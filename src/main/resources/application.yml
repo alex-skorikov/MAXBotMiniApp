@@ -5,3 +5,12 @@ max:
   api:
     url: https://api.max.ru
     token: ${MAX_API_TOKEN:changeme}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
