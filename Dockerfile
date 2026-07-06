@@ -1,7 +1,10 @@
-FROM bellsoft/liberica-openjdk-debian:17
-
+FROM bellsoft/liberica-openjdk-debian:17 AS build
 WORKDIR /app
+COPY . .
+RUN ./mvnw -q -DskipTests package
 
-COPY target/*.jar app.jar
-
+FROM bellsoft/liberica-openjdk-debian:17
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
