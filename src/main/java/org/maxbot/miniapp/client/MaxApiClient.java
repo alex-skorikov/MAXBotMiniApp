@@ -18,7 +18,7 @@ public class MaxApiClient {
 
         this.webClient = WebClient.builder()
                 .baseUrl("https://platform-api2.max.ru")
-                .defaultHeader("Authorization", "Bearer " + token)
+                .defaultHeader("X-API-Key", token)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
