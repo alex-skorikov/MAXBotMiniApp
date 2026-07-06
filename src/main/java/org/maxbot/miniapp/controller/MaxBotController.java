@@ -11,7 +11,6 @@ import org.maxbot.miniapp.service.PatentSearchService;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 public class MaxBotController {
 
 
