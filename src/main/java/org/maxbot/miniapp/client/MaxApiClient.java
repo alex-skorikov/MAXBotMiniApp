@@ -14,7 +14,7 @@ public class MaxApiClient {
     private final WebClient webClient;
     private final String botToken;
 
-    public MaxApiClient(@Value("${MAX_API_TOKEN}") String token) {
+    public MaxApiClient(@Value("${max.api.token}") String token) {
         this.botToken = token;
 
         this.webClient = WebClient.builder()
