@@ -1,5 +1,7 @@
 ### Maven ###
 target/
+.mvn/
+.settings/
 release.properties
 pom.xml.tag
 pom.xml.releaseBackup
@@ -19,6 +21,11 @@ pom.xml.versionsBackup
 .idea/
 *.iml
 out/
+*.ipr
+*.iws
+
+### GigaIDE ###
+.gigaide/
 
 ### VS Code ###
 .vscode/
