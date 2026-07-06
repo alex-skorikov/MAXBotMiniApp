@@ -1,6 +1,5 @@
 package org.maxbot.miniapp.controller;
 
-
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +11,6 @@ import java.util.Map;
 @RestController
 public class MaxBotController {
 
-
     private final MaxApiClient maxApiClient;
     private final PatentSearchService patentSearchService;
 
@@ -21,13 +19,7 @@ public class MaxBotController {
         this.maxApiClient = maxApiClient;
         this.patentSearchService = patentSearchService;
         System.out.println(">>> MaxBotController LOADED");
-
     }
-
-/*    @PostMapping("/webhook")
-    public Map<String, Object> handleUpdate(@RequestBody Map<String, Object> update) {
-        return Map.of("ok", true);
-    }*/
 
     @PostMapping("/webhook")
     public Map<String, Object> handleUpdate(@RequestBody Map<String, Object> update) {
@@ -39,10 +31,13 @@ public class MaxBotController {
             return Map.of("ok", true);
         }
 
-        String chatId = String.valueOf(message.get("chat_id"));
+        // ВАЖНО: user_id — единственный корректный идентификатор для отправки сообщений
+        Map<String, Object> from = (Map<String, Object>) message.get("from");
+        long userId = Long.parseLong(String.valueOf(from.get("user_id")));
+
         String text = String.valueOf(message.getOrDefault("text", ""));
 
-        // Обработка команды /start
+        // Команда /start
         if (text.equals("/start")) {
 
             String reply = """
@@ -50,17 +45,15 @@ public class MaxBotController {
                     Готов помочь вам с поиском патентов и другой информацией.
                     """;
 
-            maxApiClient.sendMessage(chatId, reply);
+            maxApiClient.sendMessage(userId, reply);
             return Map.of("ok", true);
         }
 
-        // Обработка обычных сообщений
-        Map<String, Object> from = (Map<String, Object>) message.get("from");
-
-        String firstName = from != null ? String.valueOf(from.getOrDefault("first_name", "не задано")) : "не задано";
-        String lastName = from != null ? String.valueOf(from.getOrDefault("last_name", "")) : "";
-        String username = from != null ? String.valueOf(from.getOrDefault("username", "не задан")) : "не задан";
-        String role = from != null ? String.valueOf(from.getOrDefault("role", "неизвестно")) : "неизвестно";
+        // Ответ на обычное сообщение
+        String firstName = String.valueOf(from.getOrDefault("first_name", "не задано"));
+        String lastName = String.valueOf(from.getOrDefault("last_name", ""));
+        String username = String.valueOf(from.getOrDefault("username", "не задан"));
+        String role = String.valueOf(from.getOrDefault("role", "неизвестно"));
 
         String reply = String.format(
                 "Информация о вас:\n" +
@@ -68,10 +61,10 @@ public class MaxBotController {
                         "Имя: %s %s\n" +
                         "Username: %s\n" +
                         "Роль: %s",
-                chatId, firstName, lastName, username, role
+                userId, firstName, lastName, username, role
         );
 
-        maxApiClient.sendMessage(chatId, reply);
+        maxApiClient.sendMessage(userId, reply);
 
         return Map.of("ok", true);
     }
