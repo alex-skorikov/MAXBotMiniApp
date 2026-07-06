@@ -4,7 +4,7 @@ server:
 max:
   api:
     url: https://api.max.ru
-    token: ${max.api.token}
+    token: ${MAX_API_TOKEN}
 
 management:
   endpoints:
