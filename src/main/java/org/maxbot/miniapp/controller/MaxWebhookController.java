@@ -1,6 +1,7 @@
 package org.maxbot.miniapp.controller;
 
 import org.maxbot.miniapp.dto.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,10 +17,10 @@ public class MaxWebhookController {
 
     private final WebClient webClient;
 
-    public MaxWebhookController() {
+    public MaxWebhookController(@Value("${max.api.token}") String token) {
         this.webClient = WebClient.builder()
                 .baseUrl("https://platform-api2.max.ru")
-                .defaultHeader("Authorization", "mapib_ТОКЕН_ТВОЕГО_БОТА")
+                .defaultHeader("Authorization", token)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
