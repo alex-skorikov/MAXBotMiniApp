@@ -1,6 +1,8 @@
 MAXBotMiniApp
 =============
+![Документация](./documentation.md)
 
+--------
 Описание
 --------
 MAXBotMiniApp — это Java/Spring Boot приложение, которое принимает события от платформы MAX через webhook,
