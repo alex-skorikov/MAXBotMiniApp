@@ -2,6 +2,7 @@ package org.maxbot.miniapp.controller;
 
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.service.PatentSearchService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,42 @@ public class MaxBotController {
         this.maxApiClient = maxApiClient;
         this.patentSearchService = patentSearchService;
         System.out.println(">>> MaxBotController LOADED");
+    }
+
+    @GetMapping("/message")
+    public Map<String, Object>  getMessage(@RequestBody Map<String, Object> update){
+        Map<String, Object> message = (Map<String, Object>) update.get("message");
+        if (message == null) {
+            return Map.of("ok", true);
+        }
+        Map<String, Object> from = (Map<String, Object>) message.get("from");
+        long userId = Long.parseLong(String.valueOf(from.get("user_id")));
+        String reply = """
+                    Привет! Я ваш MAXBotMiniApp.
+                    Готов помочь вам с поиском патентов и другой информацией.
+                    """;
+
+        maxApiClient.sendMessage(userId, reply);
+        return Map.of("ok", true);
+
+    }
+
+    @GetMapping("/webhook/message")
+    public Map<String, Object>  getMessage2(@RequestBody Map<String, Object> update){
+        Map<String, Object> message = (Map<String, Object>) update.get("message");
+        if (message == null) {
+            return Map.of("ok", true);
+        }
+        Map<String, Object> from = (Map<String, Object>) message.get("from");
+        long userId = Long.parseLong(String.valueOf(from.get("user_id")));
+        String reply = """
+                    Привет! Я ваш MAXBotMiniApp.
+                    Готов помочь вам с поиском патентов и другой информацией.
+                    """;
+
+        maxApiClient.sendMessage(userId, reply);
+        return Map.of("ok", true);
+
     }
 
     @PostMapping("/webhook")
