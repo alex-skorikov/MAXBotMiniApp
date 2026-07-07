@@ -20,15 +20,9 @@ public class MaxApiClient {
 
     public MaxApiClient(@Value("${max.api.token}") String token) {
 
-        System.out.println(">>> Max TOKEN: " + token);
-
-        HttpClient httpClient = HttpClient.create()
-                .wiretap("reactor.netty.http.client", LogLevel.DEBUG, AdvancedByteBufFormat.TEXTUAL);
-
         this.webClient = WebClient.builder()
                 .baseUrl("https://platform-api2.max.ru")
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .defaultHeader("X-API-Key", token)
+                .defaultHeader("Authorization", token)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
