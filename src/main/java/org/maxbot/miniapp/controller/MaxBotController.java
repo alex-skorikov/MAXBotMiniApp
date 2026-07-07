@@ -22,7 +22,7 @@ public class MaxBotController {
         System.out.println(">>> MaxBotController LOADED");
     }
 
-    @GetMapping("/message")
+    @GetMapping("/messages")
     public Map<String, Object>  getMessage(@RequestBody Map<String, Object> update){
         Map<String, Object> message = (Map<String, Object>) update.get("message");
         if (message == null) {
@@ -40,7 +40,7 @@ public class MaxBotController {
 
     }
 
-    @GetMapping("/webhook/message")
+    @GetMapping("/webhook/messages")
     public Map<String, Object>  getMessage2(@RequestBody Map<String, Object> update){
         Map<String, Object> message = (Map<String, Object>) update.get("message");
         if (message == null) {
