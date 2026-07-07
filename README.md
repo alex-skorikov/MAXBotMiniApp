@@ -1,6 +1,6 @@
 MAXBotMiniApp
 =============
-### [Документация](./documentation.md)
+### [Документация-1](./documentation.md)
 
 --------
 Описание
