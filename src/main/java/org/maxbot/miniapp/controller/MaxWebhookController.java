@@ -40,8 +40,8 @@ public class MaxWebhookController {
         BodyDto body = msg.getBody();
 
         int senderUserId = sender.getUser_id();
-        int chatId = recipient.getChat_id();
-        int recipientUserId = recipient.getUser_id();
+//        int chatId = recipient.getChat_id();
+//        int recipientUserId = recipient.getUser_id();
         String text = body.getText();
 
         String reply = "Информация о вас:\n" +
