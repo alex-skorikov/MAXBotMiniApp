@@ -39,12 +39,13 @@ public class MaxWebhookController {
         RecipientDto recipient = msg.getRecipient();
         BodyDto body = msg.getBody();
 
-        int userId = sender.getUser_id();
-//        int chatId = recipient.getChat_id();
+        int senderUserId = sender.getUser_id();
+        int chatId = recipient.getChat_id();
+        int recipientUserId = recipient.getUser_id();
         String text = body.getText();
 
         String reply = "Информация о вас:\n" +
-                "ID: " + userId + "\n" +
+                "ID: " + senderUserId + "\n" +
                 "Имя: " + sender.getFirst_name() + " " + sender.getLast_name() + "\n" +
                 "Текст: " + text;
 
@@ -56,7 +57,7 @@ public class MaxWebhookController {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
-                        .queryParam("user_id", userId)
+                        .queryParam("user_id", senderUserId)
                         .build())
                 .bodyValue(sendBody)
                 .retrieve()
