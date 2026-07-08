@@ -55,15 +55,12 @@
     async function search() {
         const query = document.getElementById("query").value;
 
-        document.getElementById("result").innerHTML = "Ищу патенты…";
-
-        // пример запроса к твоему backend
-        const response = await fetch("https://maxbotminiapp-production.up.railway.app/api/search?query=" + encodeURIComponent(query));
+        const response = await fetch("/api/patents/search?q=" + encodeURIComponent(query));
         const data = await response.json();
 
         document.getElementById("result").innerHTML =
-            "<h3>Результаты:</h3>" +
-            "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
+            "<h3>Найдено: " + data.total + "</h3>" +
+            "<pre>" + JSON.stringify(data.hits, null, 2) + "</pre>";
     }
 </script>
 
