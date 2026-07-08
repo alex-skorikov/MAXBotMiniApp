@@ -13,15 +13,17 @@ import java.util.*;
 @Component
 public class RospatentClient {
 
+    @Value("${rospatent.token}")
+    private String token;
+
     private final WebClient webClient;
 
     private static final String URL =
             "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
-    public RospatentClient(@Value("${rospatent.token}") String token) {
+    public RospatentClient() {
         this.webClient = WebClient.builder()
                 .baseUrl(URL)
-                .defaultHeader("Authorization", "Bearer " + token)
                 .defaultHeader("User-Agent", "curl/8.0.1")
                 .defaultHeader("Accept", "*/*")
                 .defaultHeader("Connection", "keep-alive")
@@ -34,6 +36,12 @@ public class RospatentClient {
         Map<String, String> body = Map.of("q", query);
 
         Map<String, Object> json = webClient.post()
+                .uri(URL)
+                .header("Authorization", "Bearer " + token)   // ← ВАЖНО!
+                .header("User-Agent", "curl/8.0.1")
+                .header("Accept", "*/*")
+                .header("Connection", "keep-alive")
+                .header("Accept-Encoding", "gzip, deflate, br")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
