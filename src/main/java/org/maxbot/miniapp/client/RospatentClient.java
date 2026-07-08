@@ -4,18 +4,30 @@ import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
 
 import java.util.*;
 
 @Component
 public class RospatentClient {
 
+
     @Value("${rospatent.token}")
     private String token;
 
-    private final WebClient webClient = WebClient.builder().build();
+    private final WebClient webClient;
+
+    public RospatentClient() {
+        this.webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .resolver(spec -> spec.ndots(1)) // ← критично
+                ))
+                .build();
+    }
 
     public PatentSearchResponse search(String query) {
 
