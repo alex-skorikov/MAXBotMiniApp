@@ -2,6 +2,7 @@ package org.maxbot.miniapp.client;
 
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -14,10 +15,18 @@ public class RospatentClient {
     private final RestTemplate rest = new RestTemplate();
     private static final String URL = "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
+    @Value("${rospatent.token}")
+    private String token;
+
     public PatentSearchResponse search(String query) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        headers.set("Authorization", "Bearer " + token);
+        headers.set("User-Agent", "Mozilla/5.0");
+        headers.set("Origin", "https://searchplatform.rospatent.gov.ru");
+        headers.set("Referer", "https://searchplatform.rospatent.gov.ru");
 
         Map<String, String> body = Map.of("q", query);
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
