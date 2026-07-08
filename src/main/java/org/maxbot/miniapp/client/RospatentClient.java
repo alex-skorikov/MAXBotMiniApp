@@ -13,19 +13,14 @@ import java.util.*;
 
 @Component
 public class RospatentClient {
-
-
-    @Value("${rospatent.token}")
-    private String token;
-
     private final WebClient webClient;
 
-    public RospatentClient() {
+    public RospatentClient(@Value("${rospatent.token}") String token) {
+
         this.webClient = WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(
-                        HttpClient.create()
-                                .resolver(spec -> spec.ndots(1)) // ← критично
-                ))
+                .baseUrl("https://searchplatform.rospatent.gov.ru")
+                .defaultHeader("Authorization", "Bearer " + token)
+                .defaultHeader("Content-Type", "application/json")
                 .build();
     }
 
@@ -34,13 +29,7 @@ public class RospatentClient {
         Map<String, String> body = Map.of("q", query);
 
         Map<String, Object> json = webClient.post()
-                .uri("https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search")
-                .header("Authorization", "Bearer " + token)
-                .header("User-Agent", "curl/8.0.1")
-                .header("Accept", "*/*")
-                .header("Connection", "keep-alive")
-                .header("Accept-Encoding", "gzip, deflate, br")
-                .contentType(MediaType.APPLICATION_JSON)
+                .uri("/patsearch/v0.2/search")
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Map.class)
