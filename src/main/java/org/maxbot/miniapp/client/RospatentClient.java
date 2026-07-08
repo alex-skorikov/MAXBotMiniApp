@@ -21,7 +21,7 @@ public class RospatentClient {
     public RospatentClient(@Value("${rospatent.token}") String token) {
         this.webClient = WebClient.builder()
                 .baseUrl(URL)
-                .defaultHeader("Authorization", token)
+                .defaultHeader("Authorization", "Bearer " + token)
                 .defaultHeader("User-Agent", "curl/8.0.1")
                 .defaultHeader("Accept", "*/*")
                 .defaultHeader("Connection", "keep-alive")
