@@ -5,7 +5,12 @@ import lombok.Data;
 @Data
 public class PatentHit {
 
-    private String id; // RU123456
+    private String id;
+    private String title;
+    private String applicant;
+    private String inventor;
+    private String ipc;
+    private String description;
     private Biblio biblio;
 
     @Data

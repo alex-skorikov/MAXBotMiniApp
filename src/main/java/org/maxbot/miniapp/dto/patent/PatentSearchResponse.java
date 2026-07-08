@@ -1,21 +1,16 @@
 package org.maxbot.miniapp.dto.patent;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
-import java.util.stream.Collectors;
 
+@Getter
+@Setter
 public class PatentSearchResponse {
-
+    private int total;
+    private int available;
     private List<PatentHit> hits;
 
-//    public List<MiniAppCard> toCards() {
-//        return hits.stream()
-//                .map(hit -> new MiniAppCard(
-//                        hit.getId(),
-//                        hit.getBiblio().getRu().getTitle(),
-//                        "Владелец: " + hit.getBiblio().getRu().getApplicant(),
-//                        "Дата: " + hit.getBiblio().getRu().getDate()
-//                ))
-//                .collect(Collectors.toList());
-//    }
 }
 

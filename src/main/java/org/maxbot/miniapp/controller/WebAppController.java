@@ -10,4 +10,3 @@ public class WebAppController {
         return "static/index.html";
     }
 }
-
