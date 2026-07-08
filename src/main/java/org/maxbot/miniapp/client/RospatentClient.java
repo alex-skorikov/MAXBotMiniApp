@@ -3,38 +3,42 @@ package org.maxbot.miniapp.client;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 
 @Component
 public class RospatentClient {
 
-    private final RestTemplate rest = new RestTemplate();
-    private static final String URL =
-            "https://searchplatform.rosPatent.gov.ru/patsearch/v0.2/search";
+    private final WebClient webClient;
 
-    @Value("${rospatent.token}")
-    private String token;
+    private static final String URL =
+            "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
+
+    public RospatentClient(@Value("${rospatent.token}") String token) {
+        this.webClient = WebClient.builder()
+                .baseUrl(URL)
+                .defaultHeader("Authorization", token)
+                .defaultHeader("User-Agent", "curl/8.0.1")
+                .defaultHeader("Accept", "*/*")
+                .defaultHeader("Connection", "keep-alive")
+                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
+                .build();
+    }
 
     public PatentSearchResponse search(String query) {
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        headers.set("Authorization", "Bearer " + token);
-        headers.set("User-Agent", "Mozilla/5.0");
-        headers.set("Origin", "https://searchplatform.rospatent.gov.ru");
-        headers.set("Referer", "https://searchplatform.rospatent.gov.ru");
-
         Map<String, String> body = Map.of("q", query);
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> response = rest.exchange(URL, HttpMethod.POST, entity, Map.class);
-
-        Map<String, Object> json = response.getBody();
+        Map<String, Object> json = webClient.post()
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
 
         int total = (int) json.get("total");
         int available = (int) json.get("available");
@@ -53,7 +57,9 @@ public class RospatentClient {
             hit.setApplicant((String) snippet.get("applicant"));
             hit.setInventor((String) snippet.get("inventor"));
 
-            Map<String, Object> classification = (Map<String, Object>) snippet.get("classification");
+            Map<String, Object> classification =
+                    (Map<String, Object>) snippet.get("classification");
+
             hit.setIpc((String) classification.get("ipc"));
 
             hits.add(hit);
