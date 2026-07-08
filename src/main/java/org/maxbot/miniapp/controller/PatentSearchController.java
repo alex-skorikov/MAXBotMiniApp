@@ -15,8 +15,8 @@ public class PatentSearchController {
     }
 
     @GetMapping("/search")
-    public PatentSearchResponse search(@RequestParam String query) {
-        System.out.println("Получен запрос: /api/patents/search " + query);
-        return service.search(query);
+    public PatentSearchResponse search(@RequestParam String q) {
+        System.out.println("Получен запрос: /api/patents/search " + q);
+        return service.search(q);
     }
 }
