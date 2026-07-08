@@ -19,4 +19,3 @@ public class PatentSearchController {
         return service.search(q);
     }
 }
-

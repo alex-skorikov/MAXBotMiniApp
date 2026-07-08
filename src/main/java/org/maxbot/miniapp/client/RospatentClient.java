@@ -2,13 +2,11 @@ package org.maxbot.miniapp.client;
 
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class RospatentClient {
@@ -36,18 +34,17 @@ public class RospatentClient {
 
         for (Map<String, Object> raw : rawHits) {
 
-            Map<String, Object> common = (Map<String, Object>) raw.get("common");
-            Map<String, Object> biblio = (Map<String, Object>) raw.get("biblio");
-            Map<String, Object> ru = biblio != null ? (Map<String, Object>) biblio.get("ru") : null;
             Map<String, Object> snippet = (Map<String, Object>) raw.get("snippet");
 
             PatentHit hit = new PatentHit();
             hit.setId((String) raw.get("id"));
-            hit.setTitle(ru != null ? (String) ru.get("title") : (String) snippet.get("title"));
-            hit.setApplicant(snippet != null ? (String) snippet.get("applicant") : null);
-            hit.setInventor(snippet != null ? (String) snippet.get("inventor") : null);
-            hit.setIpc(snippet != null ? (String) snippet.get("classification") : null);
-            hit.setDescription(snippet != null ? (String) snippet.get("description") : null);
+            hit.setTitle((String) snippet.get("title"));
+            hit.setDescription((String) snippet.get("description"));
+            hit.setApplicant((String) snippet.get("applicant"));
+            hit.setInventor((String) snippet.get("inventor"));
+
+            Map<String, Object> classification = (Map<String, Object>) snippet.get("classification");
+            hit.setIpc((String) classification.get("ipc"));
 
             hits.add(hit);
         }
