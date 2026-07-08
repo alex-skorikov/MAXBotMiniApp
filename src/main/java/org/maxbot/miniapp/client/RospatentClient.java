@@ -23,7 +23,7 @@ public class RospatentClient {
 
     public RospatentClient() {
         this.webClient = WebClient.builder()
-                .baseUrl(URL)
+//                .baseUrl(URL)
                 .defaultHeader("User-Agent", "curl/8.0.1")
                 .defaultHeader("Accept", "*/*")
                 .defaultHeader("Connection", "keep-alive")
@@ -36,7 +36,7 @@ public class RospatentClient {
         Map<String, String> body = Map.of("q", query);
 
         Map<String, Object> json = webClient.post()
-                .uri(URL)
+                .uri("https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search")
                 .header("Authorization", "Bearer " + token)   // ← ВАЖНО!
                 .header("User-Agent", "curl/8.0.1")
                 .header("Accept", "*/*")
