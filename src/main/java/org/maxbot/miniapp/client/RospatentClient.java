@@ -13,7 +13,8 @@ import java.util.*;
 public class RospatentClient {
 
     private final RestTemplate rest = new RestTemplate();
-    private static final String URL = "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
+    private static final String URL =
+            "https://searchplatform.rosPatent.gov.ru/patsearch/v0.2/search";
 
     @Value("${rospatent.token}")
     private String token;
