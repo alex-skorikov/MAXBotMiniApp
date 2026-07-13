@@ -27,6 +27,7 @@ public class PatentSearchController {
     @PostMapping("/search")
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
 
+        System.out.println("Получен запрос: /api/patents/search " + request);
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
                 request.getQueryMode(),
