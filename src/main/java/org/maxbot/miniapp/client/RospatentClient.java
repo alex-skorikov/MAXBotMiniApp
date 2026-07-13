@@ -90,7 +90,7 @@ public class RospatentClient {
     public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
 
         Map<String, Object> body = Map.of(
-                "q", query,
+                "qn", query,
                 "limit", limit,
                 "offset", offset
         );

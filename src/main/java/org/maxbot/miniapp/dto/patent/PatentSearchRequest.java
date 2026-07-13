@@ -9,9 +9,9 @@ public class PatentSearchRequest {
 
     private String query;
     private String queryMode; // "q" или "qn"
-    private Integer page;
-    private Integer pageSize;
-    private Integer includeFacets;
+//    private Integer page;
+//    private Integer pageSize;
+//    private Integer includeFacets;
     private Integer limit;
     private Integer offset;
 
