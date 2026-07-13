@@ -1,7 +1,5 @@
 package org.maxbot.miniapp.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -41,25 +39,74 @@ public class MaxWebhookController {
         this.patentSearchService = patentSearchService;
     }
 
+//    @PostMapping("/webhook")
+//    public Mono<Void> handleUpdate(@RequestBody String updates) throws JsonProcessingException {
+//        log.info(">>> RAW UPDATE: {}", updates);
+//
+//        ObjectMapper mapper = new ObjectMapper();
+//        UpdateDto update = mapper.readValue(updates, UpdateDto.class);
+//
+//        // Обрабатываем только message_callback
+//        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
+//            return handleCallback(update.getCallback());
+//        }
+//
+//        // Обрабатываем только message_created
+//        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
+//            return handleMessage(update.getMessage());
+//        }
+//
+//        // Игнорируем bot_started, bot_stopped
+//        return Mono.empty();
+//    }
+
     @PostMapping("/webhook")
-    public Mono<Void> handleUpdate(@RequestBody String updates) throws JsonProcessingException {
-        log.info(">>> RAW UPDATE: {}", updates);
+    public void handleUpdate(@RequestBody UpdateDto update) {
+        try {
+            log.info(">>> RAW UPDATE: {}", update);
 
-        ObjectMapper mapper = new ObjectMapper();
-        UpdateDto update = mapper.readValue(updates, UpdateDto.class);
+            // --- MESSAGE CREATED ---
+            if ("message_created".equals(update.getUpdateType())) {
+                MessageDto msg = update.getMessage();
+                int chatId = msg.getRecipient().getChatId();
+                String text = msg.getBody().getText();
 
-        // Обрабатываем только message_callback
-        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
-            return handleCallback(update.getCallback());
+                // Показываем меню
+                sendMenu(chatId);
+                return;
+            }
+
+            // --- CALLBACK ---
+            if ("message_callback".equals(update.getUpdateType())) {
+                CallbackDto cb = update.getCallback();
+                int userId = cb.getUser().getUserId();
+                String callbackId = cb.getCallbackId();
+
+                if (cb == null || cb.getCallbackId() == null) {
+                    log.warn("Callback received WITHOUT callback_id → ignoring");
+                    return;
+                }
+
+                String payload = cb.getPayload();
+                long chatId = update.getMessage().getRecipient().getChatId();
+
+                switch (payload) {
+                    case "INFO":
+                        answer(callbackId, Map.of(
+                                "message", Map.of("text", "Информация о вас:\nUser ID: " + userId)
+                        ));
+
+                    case "PATENT_SEARCH":
+                        userState.put(userId, "PATENT_SEARCH");
+                        answer(callbackId, Map.of(
+                                "message", Map.of("text", "Введите поисковый запрос:")
+                        ));
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error handling update", e);
         }
-
-        // Обрабатываем только message_created
-        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
-            return handleMessage(update.getMessage());
-        }
-
-        // Игнорируем bot_started, bot_stopped
-        return Mono.empty();
     }
 
 
@@ -110,7 +157,7 @@ public class MaxWebhookController {
         }
 
         // На любое другое сообщение → показываем кнопки
-        return sendButtons(chatId);
+        return sendMenu(chatId);
     }
 
     // ===========================
@@ -147,7 +194,7 @@ public class MaxWebhookController {
     // BUTTONS
     // ===========================
 
-    private Mono<Void> sendButtons(int chatId) {
+    private Mono<Void> sendMenu(int chatId) {
 
         Map<String, Object> body = Map.of(
                 "text", "Выберите действие:",
