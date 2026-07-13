@@ -10,6 +10,6 @@ public class UpdateDto {
     private long timestamp;
     private MessageDto message;
     private String user_locale;
-
+    private CallbackDto callback;
 }
 
