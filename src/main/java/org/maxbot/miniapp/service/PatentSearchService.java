@@ -13,7 +13,25 @@ public class PatentSearchService {
         this.client = client;
     }
 
-    public PatentSearchResponse search(String query) {
-        return client.search(query);
+//    public PatentSearchResponse search(String query) {
+//        return client.search(query);
+//    }
+
+    public PatentSearchResponse search(
+            String query,
+            String queryMode,
+            Integer page,
+            Integer pageSize,
+            Integer includeFacets
+    ) {
+        if ("q".equalsIgnoreCase(queryMode)) {
+            return client.searchByQuery(query, page, pageSize, includeFacets);
+        }
+
+        if ("qn".equalsIgnoreCase(queryMode)) {
+            return client.searchByNumber(query);
+        }
+
+        throw new IllegalArgumentException("Unknown queryMode: " + queryMode);
     }
 }
