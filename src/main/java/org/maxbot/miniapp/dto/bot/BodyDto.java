@@ -9,5 +9,6 @@ public class BodyDto {
     private String text;
     private String mid;
     private long seq;
+    private String payload;
 
 }
