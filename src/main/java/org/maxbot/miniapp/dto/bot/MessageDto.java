@@ -8,10 +8,11 @@ import lombok.ToString;
 @Setter
 @ToString
 public class MessageDto {
+    private long timestamp;
     private RecipientDto recipient;
     private SenderDto sender;
     private BodyDto body;
-    private long timestamp;
+
 
 }
 
