@@ -76,7 +76,7 @@ public class MaxWebhookController {
 
         String callbackId = cb.getCallbackId();
         String payload = cb.getPayload();
-        int userId = cb.getUserId();
+        int userId = cb.getUser().getUserId();
 
         switch (payload) {
             case "INFO":

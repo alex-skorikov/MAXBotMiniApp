@@ -11,9 +11,9 @@ import lombok.ToString;
 public class CallbackDto {
     @JsonProperty("callback_id")
     private String callbackId;
+    private SenderDto user;
     private String payload;
-    @JsonProperty("user_id")
-    private int userId;
+//    @JsonProperty("user_id")
+//    private int userId;
 
 }
-
