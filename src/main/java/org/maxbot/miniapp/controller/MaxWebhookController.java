@@ -44,18 +44,20 @@ public class MaxWebhookController {
 
         log.info(">>> RAW UPDATE: {}", update);
 
-        // 1) Callback-кнопка
-        if (update.getCallback() != null) {
+        // Обрабатываем только message_callback
+        if ("message_callback".equals(update.getUpdate_type()) && update.getCallback() != null) {
             return handleCallback(update.getCallback());
         }
 
-        // 2) Обычное сообщение
-        if (update.getMessage() != null) {
+        // Обрабатываем только message_created
+        if ("message_created".equals(update.getUpdate_type()) && update.getMessage() != null) {
             return handleMessage(update.getMessage());
         }
 
+        // Игнорируем bot_started, bot_stopped
         return Mono.empty();
     }
+
 
     // ===========================
     // CALLBACK HANDLER
@@ -63,30 +65,31 @@ public class MaxWebhookController {
 
     private Mono<Void> handleCallback(CallbackDto cb) {
 
-        String payload = cb.getPayload();
+        if (cb.getCallbackId() == null || cb.getCallbackId().isBlank()) {
+            log.warn("Callback received WITHOUT callback_id → ignoring");
+            return Mono.empty();
+        }
+
         String callbackId = cb.getCallbackId();
+        String payload = cb.getPayload();
         int userId = cb.getUserId();
 
         switch (payload) {
-
             case "INFO":
                 return answer(callbackId, Map.of(
-                        "message", Map.of(
-                                "text", "Информация о вас:\nChat ID: " + userId
-                        )
+                        "message", Map.of("text", "Информация о вас:\nUser ID: " + userId)
                 ));
 
             case "PATENT_SEARCH":
                 userState.put(userId, "PATENT_SEARCH");
                 return answer(callbackId, Map.of(
-                        "message", Map.of(
-                                "text", "Введите поисковый запрос:"
-                        )
+                        "message", Map.of("text", "Введите поисковый запрос:")
                 ));
         }
 
         return Mono.empty();
     }
+
 
     // ===========================
     // MESSAGE HANDLER
