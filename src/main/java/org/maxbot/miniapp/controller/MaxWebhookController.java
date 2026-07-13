@@ -21,24 +21,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 public class MaxWebhookController {
+
     private final Map<Integer, String> userState = new ConcurrentHashMap<>();
     private final WebClient webClient;
     private final PatentSearchService patentSearchService;
     private static final Logger log = LoggerFactory.getLogger(MaxWebhookController.class);
 
-    public MaxWebhookController(@Value("${max.api.token}") String token, PatentSearchService patentSearchService) {
+    public MaxWebhookController(@Value("${max.api.token}") String token,
+                                PatentSearchService patentSearchService) {
+
         this.webClient = WebClient.builder()
                 .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
+
         this.patentSearchService = patentSearchService;
     }
 
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
+
         log.info(">>> RAW UPDATE: {}", update);
-        // 1) Если нажата кнопка
+
+        // 1) Callback-кнопка
         if (update.getCallback() != null) {
             return handleCallback(update.getCallback());
         }
@@ -51,23 +57,27 @@ public class MaxWebhookController {
         return Mono.empty();
     }
 
+    // ===========================
+    // CALLBACK HANDLER
+    // ===========================
+
     private Mono<Void> handleCallback(CallbackDto cb) {
 
         String payload = cb.getPayload();
-        String callbackId = cb.getCallback_id();
-
+        String callbackId = cb.getCallbackId();
+        int userId = cb.getUserId();
 
         switch (payload) {
 
             case "INFO":
                 return answer(callbackId, Map.of(
                         "message", Map.of(
-                                "text", "Информация о вас:\nID: " + cb.getUser_id()
+                                "text", "Информация о вас:\nChat ID: " + userId
                         )
                 ));
 
             case "PATENT_SEARCH":
-                userState.put(cb.getUser_id(), "PATENT_SEARCH");
+                userState.put(userId, "PATENT_SEARCH");
                 return answer(callbackId, Map.of(
                         "message", Map.of(
                                 "text", "Введите поисковый запрос:"
@@ -78,20 +88,27 @@ public class MaxWebhookController {
         return Mono.empty();
     }
 
+    // ===========================
+    // MESSAGE HANDLER
+    // ===========================
 
     private Mono<Void> handleMessage(MessageDto msg) {
-        int userId = msg.getSender().getUser_id();
+
+        int chatId = msg.getRecipient().getChat_id();   // ВАЖНО: используем chat_id
         String text = msg.getBody().getText();
 
-        // если пользователь вводит текст в режиме поиска
-        if ("PATENT_SEARCH".equals(userState.get(userId))) {
-            return handlePatentSearch(userId, text);
+        // Если пользователь вводит текст в режиме поиска
+        if ("PATENT_SEARCH".equals(userState.get(chatId))) {
+            return handlePatentSearch(chatId, text);
         }
 
-        // иначе показываем кнопки
-        return sendButtons(userId);
+        // На любое другое сообщение → показываем кнопки
+        return sendButtons(chatId);
     }
 
+    // ===========================
+    // ANSWERS API
+    // ===========================
 
     private Mono<Void> answer(String callbackId, Map<String, Object> body) {
         return webClient.post()
@@ -104,19 +121,27 @@ public class MaxWebhookController {
                 .bodyToMono(Void.class);
     }
 
+    // ===========================
+    // MESSAGES API
+    // ===========================
 
-    private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
+    private Mono<Void> sendMessage(int chatId, Map<String, Object> body) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
-                        .queryParam("user_id", userId)
+                        .queryParam("chat_id", chatId)
                         .build())
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(Void.class);
     }
 
-    private Mono<Void> sendButtons(int userId) {
+    // ===========================
+    // BUTTONS
+    // ===========================
+
+    private Mono<Void> sendButtons(int chatId) {
+
         Map<String, Object> body = Map.of(
                 "text", "Выберите действие:",
                 "attachments", List.of(
@@ -142,28 +167,25 @@ public class MaxWebhookController {
                 )
         );
 
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/messages")
-                        .queryParam("user_id", userId)
-                        .build())
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Void.class);
+        return sendMessage(chatId, body);
     }
 
+    // ===========================
+    // PATENT SEARCH
+    // ===========================
 
-    private Mono<Void> handlePatentSearch(int userId, String query) {
+    private Mono<Void> handlePatentSearch(int chatId, String query) {
 
         PatentSearchResponse raw = patentSearchService.search(
                 query,
-                "q",      // режим текстового поиска
-                10,       // limit
-                0         // offset
+                "q",
+                10,
+                0
         );
 
         if (raw.getHits() == null || raw.getHits().isEmpty()) {
-            return sendMessage(userId, Map.of("text", "Ничего не найдено."));
+            userState.remove(chatId);
+            return sendMessage(chatId, Map.of("text", "Ничего не найдено."));
         }
 
         StringBuilder sb = new StringBuilder("Результаты поиска:\n\n");
@@ -177,11 +199,8 @@ public class MaxWebhookController {
             sb.append("\n");
         });
 
-        userState.remove(userId);
+        userState.remove(chatId);
 
-        return sendMessage(userId, Map.of("text", sb.toString()));
+        return sendMessage(chatId, Map.of("text", sb.toString()));
     }
-
-
 }
-
