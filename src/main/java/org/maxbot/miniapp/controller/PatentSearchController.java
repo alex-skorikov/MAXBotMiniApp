@@ -30,9 +30,8 @@ public class PatentSearchController {
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
                 request.getQueryMode(),
-                request.getPage(),
-                request.getPageSize(),
-                request.getIncludeFacets()
+                request.getLimit(),
+                request.getOffset()
         );
 
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
@@ -41,15 +40,17 @@ public class PatentSearchController {
         PatentSearchPagedResponse.Pagination pagination =
                 new PatentSearchPagedResponse.Pagination();
 
-        pagination.setPage(request.getPage());
-        pagination.setPageSize(request.getPageSize());
+        int pageSize = request.getLimit();
+        int page = (request.getOffset() / pageSize) + 1;
+
+        pagination.setPage(page);
+        pagination.setPageSize(pageSize);
         pagination.setTotal(raw.getTotal());
-        pagination.setHasNext(request.getPage() * request.getPageSize() < raw.getTotal());
+        pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
 
         response.setPagination(pagination);
 
         return response;
     }
-
 
 }

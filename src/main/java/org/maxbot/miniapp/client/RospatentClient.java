@@ -87,19 +87,13 @@ public class RospatentClient {
     // -----------------------------
 
     /** Обычный текстовый поиск (queryMode = "q") */
-    public PatentSearchResponse searchByQuery(
-            String query,
-            Integer page,
-            Integer pageSize,
-            Integer includeFacets
-    ) {
+    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
+
         Map<String, Object> body = Map.of(
                 "q", query,
-                "page", page,
-                "pageSize", pageSize,
-                "includeFacets", includeFacets
+                "limit", limit,
+                "offset", offset
         );
-
         return execute(body);
     }
 

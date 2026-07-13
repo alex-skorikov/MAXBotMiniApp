@@ -12,4 +12,7 @@ public class PatentSearchRequest {
     private Integer page;
     private Integer pageSize;
     private Integer includeFacets;
+    private Integer limit;
+    private Integer offset;
+
 }

@@ -13,22 +13,6 @@ public class PatentSearchPagedResponse {
 
     private Pagination pagination;
 
-    public List<PatentHit> getItems() {
-        return items;
-    }
-
-    public void setItems(List<PatentHit> items) {
-        this.items = items;
-    }
-
-    public Pagination getPagination() {
-        return pagination;
-    }
-
-    public void setPagination(Pagination pagination) {
-        this.pagination = pagination;
-    }
-
     @Getter
     @Setter
     public static class Pagination {
