@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.controller;
 
+import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentSearchService;
@@ -24,16 +25,31 @@ public class PatentSearchController {
 //    }
 
     @PostMapping("/search")
-    public PatentSearchResponse search(@RequestBody PatentSearchRequest request) {
+    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
 
-        System.out.println("Получен запрос: /api/patents/search " + request.getQuery());
-
-        return service.search(
+        PatentSearchResponse raw = service.search(
                 request.getQuery(),
                 request.getQueryMode(),
                 request.getPage(),
                 request.getPageSize(),
                 request.getIncludeFacets()
         );
+
+        PatentSearchPagedResponse response = new PatentSearchPagedResponse();
+        response.setItems(raw.getHits());
+
+        PatentSearchPagedResponse.Pagination pagination =
+                new PatentSearchPagedResponse.Pagination();
+
+        pagination.setPage(request.getPage());
+        pagination.setPageSize(request.getPageSize());
+        pagination.setTotal(raw.getTotal());
+        pagination.setHasNext(request.getPage() * request.getPageSize() < raw.getTotal());
+
+        response.setPagination(pagination);
+
+        return response;
     }
+
+
 }
