@@ -1,27 +1,37 @@
 package org.maxbot.miniapp.service;
 
-import org.maxbot.miniapp.client.MaxApiClient;
+import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PatentSearchService {
 
-    private final MaxApiClient maxApiClient;
+    private final RospatentClient client;
 
-    public PatentSearchService(MaxApiClient maxApiClient) {
-        this.maxApiClient = maxApiClient;
+    public PatentSearchService(RospatentClient client) {
+        this.client = client;
     }
 
-    public Object processIncomingMessage(String message) {
+//    public PatentSearchResponse search(String query) {
+//        return client.search(query);
+//    }
 
-        // Заглушка поиска патентов
-        String result = "Патент по запросу '%s' не найден (заглушка)".formatted(message);
+    public PatentSearchResponse search(
+            String query,
+            String queryMode,
+            Integer page,
+            Integer pageSize,
+            Integer includeFacets
+    ) {
+        if ("q".equalsIgnoreCase(queryMode)) {
+            return client.searchByQuery(query, page, pageSize, includeFacets);
+        }
 
-        // Отправка ответа в MAX
-//        maxApiClient.sendUserMessage(329529068L, "Привет!", result);
+        if ("qn".equalsIgnoreCase(queryMode)) {
+            return client.searchByNumber(query);
+        }
 
-        return new Response(result);
+        throw new IllegalArgumentException("Unknown queryMode: " + queryMode);
     }
-
-    public record Response(String result) {}
 }

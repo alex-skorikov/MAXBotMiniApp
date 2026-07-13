@@ -1,6 +1,6 @@
 package org.maxbot.miniapp.controller;
 
-import org.maxbot.miniapp.dto.*;
+import org.maxbot.miniapp.dto.bot.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
