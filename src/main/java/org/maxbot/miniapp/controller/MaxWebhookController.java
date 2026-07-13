@@ -54,11 +54,12 @@ public class MaxWebhookController {
     private Mono<Void> handleCallback(CallbackDto cb) {
 
         String payload = cb.getPayload();
+        String callbackId = cb.getId();
 
         switch (payload) {
 
             case "INFO":
-                return answer(cb.getId(), Map.of(
+                return answer(callbackId, Map.of(
                         "message", Map.of(
                                 "text", "Информация о вас:\nID: " + cb.getUser_id()
                         )
@@ -66,7 +67,7 @@ public class MaxWebhookController {
 
             case "PATENT_SEARCH":
                 userState.put(cb.getUser_id(), "PATENT_SEARCH");
-                return answer(cb.getId(), Map.of(
+                return answer(callbackId, Map.of(
                         "message", Map.of(
                                 "text", "Введите поисковый запрос:"
                         )
@@ -75,6 +76,7 @@ public class MaxWebhookController {
 
         return Mono.empty();
     }
+
 
     private Mono<Void> handleMessage(MessageDto msg) {
         int userId = msg.getSender().getUser_id();
