@@ -42,12 +42,11 @@ public class RospatentClient {
                 .build();
     }
 
-    /**
-     * Логирование исходящего запроса
-     */
+    // -----------------------------
+    // ЛОГИРОВАНИЕ ЗАПРОСОВ
+    // -----------------------------
     private ExchangeFilterFunction logRequest() {
         return ExchangeFilterFunction.ofRequestProcessor(request -> {
-
             log.info("=== Rospatent REQUEST ===");
             log.info("URI: {}", request.url());
             log.info("Method: {}", request.method());
@@ -59,12 +58,11 @@ public class RospatentClient {
         });
     }
 
-    /**
-     * Логирование входящего ответа
-     */
+    // -----------------------------
+    // ЛОГИРОВАНИЕ ОТВЕТОВ
+    // -----------------------------
     private ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
-
             log.info("=== Rospatent RESPONSE ===");
             log.info("Status: {}", response.statusCode());
 
@@ -72,6 +70,7 @@ public class RospatentClient {
 
             return response.bodyToMono(String.class)
                     .flatMap(body -> {
+                        log.info("Body: {}", body);
                         return Mono.just(
                                 ClientResponse
                                         .create(response.statusCode())
@@ -83,9 +82,40 @@ public class RospatentClient {
         });
     }
 
-    public PatentSearchResponse search(String query) {
+    // -----------------------------
+    // ПУБЛИЧНЫЕ МЕТОДЫ ПОИСКА
+    // -----------------------------
 
-        Map<String, Object> body = Map.of("q", query);
+    /** Обычный текстовый поиск (queryMode = "q") */
+    public PatentSearchResponse searchByQuery(
+            String query,
+            Integer page,
+            Integer pageSize,
+            Integer includeFacets
+    ) {
+        Map<String, Object> body = Map.of(
+                "q", query,
+                "page", page,
+                "pageSize", pageSize,
+                "includeFacets", includeFacets
+        );
+
+        return execute(body);
+    }
+
+    /** Поиск по номеру (queryMode = "qn") */
+    public PatentSearchResponse searchByNumber(String number) {
+        Map<String, Object> body = Map.of(
+                "qn", number
+        );
+
+        return execute(body);
+    }
+
+    // -----------------------------
+    // ЕДИНЫЙ МЕТОД ВЫПОЛНЕНИЯ ЗАПРОСА
+    // -----------------------------
+    private PatentSearchResponse execute(Map<String, Object> body) {
 
         Map<String, Object> json;
 
@@ -101,6 +131,14 @@ public class RospatentClient {
             log.error("Rospatent API error", e);
             throw new RuntimeException("Rospatent API error: " + e.getMessage());
         }
+
+        return mapResponse(json);
+    }
+
+    // -----------------------------
+    // МАППИНГ ОТВЕТА В DTO
+    // -----------------------------
+    private PatentSearchResponse mapResponse(Map<String, Object> json) {
 
         int total = ((Number) json.get("total")).intValue();
         int available = ((Number) json.get("available")).intValue();
