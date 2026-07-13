@@ -92,24 +92,26 @@ public class MaxWebhookController {
                             "text", "Информация о вас:\n" +
                                     "ID: " + userId + "\n" +
                                     "Имя: " + msg.getSender().getFirst_name() + " " + msg.getSender().getLast_name()
-                    ));
+                    )).then(sendMessage(userId, mainMenu()));
 
                 case "PATENT_SEARCH":
                     userState.put(userId, "PATENT_SEARCH");
                     return sendMessage(userId, Map.of(
-                            "text", "Введите поисковый запрос для поиска патентов:"
+                            "text", "Введите поисковый запрос:"
                     ));
             }
         }
 
         // 2) Если пользователь вводит текст в режиме поиска
         if ("PATENT_SEARCH".equals(userState.get(userId))) {
-            return handlePatentSearch(userId, text);
+            return handlePatentSearch(userId, text)
+                    .then(sendMessage(userId, mainMenu()));
         }
 
         // 3) На любое другое сообщение → показываем две кнопки
         return sendMessage(userId, mainMenu());
     }
+
 
 
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
@@ -124,15 +126,43 @@ public class MaxWebhookController {
     }
 
 
+//    private Map<String, Object> mainMenu() {
+//        return Map.of(
+//                "text", "Добро пожаловать! Выберите действие:",
+//                "quick_replies", List.of(
+//                        Map.of("title", "ℹ️ Информация", "payload", "INFO"),
+//                        Map.of("title", "🔍 Поиск патентов", "payload", "PATENT_SEARCH")
+//                )
+//        );
+//    }
+
     private Map<String, Object> mainMenu() {
         return Map.of(
-                "text", "Добро пожаловать! Выберите действие:",
-                "quick_replies", List.of(
-                        Map.of("title", "ℹ️ Информация", "payload", "INFO"),
-                        Map.of("title", "🔍 Поиск патентов", "payload", "PATENT_SEARCH")
+                "text", "Выберите действие:",
+                "attachments", List.of(
+                        Map.of(
+                                "type", "inline_keyboard",
+                                "payload", Map.of(
+                                        "buttons", List.of(
+                                                List.of(
+                                                        Map.of(
+                                                                "type", "callback",
+                                                                "text", "ℹ️ Информация",
+                                                                "payload", "INFO"
+                                                        ),
+                                                        Map.of(
+                                                                "type", "callback",
+                                                                "text", "🔍 Поиск патентов",
+                                                                "payload", "PATENT_SEARCH"
+                                                        )
+                                                )
+                                        )
+                                )
+                        )
                 )
         );
     }
+
     private Mono<Void> handlePatentSearch(int userId, String query) {
 
         PatentSearchResponse raw = patentSearchService.search(
