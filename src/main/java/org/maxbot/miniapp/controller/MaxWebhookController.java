@@ -1,7 +1,6 @@
 package org.maxbot.miniapp.controller;
 
-import org.maxbot.miniapp.client.RospatentClient;
-import org.maxbot.miniapp.dto.bot.BodyDto;
+import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
@@ -38,43 +37,110 @@ public class MaxWebhookController {
 
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-        log.info(">>> RAW UPDATE: {}", update);
-        MessageDto msg = update.getMessage();
-        if (msg == null) return Mono.empty();
-
-        BodyDto body = msg.getBody();
-        String text = body.getText();
-        String payload = body.getPayload();
-        int userId = msg.getSender().getUser_id();
 
         // 1) Если нажата кнопка
-        if (payload != null) {
-            switch (payload) {
-
-                case "INFO":
-                    return sendMessage(userId, Map.of(
-                            "text", "Информация о вас:\n" +
-                                    "ID: " + userId + "\n" +
-                                    "Имя: " + msg.getSender().getFirst_name() + " " + msg.getSender().getLast_name()
-                    )).then(sendMessage(userId, mainMenu()));
-
-                case "PATENT_SEARCH":
-                    userState.put(userId, "PATENT_SEARCH");
-                    return sendMessage(userId, Map.of(
-                            "text", "Введите поисковый запрос:"
-                    ));
-            }
+        if (update.getCallback() != null) {
+            return handleCallback(update.getCallback());
         }
 
-        // 2) Если пользователь вводит текст в режиме поиска
-        if ("PATENT_SEARCH".equals(userState.get(userId))) {
-            return handlePatentSearch(userId, text)
-                    .then(sendMessage(userId, mainMenu()));
+        // 2) Обычное сообщение
+        if (update.getMessage() != null) {
+            return handleMessage(update.getMessage());
         }
 
-        // 3) На любое сообщение → показываем две кнопки
-        return sendMessage(userId, mainMenu());
+        return Mono.empty();
     }
+
+    private Mono<Void> handleCallback(CallbackDto cb) {
+
+        String payload = cb.getPayload();
+
+        switch (payload) {
+
+            case "INFO":
+                return answer(cb.getId(), Map.of(
+                        "message", Map.of(
+                                "text", "Информация о вас:\nID: " + cb.getUser_id()
+                        )
+                ));
+
+            case "PATENT_SEARCH":
+                userState.put(cb.getUser_id(), "PATENT_SEARCH");
+                return answer(cb.getId(), Map.of(
+                        "message", Map.of(
+                                "text", "Введите поисковый запрос:"
+                        )
+                ));
+        }
+
+        return Mono.empty();
+    }
+
+    private Mono<Void> handleMessage(MessageDto msg) {
+        int userId = msg.getSender().getUser_id();
+        String text = msg.getBody().getText();
+
+        // если пользователь вводит текст в режиме поиска
+        if ("PATENT_SEARCH".equals(userState.get(userId))) {
+            return handlePatentSearch(userId, text);
+        }
+
+        // иначе показываем кнопки
+        return sendButtons(userId);
+    }
+
+
+    private Mono<Void> answer(String callbackId, Map<String, Object> body) {
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/answers")
+                        .queryParam("callback_id", callbackId)
+                        .build())
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Void.class);
+    }
+
+
+//    @PostMapping("/webhook")
+//    public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
+//        log.info(">>> RAW UPDATE: {}", update);
+//        MessageDto msg = update.getMessage();
+//        if (msg == null) return Mono.empty();
+//
+//        BodyDto body = msg.getBody();
+//        String text = body.getText();
+//        String payload = body.getPayload();
+//        int userId = msg.getSender().getUser_id();
+//
+//        // 1) Если нажата кнопка
+//        if (payload != null) {
+//            switch (payload) {
+//
+//                case "INFO":
+//                    return sendMessage(userId, Map.of(
+//                            "text", "Информация о вас:\n" +
+//                                    "ID: " + userId + "\n" +
+//                                    "Имя: " + msg.getSender().getFirst_name() + " " + msg.getSender().getLast_name()
+//                    )).then(sendMessage(userId, mainMenu()));
+//
+//                case "PATENT_SEARCH":
+//                    userState.put(userId, "PATENT_SEARCH");
+//                    return sendMessage(userId, Map.of(
+//                            "text", "Введите поисковый запрос:"
+//                    ));
+//            }
+//        }
+//
+//        // 2) Если пользователь вводит текст в режиме поиска
+//        if ("PATENT_SEARCH".equals(userState.get(userId))) {
+//            return handlePatentSearch(userId, text)
+//                    .then(sendMessage(userId, mainMenu()));
+//        }
+//
+//        // 3) На любое сообщение → показываем две кнопки
+//        return sendMessage(userId, mainMenu());
+//    }
 
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
         return webClient.post()
@@ -87,8 +153,8 @@ public class MaxWebhookController {
                 .bodyToMono(Void.class);
     }
 
-    private Map<String, Object> mainMenu() {
-        return Map.of(
+    private Mono<Void> sendButtons(int userId) {
+        Map<String, Object> body = Map.of(
                 "text", "Выберите действие:",
                 "attachments", List.of(
                         Map.of(
@@ -112,7 +178,17 @@ public class MaxWebhookController {
                         )
                 )
         );
+
+        return webClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/messages")
+                        .queryParam("user_id", userId)
+                        .build())
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(Void.class);
     }
+
 
     private Mono<Void> handlePatentSearch(int userId, String query) {
 
