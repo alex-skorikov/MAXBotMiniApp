@@ -55,7 +55,6 @@ public class RospatentClient {
             request.headers().forEach((name, values) ->
                     values.forEach(value -> log.info("{}: {}", name, value))
             );
-
             return Mono.just(request);
         });
     }
@@ -70,14 +69,9 @@ public class RospatentClient {
             log.info("Status: {}", response.statusCode());
 
             HttpHeaders headers = response.headers().asHttpHeaders();
-            log.info("Headers:");
-            headers.forEach((name, values) ->
-                    values.forEach(value -> log.info("{}: {}", name, value))
-            );
 
             return response.bodyToMono(String.class)
                     .flatMap(body -> {
-                        log.info("Body: {}", body);
                         return Mono.just(
                                 ClientResponse
                                         .create(response.statusCode())
