@@ -33,4 +33,5 @@ public class PatentSearchService {
 
         throw new IllegalArgumentException("Unknown queryMode: " + queryMode);
     }
+
 }
