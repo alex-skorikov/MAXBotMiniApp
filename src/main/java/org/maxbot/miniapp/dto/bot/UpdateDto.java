@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.dto.bot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -8,10 +9,13 @@ import lombok.ToString;
 @Setter
 @ToString
 public class UpdateDto {
-    private String updateType;
     private long timestamp;
-    private MessageDto message;
+    @JsonProperty("user_locale")
     private String userLocale;
+    @JsonProperty("update_type")
+    private String updateType;
+    private MessageDto message;
+
     private CallbackDto callback;
 }
 

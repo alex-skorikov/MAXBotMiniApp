@@ -40,21 +40,21 @@ public class MaxWebhookController {
     }
 
     @PostMapping("/webhook")
-    public Mono<Void> handleUpdate(@RequestBody String update) {
+    public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
 
         log.info(">>> RAW UPDATE: {}", update);
 
-//        // Обрабатываем только message_callback
-//        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
-//            return handleCallback(update.getCallback());
-//        }
-//
-//        // Обрабатываем только message_created
-//        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
-//            return handleMessage(update.getMessage());
-//        }
-//
-//        // Игнорируем bot_started, bot_stopped
+        // Обрабатываем только message_callback
+        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
+            return handleCallback(update.getCallback());
+        }
+
+        // Обрабатываем только message_created
+        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
+            return handleMessage(update.getMessage());
+        }
+
+        // Игнорируем bot_started, bot_stopped
         return Mono.empty();
     }
 
