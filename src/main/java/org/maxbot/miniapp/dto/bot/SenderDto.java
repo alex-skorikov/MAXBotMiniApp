@@ -21,5 +21,6 @@ public class SenderDto {
     private String name;
     @JsonProperty("last_activity_time")
     private long lastActivityTime;
+    private String username;
 
 }
