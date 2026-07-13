@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.controller;
 
+import org.maxbot.miniapp.dto.bot.BodyDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
@@ -70,37 +71,46 @@ public class MaxWebhookController {
 //                .retrieve()
 //                .bodyToMono(Void.class);
 //    }
+
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
 
         MessageDto msg = update.getMessage();
         if (msg == null) return Mono.empty();
 
-        String text = msg.getBody().getText();
+        BodyDto body = msg.getBody();
+        String text = body.getText();
+        String payload = body.getPayload();
         int userId = msg.getSender().getUser_id();
 
-        // если нажата кнопка
-        if (msg.getBody().getPayload() != null) {
-            String payload = msg.getBody().getPayload();
-
+        // 1) Если нажата кнопка
+        if (payload != null) {
             switch (payload) {
+
+                case "INFO":
+                    return sendMessage(userId, Map.of(
+                            "text", "Информация о вас:\n" +
+                                    "ID: " + userId + "\n" +
+                                    "Имя: " + msg.getSender().getFirst_name() + " " + msg.getSender().getLast_name()
+                    ));
+
                 case "PATENT_SEARCH":
                     userState.put(userId, "PATENT_SEARCH");
                     return sendMessage(userId, Map.of(
-                            "text", "Введите поисковый запрос (например: ракета):"
+                            "text", "Введите поисковый запрос для поиска патентов:"
                     ));
             }
         }
 
-        // если пользователь вводит текст
-        String state = userState.get(userId);
-        if ("PATENT_SEARCH".equals(state)) {
+        // 2) Если пользователь вводит текст в режиме поиска
+        if ("PATENT_SEARCH".equals(userState.get(userId))) {
             return handlePatentSearch(userId, text);
         }
 
-        // иначе показываем меню
+        // 3) На любое другое сообщение → показываем две кнопки
         return sendMessage(userId, mainMenu());
     }
+
 
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
         return webClient.post()
