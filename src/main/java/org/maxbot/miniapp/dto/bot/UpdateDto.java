@@ -8,10 +8,10 @@ import lombok.ToString;
 @Setter
 @ToString
 public class UpdateDto {
-    private String update_type;
+    private String updateType;
     private long timestamp;
     private MessageDto message;
-    private String user_locale;
+    private String userLocale;
     private CallbackDto callback;
 }
 
