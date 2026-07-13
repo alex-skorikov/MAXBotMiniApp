@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -61,9 +62,12 @@ public class MaxWebhookController {
 //    }
 
     @PostMapping("/webhook")
-    public void handleUpdate(@RequestBody UpdateDto update) {
+    public void handleUpdate(@RequestBody String updates) {
         try {
-            log.info(">>> RAW UPDATE: {}", update);
+            log.info(">>> RAW UPDATE: {}", updates);
+
+            ObjectMapper mapper = new ObjectMapper();
+            UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
             // --- MESSAGE CREATED ---
             if ("message_created".equals(update.getUpdateType())) {
