@@ -107,9 +107,10 @@ public class MaxWebhookController {
                     .then(sendMessage(userId, mainMenu()));
         }
 
-        // 3) На любое другое сообщение → показываем две кнопки
+        // 3) На любое сообщение → показываем две кнопки
         return sendMessage(userId, mainMenu());
     }
+
 
 
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
@@ -144,16 +145,14 @@ public class MaxWebhookController {
                                         "buttons", List.of(
                                                 List.of(
                                                         Map.of(
+                                                                "type", "callback",
                                                                 "text", "ℹ️ Информация",
-                                                                "callback", Map.of(
-                                                                        "payload", "INFO"
-                                                                )
+                                                                "payload", "INFO"
                                                         ),
                                                         Map.of(
+                                                                "type", "callback",
                                                                 "text", "🔍 Поиск патентов",
-                                                                "callback", Map.of(
-                                                                        "payload", "PATENT_SEARCH"
-                                                                )
+                                                                "payload", "PATENT_SEARCH"
                                                         )
                                                 )
                                         )
