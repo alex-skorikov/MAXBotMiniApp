@@ -1,5 +1,7 @@
 package org.maxbot.miniapp.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -40,9 +42,11 @@ public class MaxWebhookController {
     }
 
     @PostMapping("/webhook")
-    public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
+    public Mono<Void> handleUpdate(@RequestBody String updates) throws JsonProcessingException {
+        log.info(">>> RAW UPDATE: {}", updates);
 
-        log.info(">>> RAW UPDATE: {}", update);
+        ObjectMapper mapper = new ObjectMapper();
+        UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
         // Обрабатываем только message_callback
         if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
