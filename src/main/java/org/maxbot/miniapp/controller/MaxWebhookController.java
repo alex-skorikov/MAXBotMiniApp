@@ -54,7 +54,8 @@ public class MaxWebhookController {
     private Mono<Void> handleCallback(CallbackDto cb) {
 
         String payload = cb.getPayload();
-        String callbackId = cb.getId();
+        String callbackId = cb.getCallback_id();
+
 
         switch (payload) {
 
