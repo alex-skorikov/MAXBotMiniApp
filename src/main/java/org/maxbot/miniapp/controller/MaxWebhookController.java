@@ -1,10 +1,13 @@
 package org.maxbot.miniapp.controller;
 
+import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.bot.BodyDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentSearchService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +25,7 @@ public class MaxWebhookController {
     private final Map<Integer, String> userState = new ConcurrentHashMap<>();
     private final WebClient webClient;
     private final PatentSearchService patentSearchService;
+    private static final Logger log = LoggerFactory.getLogger(MaxWebhookController.class);
 
     public MaxWebhookController(@Value("${max.api.token}") String token, PatentSearchService patentSearchService) {
         this.webClient = WebClient.builder()
@@ -32,48 +36,9 @@ public class MaxWebhookController {
         this.patentSearchService = patentSearchService;
     }
 
-//    @PostMapping("/webhook")
-//    public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-//
-//        System.out.println(">>> Incoming update: " + update);
-//
-//        MessageDto msg = update.getMessage();
-//        if (msg == null) {
-//            return Mono.empty();
-//        }
-//
-//        SenderDto sender = msg.getSender();
-//        RecipientDto recipient = msg.getRecipient();
-//        BodyDto body = msg.getBody();
-//
-//        int senderUserId = sender.getUser_id();
-
-    /// /        int chatId = recipient.getChat_id();
-    /// /        int recipientUserId = recipient.getUser_id();
-//        String text = body.getText();
-//
-//        String reply = "Информация о вас:\n" +
-//                "ID: " + senderUserId + "\n" +
-//                "Имя: " + sender.getFirst_name() + " " + sender.getLast_name() + "\n" +
-//                "Текст: " + text;
-//
-//        Map<String, Object> sendBody = Map.of(
-//                "text", reply,
-//                "attachments", List.of()
-//        );
-//
-//        return webClient.post()
-//                .uri(uriBuilder -> uriBuilder
-//                        .path("/messages")
-//                        .queryParam("user_id", senderUserId)
-//                        .build())
-//                .bodyValue(sendBody)
-//                .retrieve()
-//                .bodyToMono(Void.class);
-//    }
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-        System.out.println(">>> RAW UPDATE: " + update);
+        log.info(">>> RAW UPDATE: {}", update);
         MessageDto msg = update.getMessage();
         if (msg == null) return Mono.empty();
 
@@ -111,8 +76,6 @@ public class MaxWebhookController {
         return sendMessage(userId, mainMenu());
     }
 
-
-
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
@@ -123,17 +86,6 @@ public class MaxWebhookController {
                 .retrieve()
                 .bodyToMono(Void.class);
     }
-
-
-//    private Map<String, Object> mainMenu() {
-//        return Map.of(
-//                "text", "Добро пожаловать! Выберите действие:",
-//                "quick_replies", List.of(
-//                        Map.of("title", "ℹ️ Информация", "payload", "INFO"),
-//                        Map.of("title", "🔍 Поиск патентов", "payload", "PATENT_SEARCH")
-//                )
-//        );
-//    }
 
     private Map<String, Object> mainMenu() {
         return Map.of(
