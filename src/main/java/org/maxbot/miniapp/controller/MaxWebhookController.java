@@ -37,7 +37,7 @@ public class MaxWebhookController {
 
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-
+        log.info(">>> RAW UPDATE: {}", update);
         // 1) Если нажата кнопка
         if (update.getCallback() != null) {
             return handleCallback(update.getCallback());
@@ -101,46 +101,6 @@ public class MaxWebhookController {
                 .bodyToMono(Void.class);
     }
 
-
-//    @PostMapping("/webhook")
-//    public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-//        log.info(">>> RAW UPDATE: {}", update);
-//        MessageDto msg = update.getMessage();
-//        if (msg == null) return Mono.empty();
-//
-//        BodyDto body = msg.getBody();
-//        String text = body.getText();
-//        String payload = body.getPayload();
-//        int userId = msg.getSender().getUser_id();
-//
-//        // 1) Если нажата кнопка
-//        if (payload != null) {
-//            switch (payload) {
-//
-//                case "INFO":
-//                    return sendMessage(userId, Map.of(
-//                            "text", "Информация о вас:\n" +
-//                                    "ID: " + userId + "\n" +
-//                                    "Имя: " + msg.getSender().getFirst_name() + " " + msg.getSender().getLast_name()
-//                    )).then(sendMessage(userId, mainMenu()));
-//
-//                case "PATENT_SEARCH":
-//                    userState.put(userId, "PATENT_SEARCH");
-//                    return sendMessage(userId, Map.of(
-//                            "text", "Введите поисковый запрос:"
-//                    ));
-//            }
-//        }
-//
-//        // 2) Если пользователь вводит текст в режиме поиска
-//        if ("PATENT_SEARCH".equals(userState.get(userId))) {
-//            return handlePatentSearch(userId, text)
-//                    .then(sendMessage(userId, mainMenu()));
-//        }
-//
-//        // 3) На любое сообщение → показываем две кнопки
-//        return sendMessage(userId, mainMenu());
-//    }
 
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
         return webClient.post()
