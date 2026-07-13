@@ -13,7 +13,5 @@ public class CallbackDto {
     private String callbackId;
     private SenderDto user;
     private String payload;
-//    @JsonProperty("user_id")
-//    private int userId;
-
+    private long timestamp;
 }
