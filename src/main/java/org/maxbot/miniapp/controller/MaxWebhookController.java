@@ -73,7 +73,7 @@ public class MaxWebhookController {
 //    }
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
-
+        System.out.println(">>> RAW UPDATE: " + update);
         MessageDto msg = update.getMessage();
         if (msg == null) return Mono.empty();
 
