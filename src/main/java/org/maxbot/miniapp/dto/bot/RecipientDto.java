@@ -9,7 +9,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class RecipientDto {
-    @JsonProperty("chat_it")
+    @JsonProperty("chat_id")
     private int chatId;
     @JsonProperty("chat_type")
     private String chatType;
