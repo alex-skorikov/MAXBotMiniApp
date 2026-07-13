@@ -45,12 +45,12 @@ public class MaxWebhookController {
         log.info(">>> RAW UPDATE: {}", update);
 
         // Обрабатываем только message_callback
-        if ("message_callback".equals(update.getUpdate_type()) && update.getCallback() != null) {
+        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
             return handleCallback(update.getCallback());
         }
 
         // Обрабатываем только message_created
-        if ("message_created".equals(update.getUpdate_type()) && update.getMessage() != null) {
+        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
             return handleMessage(update.getMessage());
         }
 
@@ -97,7 +97,7 @@ public class MaxWebhookController {
 
     private Mono<Void> handleMessage(MessageDto msg) {
 
-        int chatId = msg.getRecipient().getChat_id();   // ВАЖНО: используем chat_id
+        int chatId = msg.getRecipient().getChatId();
         String text = msg.getBody().getText();
 
         // Если пользователь вводит текст в режиме поиска

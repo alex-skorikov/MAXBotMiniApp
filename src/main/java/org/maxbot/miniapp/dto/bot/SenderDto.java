@@ -7,10 +7,10 @@ import lombok.Setter;
 @Setter
 public class SenderDto {
 
-    private int user_id;
-    private String first_name;
-    private String last_name;
-    private boolean is_bot;
+    private int userId;
+    private String firstName;
+    private String lastName;
+    private boolean isBot;
     private String name;
 
 }
