@@ -71,7 +71,6 @@ public class MaxWebhookController {
 //                .retrieve()
 //                .bodyToMono(Void.class);
 //    }
-
     @PostMapping("/webhook")
     public Mono<Void> handleUpdate(@RequestBody UpdateDto update) {
 
@@ -113,7 +112,6 @@ public class MaxWebhookController {
     }
 
 
-
     private Mono<Void> sendMessage(int userId, Map<String, Object> body) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
@@ -146,14 +144,16 @@ public class MaxWebhookController {
                                         "buttons", List.of(
                                                 List.of(
                                                         Map.of(
-                                                                "type", "callback",
                                                                 "text", "ℹ️ Информация",
-                                                                "payload", "INFO"
+                                                                "callback", Map.of(
+                                                                        "payload", "INFO"
+                                                                )
                                                         ),
                                                         Map.of(
-                                                                "type", "callback",
                                                                 "text", "🔍 Поиск патентов",
-                                                                "payload", "PATENT_SEARCH"
+                                                                "callback", Map.of(
+                                                                        "payload", "PATENT_SEARCH"
+                                                                )
                                                         )
                                                 )
                                         )
@@ -191,7 +191,6 @@ public class MaxWebhookController {
 
         return sendMessage(userId, Map.of("text", sb.toString()));
     }
-
 
 
 }
