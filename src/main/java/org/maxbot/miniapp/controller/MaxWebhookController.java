@@ -76,49 +76,18 @@ public class MaxWebhookController {
 
                 String payload = cb.getPayload();
 
-//                switch (payload) {
-//                    case "INFO":
-//                        String info = UserService.getUserInfo(cb, update);
-//                        maxApiClient.sendAnswer(callbackId, Map.of(
-//                                "message", Map.of(
-//                                        "text", info,
-//                                        "attachments", List.of(
-//                                                Map.of(
-//                                                        "type", "inline_keyboard",
-//                                                        "payload", Map.of(
-//                                                                "buttons", List.of()
-//                                                        )
-//                                                )
-//                                        )
-//                                )
-//                        )).subscribe();
-//                        break;
-//                    case "PATENT_SEARCH":
-//                        userState.put(userId, "PATENT_SEARCH");
-//                        maxApiClient.sendAnswer(callbackId, Map.of(
-//                                "message", Map.of(
-//                                        "text", "Введите поисковый запрос:",
-//                                        "attachments", List.of(
-//                                                Map.of(
-//                                                        "type", "inline_keyboard",
-//                                                        "payload", Map.of(
-//                                                                "buttons", List.of()
-//                                                        )
-//                                                )
-//                                        )
-//                                )
-//                        )).subscribe();
-//                        break;
-//                }
-                int chatId = update.getMessage().getRecipient().getChatId();
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
-                        maxApiClient.sendMessage(chatId, Map.of("text", info));
+                        maxApiClient.sendAnswer(callbackId, Map.of(
+                                "message", Map.of("text", info)
+                        )).subscribe();
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
+                        maxApiClient.sendAnswer(callbackId, Map.of(
+                                "message", Map.of("text", "Введите поисковый запрос:")
+                        )).subscribe();
                         break;
                 }
             }
