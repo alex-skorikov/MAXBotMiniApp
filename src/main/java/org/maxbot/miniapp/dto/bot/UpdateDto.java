@@ -26,4 +26,5 @@ public class UpdateDto {
 
     @JsonProperty("user_id")
     private int userId;
+    private SenderDto user;
 }
