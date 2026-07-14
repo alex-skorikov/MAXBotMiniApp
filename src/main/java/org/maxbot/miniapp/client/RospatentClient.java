@@ -7,6 +7,7 @@ import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -87,7 +89,7 @@ public class RospatentClient {
     // -----------------------------
 
     /** Обычный текстовый поиск (queryMode = "q") */
-    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) throws IOException {
+    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
 
         Map<String, Object> body = Map.of(
                 "qn", query,
@@ -119,7 +121,7 @@ public class RospatentClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body)
                     .retrieve()
-                    .bodyToMono(Map.class)
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                     .block();
         } catch (Exception e) {
             log.error("Rospatent API error", e);
