@@ -76,18 +76,30 @@ public class MaxWebhookController {
 
                 String payload = cb.getPayload();
 
+//                switch (payload) {
+//                    case "INFO":
+//                        String info = UserService.getUserInfo(cb, update);
+//                        maxApiClient.sendAnswer(callbackId, Map.of(
+//                                "message", Map.of("text", info)
+//                        )).subscribe();
+//                        break;
+//                    case "PATENT_SEARCH":
+//                        userState.put(userId, "PATENT_SEARCH");
+//                        maxApiClient.sendAnswer(callbackId, Map.of(
+//                                "message", Map.of("text", "Введите поисковый запрос:")
+//                        )).subscribe();
+//                        break;
+//                }
+
+                int chatId = update.getMessage().getRecipient().getChatId();
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
-                        maxApiClient.sendAnswer(callbackId, Map.of(
-                                "message", Map.of("text", info)
-                        )).subscribe();
+                        maxApiClient.sendMessage(chatId, Map.of("text", info)).subscribe();
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.sendAnswer(callbackId, Map.of(
-                                "message", Map.of("text", "Введите поисковый запрос:")
-                        )).subscribe();
+                        maxApiClient.sendMessage(chatId, Map.of("text","Введите поисковый запрос:")).subscribe();
                         break;
                 }
             }
@@ -96,7 +108,6 @@ public class MaxWebhookController {
             log.error("Error handling update", e);
         }
     }
-
 
     // ===========================
     // PATENT SEARCH
