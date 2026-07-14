@@ -81,13 +81,13 @@ public class MaxWebhookController {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
                         maxApiClient.sendAnswer(callbackId, Map.of(
-                                "message", Map.of("text", info), "attachments", List.of()
+                                "message", Map.of("text", info,"attachments", List.of())
                         )).subscribe();
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
                         maxApiClient.sendAnswer(callbackId, Map.of(
-                                "message", Map.of("text", "Введите поисковый запрос:"), "attachments", List.of()
+                                "message", Map.of("text", "Введите поисковый запрос:", "attachments", List.of())
                         )).subscribe();
                         break;
                 }
