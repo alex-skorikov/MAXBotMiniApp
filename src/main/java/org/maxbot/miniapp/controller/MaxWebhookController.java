@@ -62,6 +62,7 @@ public class MaxWebhookController {
                 }
 
                 // Иначе показываем меню
+                sendMenu(userId);
                 sendMenu(chatId);
                 return;
             }
@@ -124,6 +125,7 @@ public class MaxWebhookController {
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
                         .queryParam("chat_id", chatId)
+                        .queryParam("user_id", chatId)
                         .build())
                 .bodyValue(body)
                 .retrieve()
