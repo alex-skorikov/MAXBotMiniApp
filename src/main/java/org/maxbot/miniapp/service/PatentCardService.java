@@ -25,11 +25,14 @@ public class PatentCardService {
         );
 
         // Приоритет
-        String priority = String.format("%s %s от %s",
-                card.getCommon().getPriority().getCountry(),
-                card.getCommon().getPriority().getNumber(),
-                card.getCommon().getPriority().getFilingDate()
-        );
+        String priority = "";
+        if (card.getCommon().getPriority() != null) {
+            priority = String.format("%s %s от %s",
+                    card.getCommon().getPriority().getCountry(),
+                    card.getCommon().getPriority().getNumber(),
+                    card.getCommon().getPriority().getFilingDate()
+            );
+        }
 
         // Заявка
         String application = String.format("%s от %s",
