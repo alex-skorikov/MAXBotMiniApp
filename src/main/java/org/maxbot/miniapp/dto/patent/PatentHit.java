@@ -94,7 +94,7 @@ public class PatentHit {
         @JsonProperty("publication_date")
         private String publicationDate;
 
-        private Priority priority;
+        private Priority priority = new Priority();
         private Application application;
 
         private Classification classification;
@@ -104,10 +104,10 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Priority {
-        private String number;
-        private String country;
+        private String number ="";
+        private String country="";
         @JsonProperty("filing_date")
-        private String filingDate;
+        private String filingDate="";
     }
 
     @Getter
