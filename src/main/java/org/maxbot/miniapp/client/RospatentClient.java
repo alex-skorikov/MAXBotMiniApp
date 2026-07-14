@@ -25,15 +25,13 @@ public class RospatentClient {
 
     private static final Logger log = LoggerFactory.getLogger(RospatentClient.class);
 
-    @Value("${rospatent.token}")
-    private final String token;
-
     private final WebClient webClient;
+    private final String token;
 
     private static final String URL =
             "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
-    public RospatentClient(String token) {
+    public RospatentClient(@Value("${rospatent.token}") String token) {
         this.token = token;
         this.webClient = WebClient.builder()
                 .baseUrl(URL)
