@@ -13,10 +13,6 @@ public class PatentSearchService {
         this.client = client;
     }
 
-//    public PatentSearchResponse search(String query) {
-//        return client.search(query);
-//    }
-
     public PatentSearchResponse search(
             String query,
             String queryMode,

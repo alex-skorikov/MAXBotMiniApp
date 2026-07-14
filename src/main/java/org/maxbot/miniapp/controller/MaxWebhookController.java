@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
-import org.maxbot.miniapp.dto.bot.SenderDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.maxbot.miniapp.service.UserService;
 import org.slf4j.Logger;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,7 +54,7 @@ public class MaxWebhookController {
 
                 // Если пользователь в режиме поиска патентов
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    handlePatentSearch(chatId, text).subscribe();
+                    handlePatentSearch(userId, chatId, text).subscribe();
                     return;
                 }
 
@@ -79,14 +80,14 @@ public class MaxWebhookController {
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
-                        maxApiClient.answer(callbackId, Map.of(
-                                "message", Map.of("text", info)
+                        maxApiClient.sendAnswer(callbackId, Map.of(
+                                "message", Map.of("text", info), "attachments", List.of()
                         )).subscribe();
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.answer(callbackId, Map.of(
-                                "message", Map.of("text", "Введите поисковый запрос:")
+                        maxApiClient.sendAnswer(callbackId, Map.of(
+                                "message", Map.of("text", "Введите поисковый запрос:"), "attachments", List.of()
                         )).subscribe();
                         break;
                 }
@@ -98,37 +99,26 @@ public class MaxWebhookController {
     }
 
 
-
     // ===========================
     // PATENT SEARCH
     // ===========================
 
-    private Mono<Void> handlePatentSearch(int chatId, String query) {
+    private Mono<Void> handlePatentSearch(int userId, int chatId, String query) throws IOException {
 
-        PatentSearchResponse raw = patentSearchService.search(
-                query,
-                "q",
-                10,
-                0
-        );
+        PatentSearchResponse raw = patentSearchService.search(query, "q", 5, 0);
 
         if (raw.getHits() == null || raw.getHits().isEmpty()) {
-            userState.remove(chatId);
+            userState.remove(userId);
             return maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
         }
 
-        StringBuilder sb = new StringBuilder("Результаты поиска:\n\n");
+        StringBuilder sb = new StringBuilder();
 
         raw.getHits().forEach(item -> {
-            sb.append("📄 ").append(item.getTitle()).append("\n");
-            if (item.getInventor() != null)
-                sb.append("👤 ").append(item.getInventor()).append("\n");
-            if (item.getIpc() != null)
-                sb.append("🔧 IPC: ").append(item.getIpc()).append("\n");
-            sb.append("\n");
+            sb.append(PatentCardService.formatPatentCard(item)).append("\n----------------------\n\n");
         });
 
-        userState.remove(chatId);
+        userState.remove(userId);
 
         return maxApiClient.sendMessage(chatId, Map.of("text", sb.toString()));
     }

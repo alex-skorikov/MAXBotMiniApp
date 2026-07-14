@@ -35,7 +35,7 @@ public class MaxApiClient {
                 .bodyToMono(Void.class);
     }
 
-    public Mono<Void> answer(String callbackId, Map<String, Object> body) {
+    public Mono<Void> sendAnswer(String callbackId, Map<String, Object> body) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/answers")
