@@ -41,8 +41,14 @@ public class MaxWebhookController {
             ObjectMapper mapper = new ObjectMapper();
             UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
-            // --- Старт бота или любое сообщение ---
-            if ("message_created".equals(update.getUpdateType()) || "bot_started".equals(update.getUpdateType())) {
+            // --- Старт бота ---
+            if("bot_started".equals(update.getUpdateType())){
+                maxApiClient.sendMenu(update.getChatId());
+                return;
+            }
+
+            // --- На любое сообщение отправляем пока меню ---
+            if ("message_created".equals(update.getUpdateType())) {
                 MessageDto msg = update.getMessage();
                 int chatId = msg.getRecipient().getChatId();
                 int userId = msg.getSender().getUserId();
