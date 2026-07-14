@@ -40,27 +40,6 @@ public class MaxWebhookController {
         this.patentSearchService = patentSearchService;
     }
 
-//    @PostMapping("/webhook")
-//    public Mono<Void> handleUpdate(@RequestBody String updates) throws JsonProcessingException {
-//        log.info(">>> RAW UPDATE: {}", updates);
-//
-//        ObjectMapper mapper = new ObjectMapper();
-//        UpdateDto update = mapper.readValue(updates, UpdateDto.class);
-//
-//        // Обрабатываем только message_callback
-//        if ("message_callback".equals(update.getUpdateType()) && update.getCallback() != null) {
-//            return handleCallback(update.getCallback());
-//        }
-//
-//        // Обрабатываем только message_created
-//        if ("message_created".equals(update.getUpdateType()) && update.getMessage() != null) {
-//            return handleMessage(update.getMessage());
-//        }
-//
-//        // Игнорируем bot_started, bot_stopped
-//        return Mono.empty();
-//    }
-
     @PostMapping("/webhook")
     public void handleUpdate(@RequestBody String updates) {
         try {
@@ -73,9 +52,16 @@ public class MaxWebhookController {
             if ("message_created".equals(update.getUpdateType())) {
                 MessageDto msg = update.getMessage();
                 int chatId = msg.getRecipient().getChatId();
+                int userId = msg.getSender().getUserId();
                 String text = msg.getBody().getText();
 
-                // Показываем меню
+                // Если пользователь в режиме поиска патентов
+                if ("PATENT_SEARCH".equals(userState.get(userId))) {
+                    handlePatentSearch(chatId, text).subscribe();
+                    return;
+                }
+
+                // Иначе показываем меню
                 sendMenu(chatId);
                 return;
             }
@@ -86,7 +72,7 @@ public class MaxWebhookController {
                 int userId = cb.getUser().getUserId();
                 String callbackId = cb.getCallbackId();
 
-                if (cb == null || cb.getCallbackId() == null) {
+                if (cb.getCallbackId() == null) {
                     log.warn("Callback received WITHOUT callback_id → ignoring");
                     return;
                 }
@@ -99,12 +85,13 @@ public class MaxWebhookController {
                         answer(callbackId, Map.of(
                                 "message", Map.of("text", "Информация о вас:\nUser ID: " + userId)
                         ));
-
+                        break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
                         answer(callbackId, Map.of(
                                 "message", Map.of("text", "Введите поисковый запрос:")
                         ));
+                        break;
                 }
             }
 
@@ -113,63 +100,12 @@ public class MaxWebhookController {
         }
     }
 
-
-    // ===========================
-    // CALLBACK HANDLER
-    // ===========================
-
-    private Mono<Void> handleCallback(CallbackDto cb) {
-
-        if (cb.getCallbackId() == null || cb.getCallbackId().isBlank()) {
-            log.warn("Callback received WITHOUT callback_id → ignoring");
-            return Mono.empty();
-        }
-
-        String callbackId = cb.getCallbackId();
-        String payload = cb.getPayload();
-        int userId = cb.getUser().getUserId();
-
-        switch (payload) {
-            case "INFO":
-                return answer(callbackId, Map.of(
-                        "message", Map.of("text", "Информация о вас:\nUser ID: " + userId)
-                ));
-
-            case "PATENT_SEARCH":
-                userState.put(userId, "PATENT_SEARCH");
-                return answer(callbackId, Map.of(
-                        "message", Map.of("text", "Введите поисковый запрос:")
-                ));
-        }
-
-        return Mono.empty();
-    }
-
-
-    // ===========================
-    // MESSAGE HANDLER
-    // ===========================
-
-    private Mono<Void> handleMessage(MessageDto msg) {
-
-        int chatId = msg.getRecipient().getChatId();
-        String text = msg.getBody().getText();
-
-        // Если пользователь вводит текст в режиме поиска
-        if ("PATENT_SEARCH".equals(userState.get(chatId))) {
-            return handlePatentSearch(chatId, text);
-        }
-
-        // На любое другое сообщение → показываем кнопки
-        return sendMenu(chatId);
-    }
-
     // ===========================
     // ANSWERS API
     // ===========================
 
-    private Mono<Void> answer(String callbackId, Map<String, Object> body) {
-        return webClient.post()
+    private void answer(String callbackId, Map<String, Object> body) {
+        webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/answers")
                         .queryParam("callback_id", callbackId)
@@ -198,7 +134,7 @@ public class MaxWebhookController {
     // BUTTONS
     // ===========================
 
-    private Mono<Void> sendMenu(int chatId) {
+    private void sendMenu(int chatId) {
 
         Map<String, Object> body = Map.of(
                 "text", "Выберите действие:",
@@ -224,8 +160,7 @@ public class MaxWebhookController {
                         )
                 )
         );
-
-        return sendMessage(chatId, body);
+        sendMessage(chatId, body);
     }
 
     // ===========================
