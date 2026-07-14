@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.dto.patent;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PatentHit {
 
     private Common common;
@@ -24,6 +26,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Biblio {
         private BiblioRu ru;
         private BiblioEn en;
@@ -31,6 +34,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BiblioRu {
         private String citations;
         private List<NameWrapper> inventor;
@@ -43,6 +47,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BiblioEn {
         private String citations;
         private List<NameWrapper> inventor;
@@ -55,18 +60,21 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NameWrapper {
         private String name;
     }
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CitationParsed {
         private String text;
     }
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Drawing {
         private String url;
         private String width;
@@ -75,6 +83,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Common {
         @JsonProperty("publishing_office")
         private String publishingOffice;
@@ -92,6 +101,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Priority {
         private String number;
         private String country;
@@ -101,6 +111,7 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Application {
         private String number;
         @JsonProperty("filing_date")
@@ -109,12 +120,14 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Classification {
         private List<IpcItem> ipc;
     }
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class IpcItem {
         @JsonProperty("main_group")
         private String mainGroup;
@@ -130,12 +143,14 @@ public class PatentHit {
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Meta {
         private Source source;
     }
 
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Source {
         private String path;
         private String file;
@@ -144,6 +159,7 @@ public class PatentHit {
     }
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Snippet {
         private String title;
         private String description;
@@ -156,6 +172,7 @@ public class PatentHit {
     }
     @Getter
     @Setter
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class SnippetClassification {
         private String ipc;
     }
