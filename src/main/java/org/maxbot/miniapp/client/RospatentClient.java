@@ -1,6 +1,5 @@
 package org.maxbot.miniapp.client;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.patent.PatentHit;
@@ -73,15 +72,13 @@ public class RospatentClient {
             HttpHeaders headers = response.headers().asHttpHeaders();
 
             return response.bodyToMono(String.class)
-                    .flatMap(body -> {
-                        return Mono.just(
-                                ClientResponse
-                                        .create(response.statusCode())
-                                        .headers(h -> h.addAll(headers))
-                                        .body(body)
-                                        .build()
-                        );
-                    });
+                    .flatMap(body -> Mono.just(
+                            ClientResponse
+                                    .create(response.statusCode())
+                                    .headers(h -> h.addAll(headers))
+                                    .body(body)
+                                    .build()
+                    ));
         });
     }
 
@@ -135,7 +132,7 @@ public class RospatentClient {
     // -----------------------------
     // МАППИНГ ОТВЕТА В DTO
     // -----------------------------
-    private PatentSearchResponse mapResponse(Map<String, Object> json) throws IOException {
+    private PatentSearchResponse mapResponse(Map<String, Object> json) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         PatentSearchResponse result = new PatentSearchResponse();
@@ -152,16 +149,6 @@ public class RospatentClient {
         }
 
         result.setHits(hits);
-        return result;
-    }
-
-    private List<PatentHit.NameWrapper> parseNames(List<Map<String, Object>> list) {
-        List<PatentHit.NameWrapper> result = new ArrayList<>();
-        for (Map<String, Object> m : list) {
-            PatentHit.NameWrapper w = new PatentHit.NameWrapper();
-            w.setName((String) m.get("name"));
-            result.add(w);
-        }
         return result;
     }
 
