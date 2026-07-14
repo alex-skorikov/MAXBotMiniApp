@@ -13,7 +13,7 @@ public class PatentCardService {
 
         // МПК
         String ipc = card.getCommon().getClassification().getIpc().stream()
-                .map(ip -> ip.getFullname())
+                .map(PatentHit.IpcItem::getFullname)
                 .collect(Collectors.joining(", "));
 
         // Документ
@@ -25,14 +25,11 @@ public class PatentCardService {
         );
 
         // Приоритет
-        String priority = "";
-        if (card.getCommon().getPriority() != null) {
-            priority = String.format("%s %s от %s",
-                    card.getCommon().getPriority().getCountry(),
-                    card.getCommon().getPriority().getNumber(),
-                    card.getCommon().getPriority().getFilingDate()
-            );
-        }
+        String priority = String.format("%s %s от %s",
+                card.getCommon().getPriority().getCountry(),
+                card.getCommon().getPriority().getNumber(),
+                card.getCommon().getPriority().getFilingDate()
+        );
 
         // Заявка
         String application = String.format("%s от %s",

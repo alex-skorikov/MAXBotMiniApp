@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collections;
 import java.util.List;
 
 @Getter
@@ -15,7 +16,7 @@ public class PatentHit {
     private Common common;
     private Meta meta;
     private Biblio biblio;
-    private List<Drawing> drawings;
+    private List<Drawing> drawings= Collections.emptyList();
     private String id;
     private String index;
     private String dataset;
@@ -37,12 +38,12 @@ public class PatentHit {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BiblioRu {
         private String citations;
-        private List<NameWrapper> inventor;
+        private List<NameWrapper> inventor= Collections.emptyList();
         private String title;
-        private List<NameWrapper> patentee;
-        private List<NameWrapper> applicant;
+        private List<NameWrapper> patentee= Collections.emptyList();
+        private List<NameWrapper> applicant= Collections.emptyList();
         @JsonProperty("citations_parsed")
-        private List<CitationParsed> citationsParsed;
+        private List<CitationParsed> citationsParsed= Collections.emptyList();
     }
 
     @Getter
@@ -50,12 +51,12 @@ public class PatentHit {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BiblioEn {
         private String citations;
-        private List<NameWrapper> inventor;
+        private List<NameWrapper> inventor= Collections.emptyList();
         private String title;
-        private List<NameWrapper> patentee;
-        private List<NameWrapper> applicant;
+        private List<NameWrapper> patentee= Collections.emptyList();
+        private List<NameWrapper> applicant= Collections.emptyList();
         @JsonProperty("citations_parsed")
-        private List<CitationParsed> citationsParsed;
+        private List<CitationParsed> citationsParsed= Collections.emptyList();
     }
 
     @Getter
@@ -122,7 +123,7 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Classification {
-        private List<IpcItem> ipc;
+        private List<IpcItem> ipc= Collections.emptyList();
     }
 
     @Getter
