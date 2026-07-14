@@ -1,19 +1,20 @@
 package org.maxbot.miniapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
+import org.maxbot.miniapp.dto.bot.SenderDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -24,20 +25,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MaxWebhookController {
 
     private final Map<Integer, String> userState = new ConcurrentHashMap<>();
-    private final WebClient webClient;
     private final PatentSearchService patentSearchService;
     private static final Logger log = LoggerFactory.getLogger(MaxWebhookController.class);
+    private final MaxApiClient maxApiClient;
 
     public MaxWebhookController(@Value("${max.api.token}") String token,
-                                PatentSearchService patentSearchService) {
-
-        this.webClient = WebClient.builder()
-                .baseUrl("https://platform-api2.max.ru")
-                .defaultHeader("Authorization", token)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
+                                PatentSearchService patentSearchService,
+                                MaxApiClient maxApiClient) {
         this.patentSearchService = patentSearchService;
+        this.maxApiClient = maxApiClient;
     }
 
     @PostMapping("/webhook")
@@ -62,7 +58,7 @@ public class MaxWebhookController {
                 }
 
                 // Иначе показываем меню
-                sendMenu(chatId);
+                maxApiClient.sendMenu(chatId);
                 return;
             }
 
@@ -82,15 +78,16 @@ public class MaxWebhookController {
 
                 switch (payload) {
                     case "INFO":
-                        answer(callbackId, Map.of(
-                                "message", Map.of("text", "Информация о вас:\nUser ID: " + userId)
-                        ));
+                        String info = UserService.getUserInfo(cb, update);
+                        maxApiClient.answer(callbackId, Map.of(
+                                "message", Map.of("text", info)
+                        )).subscribe();
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        answer(callbackId, Map.of(
+                        maxApiClient.answer(callbackId, Map.of(
                                 "message", Map.of("text", "Введите поисковый запрос:")
-                        ));
+                        )).subscribe();
                         break;
                 }
             }
@@ -100,70 +97,6 @@ public class MaxWebhookController {
         }
     }
 
-    // ===========================
-    // ANSWERS API
-    // ===========================
-
-    private void answer(String callbackId, Map<String, Object> body) {
-        webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/answers")
-                        .queryParam("callback_id", callbackId)
-                        .build())
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Void.class);
-    }
-
-    // ===========================
-    // MESSAGES API
-    // ===========================
-
-    private Mono<Void> sendMessage(int chatId, Map<String, Object> body) {
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/messages")
-                        .queryParam("chat_id", chatId)
-                        .build())
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Void.class);
-    }
-
-    // ===========================
-    // BUTTONS
-    // ===========================
-
-    private void sendMenu(int chatId) {
-
-        Map<String, Object> body = Map.of(
-                "message", Map.of(
-                        "text", "Выберите действие:",
-                        "attachments", List.of(
-                                Map.of(
-                                        "type", "inline_keyboard",
-                                        "payload", Map.of(
-                                                "buttons", List.of(
-                                                        List.of(
-                                                                Map.of(
-                                                                        "type", "callback",
-                                                                        "text", "ℹ️ Информация",
-                                                                        "payload", "INFO"
-                                                                ),
-                                                                Map.of(
-                                                                        "type", "callback",
-                                                                        "text", "🔍 Поиск патентов",
-                                                                        "payload", "PATENT_SEARCH"
-                                                                )
-                                                        )
-                                                )
-                                        )
-                                )
-                        )
-                )
-        );
-        sendMessage(chatId, body).subscribe();
-    }
 
 
     // ===========================
@@ -181,7 +114,7 @@ public class MaxWebhookController {
 
         if (raw.getHits() == null || raw.getHits().isEmpty()) {
             userState.remove(chatId);
-            return sendMessage(chatId, Map.of("text", "Ничего не найдено."));
+            return maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
         }
 
         StringBuilder sb = new StringBuilder("Результаты поиска:\n\n");
@@ -197,6 +130,6 @@ public class MaxWebhookController {
 
         userState.remove(chatId);
 
-        return sendMessage(chatId, Map.of("text", sb.toString()));
+        return maxApiClient.sendMessage(chatId, Map.of("text", sb.toString()));
     }
 }
