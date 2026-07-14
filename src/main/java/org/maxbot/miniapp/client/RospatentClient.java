@@ -74,7 +74,6 @@ public class RospatentClient {
 
             return response.bodyToMono(String.class)
                     .flatMap(body -> {
-//                        log.info("Body: {}", body);
                         return Mono.just(
                                 ClientResponse
                                         .create(response.statusCode())
