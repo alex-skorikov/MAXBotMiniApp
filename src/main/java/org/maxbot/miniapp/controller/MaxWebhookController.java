@@ -6,6 +6,7 @@ import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.maxbot.miniapp.service.UserService;
 import org.slf4j.Logger;
@@ -125,7 +126,8 @@ public class MaxWebhookController {
         }
 
         raw.getHits().forEach(hit -> {
-            maxApiClient.sendMessage(chatId, Map.of("text", hit)).subscribe();
+            maxApiClient.sendMessage(chatId, Map.of("text",
+                    PatentCardService.formatPatentCard(hit))).subscribe();
         });
 
         userState.remove(userId);
