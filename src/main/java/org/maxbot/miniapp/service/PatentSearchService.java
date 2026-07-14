@@ -4,6 +4,8 @@ import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+
 @Service
 public class PatentSearchService {
 
@@ -22,7 +24,7 @@ public class PatentSearchService {
             String queryMode,
             Integer limit,
             Integer offset
-    ) {
+    ) throws IOException {
         if ("q".equalsIgnoreCase(queryMode)) {
             return client.searchByQuery(query, limit, offset);
         }

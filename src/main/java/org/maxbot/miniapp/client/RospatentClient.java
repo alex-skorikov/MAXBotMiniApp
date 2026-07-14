@@ -1,5 +1,8 @@
 package org.maxbot.miniapp.client;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +91,7 @@ public class RospatentClient {
     // -----------------------------
 
     /** Обычный текстовый поиск (queryMode = "q") */
-    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
+    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) throws IOException {
 
         Map<String, Object> body = Map.of(
                 "qn", query,
@@ -98,7 +102,7 @@ public class RospatentClient {
     }
 
     /** Поиск по номеру (queryMode = "qn") */
-    public PatentSearchResponse searchByNumber(String number) {
+    public PatentSearchResponse searchByNumber(String number) throws IOException {
         Map<String, Object> body = Map.of(
                 "qn", number
         );
@@ -109,7 +113,7 @@ public class RospatentClient {
     // -----------------------------
     // ЕДИНЫЙ МЕТОД ВЫПОЛНЕНИЯ ЗАПРОСА
     // -----------------------------
-    private PatentSearchResponse execute(Map<String, Object> body) {
+    private PatentSearchResponse execute(Map<String, Object> body) throws IOException {
 
         Map<String, Object> json;
 
@@ -132,38 +136,35 @@ public class RospatentClient {
     // -----------------------------
     // МАППИНГ ОТВЕТА В DTO
     // -----------------------------
-    private PatentSearchResponse mapResponse(Map<String, Object> json) {
+    private PatentSearchResponse mapResponse(Map<String, Object> json) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        PatentSearchResponse result = new PatentSearchResponse();
 
-        int total = ((Number) json.get("total")).intValue();
-        int available = ((Number) json.get("available")).intValue();
+        result.setTotal(((Number) json.get("total")).intValue());
+        result.setAvailable(((Number) json.get("available")).intValue());
 
         List<Map<String, Object>> rawHits = (List<Map<String, Object>>) json.get("hits");
         List<PatentHit> hits = new ArrayList<>();
 
         for (Map<String, Object> raw : rawHits) {
-
-            Map<String, Object> snippet = (Map<String, Object>) raw.get("snippet");
-
-            PatentHit hit = new PatentHit();
-            hit.setId((String) raw.get("id"));
-            hit.setTitle((String) snippet.get("title"));
-            hit.setDescription((String) snippet.get("description"));
-            hit.setApplicant((String) snippet.get("applicant"));
-            hit.setInventor((String) snippet.get("inventor"));
-
-            Map<String, Object> classification =
-                    (Map<String, Object>) snippet.get("classification");
-
-            hit.setIpc((String) classification.get("ipc"));
-
+            PatentHit hit = mapper.convertValue(raw, PatentHit.class);
             hits.add(hit);
         }
 
-        PatentSearchResponse result = new PatentSearchResponse();
-        result.setTotal(total);
-        result.setAvailable(available);
         result.setHits(hits);
-
         return result;
     }
+
+    private List<PatentHit.NameWrapper> parseNames(List<Map<String, Object>> list) {
+        List<PatentHit.NameWrapper> result = new ArrayList<>();
+        for (Map<String, Object> m : list) {
+            PatentHit.NameWrapper w = new PatentHit.NameWrapper();
+            w.setName((String) m.get("name"));
+            result.add(w);
+        }
+        return result;
+    }
+
+
 }
