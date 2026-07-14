@@ -105,7 +105,7 @@ public class MaxWebhookController {
 
     private Mono<Void> handlePatentSearch(int userId, int chatId, String query) throws IOException {
 
-        PatentSearchResponse raw = patentSearchService.search(query, "q", 10, 0);
+        PatentSearchResponse raw = patentSearchService.search(query, "q", 5, 0);
 
         if (raw.getHits() == null || raw.getHits().isEmpty()) {
             userState.remove(userId);

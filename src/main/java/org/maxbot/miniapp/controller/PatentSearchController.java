@@ -7,7 +7,6 @@ import org.maxbot.miniapp.service.PatentSearchService;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -19,16 +18,9 @@ public class PatentSearchController {
         this.service = service;
     }
 
-//    @GetMapping("/search")
-//    public PatentSearchResponse search(@RequestParam String q) {
-//        System.out.println("Получен запрос: /api/patents/search " + q);
-//        return service.search(q);
-//    }
-
     @PostMapping("/search")
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
 
-        System.out.println("Получен запрос: /api/patents/search " + request);
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
                 request.getQueryMode(),
