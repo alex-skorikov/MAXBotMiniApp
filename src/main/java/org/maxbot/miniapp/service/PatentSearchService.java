@@ -4,8 +4,6 @@ import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-
 @Service
 public class PatentSearchService {
 
