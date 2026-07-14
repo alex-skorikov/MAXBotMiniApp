@@ -9,13 +9,21 @@ import lombok.ToString;
 @Setter
 @ToString
 public class UpdateDto {
+
     private long timestamp;
+
     @JsonProperty("user_locale")
     private String userLocale;
+
     @JsonProperty("update_type")
     private String updateType;
+
     private MessageDto message;
-
     private CallbackDto callback;
-}
 
+    @JsonProperty("chat_id")
+    private int chatId;
+
+    @JsonProperty("user_id")
+    private int userId;
+}
