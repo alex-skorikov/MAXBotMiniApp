@@ -20,7 +20,7 @@ public class PatentSearchService {
             String queryMode,
             Integer limit,
             Integer offset
-    ) throws IOException {
+    ) {
         if ("q".equalsIgnoreCase(queryMode)) {
             return client.searchByQuery(query, limit, offset);
         }

@@ -16,9 +16,7 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,14 +26,15 @@ public class RospatentClient {
     private static final Logger log = LoggerFactory.getLogger(RospatentClient.class);
 
     @Value("${rospatent.token}")
-    private String token;
+    private final String token;
 
     private final WebClient webClient;
 
     private static final String URL =
             "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
-    public RospatentClient() {
+    public RospatentClient(String token) {
+        this.token = token;
         this.webClient = WebClient.builder()
                 .baseUrl(URL)
                 .defaultHeader("User-Agent", "curl/8.0.1")
