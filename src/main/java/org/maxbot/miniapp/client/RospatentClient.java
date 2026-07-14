@@ -109,7 +109,7 @@ public class RospatentClient {
     // -----------------------------
     // ЕДИНЫЙ МЕТОД ВЫПОЛНЕНИЯ ЗАПРОСА
     // -----------------------------
-    private PatentSearchResponse execute(Map<String, Object> body) throws IOException {
+    private PatentSearchResponse execute(Map<String, Object> body) {
 
         Map<String, Object> json;
 
