@@ -62,7 +62,6 @@ public class MaxWebhookController {
                 }
 
                 // Иначе показываем меню
-                sendMenu(userId);
                 sendMenu(chatId);
                 return;
             }
@@ -125,7 +124,6 @@ public class MaxWebhookController {
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
                         .queryParam("chat_id", chatId)
-                        .queryParam("user_id", chatId)
                         .build())
                 .bodyValue(body)
                 .retrieve()
@@ -139,22 +137,24 @@ public class MaxWebhookController {
     private void sendMenu(int chatId) {
 
         Map<String, Object> body = Map.of(
-                "text", "Выберите действие:",
-                "attachments", List.of(
-                        Map.of(
-                                "type", "inline_keyboard",
-                                "payload", Map.of(
-                                        "buttons", List.of(
-                                                List.of(
-                                                        Map.of(
-                                                                "type", "callback",
-                                                                "text", "ℹ️ Информация",
-                                                                "payload", "INFO"
-                                                        ),
-                                                        Map.of(
-                                                                "type", "callback",
-                                                                "text", "🔍 Поиск патентов",
-                                                                "payload", "PATENT_SEARCH"
+                "message", Map.of(
+                        "text", "Выберите действие:",
+                        "attachments", List.of(
+                                Map.of(
+                                        "type", "inline_keyboard",
+                                        "payload", Map.of(
+                                                "buttons", List.of(
+                                                        List.of(
+                                                                Map.of(
+                                                                        "type", "callback",
+                                                                        "text", "ℹ️ Информация",
+                                                                        "payload", "INFO"
+                                                                ),
+                                                                Map.of(
+                                                                        "type", "callback",
+                                                                        "text", "🔍 Поиск патентов",
+                                                                        "payload", "PATENT_SEARCH"
+                                                                )
                                                         )
                                                 )
                                         )
@@ -162,8 +162,9 @@ public class MaxWebhookController {
                         )
                 )
         );
-        sendMessage(chatId, body);
+        sendMessage(chatId, body).subscribe();
     }
+
 
     // ===========================
     // PATENT SEARCH
