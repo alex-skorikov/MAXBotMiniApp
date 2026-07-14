@@ -88,7 +88,9 @@ public class RospatentClient {
     // ПУБЛИЧНЫЕ МЕТОДЫ ПОИСКА
     // -----------------------------
 
-    /** Обычный текстовый поиск (queryMode = "q") */
+    /**
+     * Обычный текстовый поиск (queryMode = "q")
+     */
     public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
 
         Map<String, Object> body = Map.of(
@@ -99,8 +101,10 @@ public class RospatentClient {
         return execute(body);
     }
 
-    /** Поиск по номеру (queryMode = "qn") */
-    public PatentSearchResponse searchByNumber(String number) throws IOException {
+    /**
+     * Поиск по номеру (queryMode = "qn")
+     */
+    public PatentSearchResponse searchByNumber(String number) {
         Map<String, Object> body = Map.of(
                 "qn", number
         );
@@ -121,14 +125,15 @@ public class RospatentClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                    })
                     .block();
         } catch (Exception e) {
             log.error("Rospatent API error", e);
             throw new RuntimeException("Rospatent API error: " + e.getMessage());
         }
 
-        return mapResponse(json);
+        return json != null ? mapResponse(json) : new PatentSearchResponse();
     }
 
     // -----------------------------
