@@ -6,7 +6,6 @@ import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.maxbot.miniapp.service.UserService;
 import org.slf4j.Logger;
@@ -15,10 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -54,7 +50,7 @@ public class MaxWebhookController {
 
                 // Если пользователь в режиме поиска патентов
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    handlePatentSearch(userId, chatId, text).subscribe();
+                    handlePatentSearch(userId, chatId, text);
                     return;
                 }
 
@@ -99,7 +95,7 @@ public class MaxWebhookController {
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.sendMessage(chatId, Map.of("text","Введите поисковый запрос:")).subscribe();
+                        maxApiClient.sendMessage(chatId, Map.of("text", "Введите поисковый запрос:")).subscribe();
                         break;
                 }
             }
@@ -113,23 +109,19 @@ public class MaxWebhookController {
     // PATENT SEARCH
     // ===========================
 
-    private Mono<Void> handlePatentSearch(int userId, int chatId, String query) throws IOException {
+    private void handlePatentSearch(int userId, int chatId, String query) {
 
         PatentSearchResponse raw = patentSearchService.search(query, "q", 5, 0);
 
         if (raw.getHits() == null || raw.getHits().isEmpty()) {
             userState.remove(userId);
-            return maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
+            maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
         }
 
-        StringBuilder sb = new StringBuilder();
-
-        raw.getHits().forEach(item -> {
-            sb.append(PatentCardService.formatPatentCard(item)).append("\n----------------------\n\n");
+        raw.getHits().forEach(hit -> {
+            maxApiClient.sendMessage(chatId, Map.of("text", hit)).subscribe();
         });
 
         userState.remove(userId);
-
-        return maxApiClient.sendMessage(chatId, Map.of("text", sb.toString()));
     }
 }
