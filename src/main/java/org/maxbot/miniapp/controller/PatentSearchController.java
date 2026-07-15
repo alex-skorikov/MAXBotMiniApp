@@ -4,6 +4,7 @@ import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class PatentSearchController {
 
     @PostMapping("/search")
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
+        log.info(">>> POST PatentSearchController /api/patents/search called: {}", request);
 
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
@@ -31,6 +33,9 @@ public class PatentSearchController {
                 request.getLimit(),
                 request.getOffset()
         );
+
+        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
+
 
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
         response.setItems(raw.getHits());
@@ -47,7 +52,7 @@ public class PatentSearchController {
         pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
 
         response.setPagination(pagination);
-
+        log.info(">>> RESPONSE PatentSearchController /api/patents/search: {}", response);
         return response;
     }
 
