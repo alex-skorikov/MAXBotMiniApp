@@ -19,15 +19,7 @@ public class PatentSearchService {
             Integer limit,
             Integer offset
     ) {
-        if ("q".equalsIgnoreCase(queryMode)) {
-            return client.searchByQuery(query, limit, offset);
-        }
-
-        if ("qn".equalsIgnoreCase(queryMode)) {
-            return client.searchByNumber(query);
-        }
-
-        throw new IllegalArgumentException("Unknown queryMode: " + queryMode);
+        return client.searchByQuery(query, limit, offset);
     }
 
 }
