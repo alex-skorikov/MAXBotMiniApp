@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -27,18 +28,22 @@ public class PatentSearchController {
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
         log.info(">>> POST PatentSearchController /api/patents/search called: {}", request);
 
-        PatentSearchResponse raw = service.search(
-                request.getQuery(),
-                request.getQueryMode(),
-                request.getLimit(),
-                request.getOffset()
-        );
+//        PatentSearchResponse raw = service.search(
+//                request.getQuery(),
+//                request.getQueryMode(),
+//                request.getLimit(),
+//                request.getOffset()
+//        );
+//
+//        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
 
-        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
-
+        PatentSearchResponse raw = new PatentSearchResponse();
+        raw.setTotal(1);
+        raw.setAvailable(1);
+        raw.setHits(List.of());
 
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
-        response.setItems(raw.getHits());
+//        response.setItems(raw.getHits());
 
         PatentSearchPagedResponse.Pagination pagination =
                 new PatentSearchPagedResponse.Pagination();
