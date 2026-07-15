@@ -2,6 +2,7 @@ package org.maxbot.miniapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.client.MaxApiClient;
+import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -43,7 +45,7 @@ public class MaxWebhookController {
             UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
             // --- Старт бота ---
-            if("bot_started".equals(update.getUpdateType())){
+            if ("bot_started".equals(update.getUpdateType())) {
                 maxApiClient.sendMenu(update.getChatId());
                 return;
             }
@@ -79,21 +81,6 @@ public class MaxWebhookController {
 
                 String payload = cb.getPayload();
 
-//                switch (payload) {
-//                    case "INFO":
-//                        String info = UserService.getUserInfo(cb, update);
-//                        maxApiClient.sendAnswer(callbackId, Map.of(
-//                                "message", Map.of("text", info)
-//                        )).subscribe();
-//                        break;
-//                    case "PATENT_SEARCH":
-//                        userState.put(userId, "PATENT_SEARCH");
-//                        maxApiClient.sendAnswer(callbackId, Map.of(
-//                                "message", Map.of("text", "Введите поисковый запрос:")
-//                        )).subscribe();
-//                        break;
-//                }
-
                 int chatId = update.getMessage().getRecipient().getChatId();
                 switch (payload) {
                     case "INFO":
@@ -126,8 +113,23 @@ public class MaxWebhookController {
         }
 
         raw.getHits().forEach(hit -> {
-            maxApiClient.sendMessage(chatId, Map.of("text",
-                    PatentCardService.formatPatentCard(hit))).subscribe();
+            String patentUrl = "https://searchplatform.rospatent.gov.ru/patsearch/#/document/" + hit.getId();
+            BotAnswerMessage response = BotAnswerMessage.builder()
+                    .text(PatentCardService.formatPatentCard(hit))
+                    .attachments(List.of(BotAnswerMessage.Attachment.builder()
+                            .type("inline_keyboard")
+                            .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                    .buttons(List.of(List.of(BotAnswerMessage.Button.builder()
+                                            .type("link")
+                                            .text("Сыылка")
+                                            .url(patentUrl)
+                                            .build())))
+                                    .build())
+                            .build()
+                    ))
+                    .build();
+
+            maxApiClient.sendMessage(chatId, response).subscribe();
         });
 
         userState.remove(userId);
