@@ -2,6 +2,7 @@ package org.maxbot.miniapp.client;
 
 
 import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,31 +63,29 @@ public class MaxApiClient {
     }
 
     public void sendMenu(int chatId) {
-
-        Map<String, Object> body = Map.of(
-                "text", "Выберите действие:",
-                "attachments", List.of(
-                        Map.of(
-                                "type", "inline_keyboard",
-                                "payload", Map.of(
-                                        "buttons", List.of(
-                                                List.of(
-                                                        Map.of(
-                                                                "type", "callback",
-                                                                "text", "ℹ️ Информация",
-                                                                "payload", "INFO"
-                                                        ),
-                                                        Map.of(
-                                                                "type", "callback",
-                                                                "text", "🔍 Поиск патентов",
-                                                                "payload", "PATENT_SEARCH"
-                                                        )
-                                                )
+        BotAnswerMessage response = BotAnswerMessage.builder()
+                .text("Выберите действие:")
+                .attachments(List.of(BotAnswerMessage.Attachment.builder()
+                        .type("inline_keyboard")
+                        .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                .buttons(List.of(List.of(
+                                                BotAnswerMessage.Button.builder()
+                                                        .type("callback")
+                                                        .text("ℹ️ Информация")
+                                                        .payload("INFO")
+                                                        .build(),
+                                                BotAnswerMessage.Button.builder()
+                                                        .type("callback")
+                                                        .text("🔍 Поиск патентов")
+                                                        .payload("PATENT_SEARCH")
+                                                        .build()
                                         )
-                                )
-                        )
-                )
-        );
-        sendMessage(chatId, body).subscribe();
+                                ))
+                                .build())
+                        .build()
+                ))
+                .build();
+
+        sendMessage(chatId, response).subscribe();
     }
 }
