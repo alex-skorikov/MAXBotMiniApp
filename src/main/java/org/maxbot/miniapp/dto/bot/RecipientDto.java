@@ -1,13 +1,19 @@
 package org.maxbot.miniapp.dto.bot;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class RecipientDto {
-    private int chat_id;
-    private String chat_type;
-    private int user_id;
+    @JsonProperty("chat_id")
+    private int chatId;
+    @JsonProperty("chat_type")
+    private String chatType;
+    @JsonProperty("user_id")
+    private int userId;
 
 }

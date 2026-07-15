@@ -6,7 +6,7 @@ import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -18,21 +18,14 @@ public class PatentSearchController {
         this.service = service;
     }
 
-//    @GetMapping("/search")
-//    public PatentSearchResponse search(@RequestParam String q) {
-//        System.out.println("Получен запрос: /api/patents/search " + q);
-//        return service.search(q);
-//    }
-
     @PostMapping("/search")
-    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
+    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
 
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
                 request.getQueryMode(),
-                request.getPage(),
-                request.getPageSize(),
-                request.getIncludeFacets()
+                request.getLimit(),
+                request.getOffset()
         );
 
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
@@ -41,15 +34,17 @@ public class PatentSearchController {
         PatentSearchPagedResponse.Pagination pagination =
                 new PatentSearchPagedResponse.Pagination();
 
-        pagination.setPage(request.getPage());
-        pagination.setPageSize(request.getPageSize());
+        int pageSize = request.getLimit();
+        int page = (request.getOffset() / pageSize) + 1;
+
+        pagination.setPage(page);
+        pagination.setPageSize(pageSize);
         pagination.setTotal(raw.getTotal());
-        pagination.setHasNext(request.getPage() * request.getPageSize() < raw.getTotal());
+        pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
 
         response.setPagination(pagination);
 
         return response;
     }
-
 
 }
