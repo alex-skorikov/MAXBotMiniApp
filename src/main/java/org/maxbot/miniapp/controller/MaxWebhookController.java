@@ -113,7 +113,7 @@ public class MaxWebhookController {
         }
 
         raw.getHits().forEach(hit -> {
-            String patentUrl = "https://searchplatform.rospatent.gov.ru/patsearch/#/document/" + hit.getId();
+            String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
             BotAnswerMessage response = BotAnswerMessage.builder()
                     .text(PatentCardService.formatPatentCard(hit))
                     .attachments(List.of(BotAnswerMessage.Attachment.builder()

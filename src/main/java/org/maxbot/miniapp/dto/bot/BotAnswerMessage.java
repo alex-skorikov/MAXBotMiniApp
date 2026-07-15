@@ -56,11 +56,13 @@ public class BotAnswerMessage {
         private String type;
         private String text;
         private String url;
+        private String payload;
 
-        public Button(String type, String text, String url) {
+        public Button(String type, String text, String url, String payload) {
             this.type = type;
             this.text = text;
             this.url = url;
+            this.payload = payload;
         }
 
     }
