@@ -24,19 +24,6 @@ public class PatentCardService {
                 card.getCommon().getPublicationDate()
         );
 
-        // Приоритет
-        String priority = String.format("%s %s от %s",
-                card.getCommon().getPriority().getCountry(),
-                card.getCommon().getPriority().getNumber(),
-                card.getCommon().getPriority().getFilingDate()
-        );
-
-        // Заявка
-        String application = String.format("%s от %s",
-                card.getCommon().getApplication().getNumber(),
-                card.getCommon().getApplication().getFilingDate()
-        );
-
         // Заявители
         String applicants = card.getBiblio().getRu().getApplicant().stream()
                 .map(a -> "• " + a.getName())
@@ -47,19 +34,19 @@ public class PatentCardService {
                 .map(a -> "• " + a.getName())
                 .collect(Collectors.joining("\n"));
 
-        // Описание
-        String description = card.getSnippet().getDescription();
+        // Описание 300 символов
+        String description = card.getSnippet().getDescription().length() > 300
+                ? card.getSnippet().getDescription().substring(0, 300) + "…"
+                : card.getSnippet().getDescription();
 
         return String.format(
                 "📄 %s\n" +
                         "МПК: %s\n" +
                         "Документ: %s\n" +
-                        "Приоритет: %s\n" +
-                        "Заявка: %s\n\n" +
                         "Заявители:\n%s\n\n" +
                         "Авторы:\n%s\n\n" +
                         "Описание:\n%s\n",
-                title, ipc, doc, priority, application, applicants, inventors, description
+                title, ipc, doc, applicants, inventors, description
         );
     }
 
