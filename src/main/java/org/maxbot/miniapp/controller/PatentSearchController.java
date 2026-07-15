@@ -23,7 +23,6 @@ public class PatentSearchController {
 
     @PostMapping("/search")
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
-        log.info(">>> POST PatentSearchController /api/patents/search called: {}", request);
 
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
@@ -32,12 +31,7 @@ public class PatentSearchController {
                 request.getOffset()
         );
 
-        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
-
-        PatentSearchPagedResponse response = getPatentSearchPagedResponse(request, raw);
-
-        log.info(">>> RESPONSE PatentSearchController /api/patents/search: {}", response);
-        return response;
+        return getPatentSearchPagedResponse(request, raw);
     }
 
     private static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,
