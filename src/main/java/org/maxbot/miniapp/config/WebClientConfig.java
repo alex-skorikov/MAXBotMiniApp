@@ -1,6 +1,5 @@
 package org.maxbot.miniapp.config;
 
-import org.maxbot.miniapp.controller.MaxWebhookController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +18,10 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
+                .defaultHeader("User-Agent", "curl/8.0.1")
+                .defaultHeader("Accept", "*/*")
+                .defaultHeader("Connection", "keep-alive")
+                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, "*/*")
                 .filter(logRequest())
