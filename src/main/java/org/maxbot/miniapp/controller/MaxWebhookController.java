@@ -121,7 +121,7 @@ public class MaxWebhookController {
                             .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
                                     .buttons(List.of(List.of(BotAnswerMessage.Button.builder()
                                             .type("link")
-                                            .text("Сыылка")
+                                            .text("Ссылка")
                                             .url(patentUrl)
                                             .build())))
                                     .build())
