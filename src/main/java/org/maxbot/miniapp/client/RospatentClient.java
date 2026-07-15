@@ -37,8 +37,6 @@ public class RospatentClient {
                 .baseUrl(URL)
                 .defaultHeader("User-Agent", "curl/8.0.1")
                 .defaultHeader("Accept", "*/*")
-                .defaultHeader("Connection", "keep-alive")
-                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
                 .filter(logRequest())
                 .filter(logResponse())
                 .build();
