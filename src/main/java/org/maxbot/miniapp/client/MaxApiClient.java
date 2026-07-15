@@ -2,11 +2,9 @@ package org.maxbot.miniapp.client;
 
 
 import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
-import org.maxbot.miniapp.service.PatentCardService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -17,15 +15,15 @@ import java.util.Map;
 @Component
 public class MaxApiClient {
 
+    private final String token;
     private final WebClient webClient;
     private static final Logger log = LoggerFactory.getLogger(MaxApiClient.class);
 
-    public MaxApiClient(@Value("${max.api.token}") String token) {
-
-        this.webClient = WebClient.builder()
+    public MaxApiClient(@Value("${max.api.token}") String token, WebClient webClient) {
+        this.token = token;
+        this.webClient = webClient.mutate()
                 .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 

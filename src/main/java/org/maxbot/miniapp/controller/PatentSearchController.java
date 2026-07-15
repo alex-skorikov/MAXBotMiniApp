@@ -1,17 +1,14 @@
 package org.maxbot.miniapp.controller;
 
-import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -28,16 +25,23 @@ public class PatentSearchController {
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
         log.info(">>> POST PatentSearchController /api/patents/search called: {}", request);
 
-//        PatentSearchResponse raw = service.search(
-//                request.getQuery(),
-//                request.getQueryMode(),
-//                request.getLimit(),
-//                request.getOffset()
-//        );
+        PatentSearchResponse raw = service.search(
+                request.getQuery(),
+                request.getQueryMode(),
+                request.getLimit(),
+                request.getOffset()
+        );
 
-        PatentSearchResponse raw = service.search("Ракета", "q", 5, 0);
         log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
 
+        PatentSearchPagedResponse response = getPatentSearchPagedResponse(request, raw);
+
+        log.info(">>> RESPONSE PatentSearchController /api/patents/search: {}", response);
+        return response;
+    }
+
+    private static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,
+                                                                          PatentSearchResponse raw) {
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
         response.setItems(raw.getHits());
 
@@ -53,7 +57,6 @@ public class PatentSearchController {
         pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
 
         response.setPagination(pagination);
-        log.info(">>> RESPONSE PatentSearchController /api/patents/search: {}", response);
         return response;
     }
 
