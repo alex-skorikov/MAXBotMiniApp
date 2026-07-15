@@ -34,16 +34,12 @@ public class PatentSearchController {
 //                request.getLimit(),
 //                request.getOffset()
 //        );
-//
-//        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
 
-        PatentSearchResponse raw = new PatentSearchResponse();
-        raw.setTotal(1);
-        raw.setAvailable(1);
-        raw.setHits(List.of());
+        PatentSearchResponse raw = service.search("Ракета", "q", 5, 0);
+        log.info(">>> RESPONSE PatentSearch size: {}", raw.getHits().size());
 
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
-//        response.setItems(raw.getHits());
+        response.setItems(raw.getHits());
 
         PatentSearchPagedResponse.Pagination pagination =
                 new PatentSearchPagedResponse.Pagination();
