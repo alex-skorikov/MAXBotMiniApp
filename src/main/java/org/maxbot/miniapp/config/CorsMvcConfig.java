@@ -11,11 +11,17 @@ public class CorsMvcConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
 
         registry.addMapping("/**")
-                .allowedOrigins("https://max-webapp.onrender.com")
+                .allowedOrigins(
+                        "https://max-webapp.onrender.com",
+                        "https://maxbotminiapp.onrender.com",
+                        "http://localhost:5173",
+                        "http://localhost:3000"
+                )
                 .allowedMethods("GET", "POST", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(false)
-                .maxAge(3600); // кэшируем preflight
+                .maxAge(3600);
     }
 }
+
 
