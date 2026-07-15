@@ -105,33 +105,33 @@ public class MaxWebhookController {
 
     private void handlePatentSearch(int userId, int chatId, String query) {
 
-        PatentSearchResponse raw = patentSearchService.search(query, "q", 5, 0);
+        PatentSearchResponse raw = patentSearchService.search(query,
+                "q", 5, 0);
 
-        if (raw.getHits() == null || raw.getHits().isEmpty()) {
+        if (raw.getHits().isEmpty()) {
             userState.remove(userId);
             maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
+        } else {
+            raw.getHits().forEach(hit -> {
+                String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
+                BotAnswerMessage response = BotAnswerMessage.builder()
+                        .text(PatentCardService.formatPatentCard(hit))
+                        .attachments(List.of(BotAnswerMessage.Attachment.builder()
+                                .type("inline_keyboard")
+                                .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                        .buttons(List.of(List.of(BotAnswerMessage.Button.builder()
+                                                .type("link")
+                                                .text("Ссылка")
+                                                .url(patentUrl)
+                                                .build())))
+                                        .build())
+                                .build()
+                        ))
+                        .build();
+
+                maxApiClient.sendMessage(chatId, response).subscribe();
+            });
+            userState.remove(userId);
         }
-
-        raw.getHits().forEach(hit -> {
-            String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
-            BotAnswerMessage response = BotAnswerMessage.builder()
-                    .text(PatentCardService.formatPatentCard(hit))
-                    .attachments(List.of(BotAnswerMessage.Attachment.builder()
-                            .type("inline_keyboard")
-                            .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
-                                    .buttons(List.of(List.of(BotAnswerMessage.Button.builder()
-                                            .type("link")
-                                            .text("Ссылка")
-                                            .url(patentUrl)
-                                            .build())))
-                                    .build())
-                            .build()
-                    ))
-                    .build();
-
-            maxApiClient.sendMessage(chatId, response).subscribe();
-        });
-
-        userState.remove(userId);
     }
 }
