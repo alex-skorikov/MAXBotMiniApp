@@ -27,7 +27,7 @@ public class MaxApiClient {
                 .build();
     }
 
-    public Mono<Void> sendMessage(int chatId, Map<String, Object> bodyValue) {
+    public Void sendMessage(int chatId, Map<String, Object> bodyValue) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
@@ -35,10 +35,11 @@ public class MaxApiClient {
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class)
+                .block();
     }
 
-    public Mono<Void> sendMessage(int chatId, BotAnswerMessage bodyValue) {
+    public Void sendMessage(int chatId, BotAnswerMessage bodyValue) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
@@ -46,10 +47,11 @@ public class MaxApiClient {
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class)
+                .block();
     }
 
-    public Mono<Void> sendAnswer(String callbackId, Map<String, Object> bodyValue) {
+    public Void sendAnswer(String callbackId, Map<String, Object> bodyValue) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/answers")
@@ -57,7 +59,8 @@ public class MaxApiClient {
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class)
+                .block();
     }
 
     public void sendMenu(int chatId) {
@@ -84,6 +87,6 @@ public class MaxApiClient {
                 ))
                 .build();
 
-        sendMessage(chatId, response).subscribe();
+        sendMessage(chatId, response);
     }
 }
