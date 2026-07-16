@@ -20,7 +20,6 @@ public class WebClientConfig {
         return WebClient.builder()
                 .defaultHeader("User-Agent", "curl/8.0.1")
                 .defaultHeader("Accept", "*/*")
-                .defaultHeader("Connection", "keep-alive")
                 .defaultHeader("Accept-Encoding", "gzip, deflate, br")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, "*/*")
