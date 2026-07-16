@@ -85,11 +85,11 @@ public class MaxWebhookController {
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
-                        maxApiClient.sendMessage(chatId, Map.of("text", info)).subscribe();
+                        maxApiClient.sendMessage(chatId, Map.of("text", info));
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.sendMessage(chatId, Map.of("text", "Введите поисковый запрос:")).subscribe();
+                        maxApiClient.sendMessage(chatId, Map.of("text", "Введите поисковый запрос:"));
                         break;
                 }
             }
@@ -129,7 +129,7 @@ public class MaxWebhookController {
                         ))
                         .build();
 
-                maxApiClient.sendMessage(chatId, response).subscribe();
+                maxApiClient.sendMessage(chatId, response);
             });
             userState.remove(userId);
         }
