@@ -3,14 +3,10 @@ package org.maxbot.miniapp.controller;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -27,8 +23,8 @@ public class PatentSearchController {
     public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
 
         PatentSearchResponse raw = service.search(
-                request.getQuery(),
                 request.getQueryMode(),
+                request.getQuery(),
                 request.getLimit(),
                 request.getOffset()
         );
