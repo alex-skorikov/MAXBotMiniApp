@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -41,19 +40,8 @@ public class WebClientConfig {
     private ExchangeFilterFunction logResponse() {
         return ExchangeFilterFunction.ofResponseProcessor(response -> {
             log.info("HTTP RESPONSE ← Status: {}", response.statusCode());
-            return response.bodyToMono(String.class)
-                    .flatMap(body -> {
-                        log.debug("Body: {}", body);
-                        return Mono.just(
-                                ClientResponse.create(response.statusCode())
-                                        .headers(headers -> headers.addAll(response.headers().asHttpHeaders()))
-                                        .body(body)
-                                        .build()
-                        );
-                    });
+            return Mono.just(response);
         });
     }
-
-
 }
 
