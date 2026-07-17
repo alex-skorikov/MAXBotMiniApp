@@ -66,7 +66,7 @@ public class RospatentClient {
             throw new RuntimeException("Rospatent API error: " + e.getMessage());
         }
 
-        log.info(">>> RESPONSE RospatentClient : {}", json);
+        log.info(">>> RESPONSE RospatentClient total: {}", json.get("total"));
 
         return json != null ? mapResponse(json) : new PatentSearchResponse();
     }

@@ -59,7 +59,7 @@ public class MaxWebhookController {
 
                 // Если пользователь в режиме поиска патентов
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    handlePatentSearch(userId, chatId, text);
+                    handlePatentSearch("qn", text, userId, chatId);
                     return;
                 }
 
@@ -109,9 +109,9 @@ public class MaxWebhookController {
     // PATENT SEARCH
     // ===========================
 
-    private void handlePatentSearch(int userId, int chatId, String query) {
+    private void handlePatentSearch(String queryMode, String query, int userId, int chatId) {
 
-        PatentSearchResponse raw = patentSearchService.search("q", query,
+        PatentSearchResponse raw = patentSearchService.search(queryMode, query,
                  5, 0);
 
         if (raw.getHits().isEmpty()) {
