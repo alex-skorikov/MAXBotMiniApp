@@ -11,7 +11,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +27,7 @@ public class RospatentClient {
     private final WebClient webClient;
     private final String token;
 
-    private static final String URL =
-            "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
+    private static final String URL = "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
     public RospatentClient(WebClient webClient, @Value("${rospatent.token}") String token) {
         this.webClient = webClient;
@@ -39,11 +41,7 @@ public class RospatentClient {
     // --- Обычный текстовый поиск (queryMode = "q") ---
     public PatentSearchResponse searchByQuery(String queryMode, String query, Integer limit, Integer offset) {
 
-        Map<String, Object> body = Map.of(
-                queryMode, query,
-                "limit", limit,
-                "offset", offset
-        );
+        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
         return execute(body);
     }
 
@@ -52,15 +50,8 @@ public class RospatentClient {
 
         Map<String, Object> json;
         try {
-            json = webClient.post()
-                    .uri(URL)
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                    })
-                    .block();
+            json = webClient.post().uri(URL).header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+            }).block();
         } catch (Exception e) {
             log.error("Rospatent API error", e);
             throw new RuntimeException("Rospatent API error: " + e.getMessage());
@@ -70,6 +61,30 @@ public class RospatentClient {
 
         return json != null ? mapResponse(json) : new PatentSearchResponse();
     }
+
+    // --- async ---
+    public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
+        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
+        return executeReactive(body);
+    }
+
+    private Mono<PatentSearchResponse> executeReactive(Map<String, Object> body) {
+        log.info(">>> REQUEST RospatentClient : {}", body);
+
+        return webClient.post()
+                .uri(URL)
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .timeout(Duration.ofSeconds(10))
+                .retryWhen(Retry.backoff(2, Duration.ofSeconds(1)))
+                .map(this::mapResponse)
+                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()))
+                .doOnError(e -> log.error("Rospatent API error", e));
+    }
+
 
     // --- МАППИНГ ОТВЕТА В DTO ---
     private PatentSearchResponse mapResponse(Map<String, Object> json) {
