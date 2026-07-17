@@ -58,16 +58,16 @@ public class PatentSearchController {
 
     @GetMapping("/test")
     public String test() {
-        Map<String, String> result = new HashMap<>();
+        String result = "";
         try {
-            result.put("MaxBotService", ">>> OK");
-            PatentSearchResponse raw = service.search("q", "<jirf",
+            result = result.concat("MaxBotService \t\t\t >>> OK \n");
+            PatentSearchResponse raw = service.search("q", "Запрос",
                     5, 0);
-            result.put("PatentSearchService", ">>> OK");
+            result = result.concat("PatentSearchService \t >>> OK");
         } catch (Exception e) {
-            result.put("MaxBotService", ">>> Fail");
+            result = result.concat("MaxBotService >>> Fail: ").concat(e.getMessage());
         }
-        return result.toString();
+        return result;
     }
 
 }
