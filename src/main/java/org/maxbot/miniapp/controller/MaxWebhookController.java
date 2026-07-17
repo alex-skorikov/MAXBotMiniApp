@@ -111,8 +111,8 @@ public class MaxWebhookController {
 
     private void handlePatentSearch(int userId, int chatId, String query) {
 
-        PatentSearchResponse raw = patentSearchService.search(query,
-                "q", 5, 0);
+        PatentSearchResponse raw = patentSearchService.search("q", query,
+                 5, 0);
 
         if (raw.getHits().isEmpty()) {
             userState.remove(userId);
