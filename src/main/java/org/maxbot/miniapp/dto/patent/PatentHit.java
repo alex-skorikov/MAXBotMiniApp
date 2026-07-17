@@ -13,25 +13,25 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PatentHit {
 
-    private Common common;      // общие данные (номер, дата, классификация)
-    private Meta meta;          // источник данных
-    private Biblio biblio;      // библиография на разных языках
-    private List<Drawing> drawings= Collections.emptyList();    // чертежи
-    private String id;
-    private String index;       // индекс набора данных
-    private String dataset;     // набор данных (cis, ru_since_1994)
-    private double similarity;  // оценка похожести
+    private Common common = new Common();       // общие данные (номер, дата, классификация)
+    private Meta meta = new Meta();             // источник данных
+    private Biblio biblio = new Biblio();       // библиография на разных языках
+    private List<Drawing> drawings = Collections.emptyList();    // чертежи
+    private String id = "";
+    private String index = "";          // индекс набора данных
+    private String dataset = "";        // набор данных (cis, ru_since_1994)
+    private double similarity = 0.0;    // оценка похожести
     @JsonProperty("similarity_norm")
-    private double similarityNorm;  // нормированная похожесть
-    private Snippet snippet;        // краткое описание
+    private double similarityNorm = 0.0;            // нормированная похожесть
+    private Snippet snippet = new Snippet();        // краткое описание
 
     // --- Библиография на разных языках ---
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Biblio {
-        private BiblioLang ru;
-        private BiblioLang en;
+        private BiblioLang ru = new BiblioLang();
+        private BiblioLang en = new BiblioLang();
     }
 
     // --- Библиография на одном языке ---
@@ -39,22 +39,22 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BiblioLang {
-        private String title;       // название изобретения
-        private List<NameWrapper> inventor= Collections.emptyList();    // изобретатели
-        private List<NameWrapper> patentee= Collections.emptyList();    // патентообладатели
-        private List<NameWrapper> applicant= Collections.emptyList();   // заявители
+        private String title = "";                                       // название изобретения
+        private List<NameWrapper> inventor = Collections.emptyList();    // изобретатели
+        private List<NameWrapper> patentee = Collections.emptyList();    // патентообладатели
+        private List<NameWrapper> applicant = Collections.emptyList();   // заявители
 
-        private String citations;   // строка цитирований
+        private String citations = "";   // строка цитирований
 
         @JsonProperty("citations_parsed")
-        private List<CitationParsed> citationsParsed= Collections.emptyList();  // структурированные цитаты
+        private List<CitationParsed> citationsParsed = Collections.emptyList();  // структурированные цитаты
     }
 
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class NameWrapper {
-        private String name;
+        private String name = "";
     }
 
     // --- Цитаты/документы ---
@@ -62,8 +62,8 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CitationParsed {
-        private String text;        // текст цитаты
-        private CitationDoc doc;    // структурированные данные документа
+        private String text = "";        // текст цитаты
+        private CitationDoc doc = new CitationDoc();    // структурированные данные документа
     }
 
     @Getter
@@ -71,14 +71,14 @@ public class PatentHit {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CitationDoc {
         @JsonProperty("document_number")
-        private String documentNumber;
-        private String kind;
-        private String identity;
+        private String documentNumber = "";
+        private String kind = "";
+        private String identity = "";
         @JsonProperty("publication_date")
-        private String publicationDate;
-        private String id;
+        private String publicationDate = "";
+        private String id = "";
         @JsonProperty("publishing_office")
-        private String publishingOffice;
+        private String publishingOffice = "";
     }
 
     // --- Чертежи патента ---
@@ -86,9 +86,9 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Drawing {
-        private String url;
-        private String width;
-        private String height;
+        private String url = "";
+        private String width = "";
+        private String height = "";
     }
 
     // --- Общая информация о патенте ---
@@ -97,17 +97,17 @@ public class PatentHit {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Common {
         @JsonProperty("publishing_office")
-        private String publishingOffice;                           // офис публикации (RU, UA, EA)
+        private String publishingOffice = "";                           // офис публикации (RU, UA, EA)
         @JsonProperty("document_number")
-        private String documentNumber;                             // номер документа
-        private String kind;                                       // тип документа (C2, B1)
+        private String documentNumber = "";                             // номер документа
+        private String kind = "";                                       // тип документа (C2, B1)
         @JsonProperty("publication_date")
-        private String publicationDate;                            // дата публикации
+        private String publicationDate = "";                            // дата публикации
 
-        private List<Priority> priority = Collections.emptyList(); // приоритеты
-        private Application application;                            // данные заявки
+        private List<Priority> priority = Collections.emptyList();       // приоритеты
+        private Application application = new Application();             // данные заявки
 
-        private Classification classification;                      // классификация IPC/CPC
+        private Classification classification = new Classification();    // классификация IPC/CPC
     }
 
     // --- Приоритеты патента ---
@@ -115,10 +115,10 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Priority {
-        private String number ="";      // номер приоритета
-        private String country="";      // страна
+        private String number = "";         // номер приоритета
+        private String country = "";        // страна
         @JsonProperty("filing_date")
-        private String filingDate="";   // дата подачи
+        private String filingDate = "";     // дата подачи
     }
 
     // --- Данные заявки ---
@@ -126,11 +126,11 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Application {
-        private String number;                 // номер заявки
+        private String number = "";                 // номер заявки
         @JsonProperty("filing_date")
-        private String filingDate;             // дата подачи
+        private String filingDate = "";             // дата подачи
         @JsonProperty("rights_start_date")
-        private String rightsStartDate;        // дата начала действия прав
+        private String rightsStartDate = "";        // дата начала действия прав
     }
 
     // --- Классификация патента (IPC/CPC) ---
@@ -138,7 +138,7 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Classification {
-        private List<IpcItem> ipc= Collections.emptyList();     // список IPC-классов
+        private List<IpcItem> ipc = Collections.emptyList();     // список IPC-классов
     }
 
     // --- Один класс IPC ---
@@ -147,15 +147,15 @@ public class PatentHit {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class IpcItem {
         @JsonProperty("main_group")
-        private String mainGroup;
+        private String mainGroup = "";
         @JsonProperty("classification_value")
-        private String classificationValue;
-        private String subgroup;
-        private String subclass;
-        private String section;
-        private String fullname;
+        private String classificationValue = "";
+        private String subgroup = "";
+        private String subclass = "";
+        private String section = "";
+        private String fullname = "";
         @JsonProperty("class")
-        private String clazz;
+        private String clazz = "";
     }
 
     // --- Метаданные ---
@@ -163,7 +163,7 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Meta {
-        private Source source;
+        private Source source = new Source();
     }
 
     // --- Источник ---
@@ -171,10 +171,10 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Source {
-        private String path;    // путь к XML
-        private String file;    // имя файла
-        private String index;   // индекс набора
-        private String from;    // источник
+        private String path = "";    // путь к XML
+        private String file = "";    // имя файла
+        private String index = "";   // индекс набора
+        private String from = "";    // источник
     }
 
     // --- Краткое описание патента ---
@@ -182,20 +182,21 @@ public class PatentHit {
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Snippet {
-        private String title;
+        private String title = "";
         private String description = "";
-        private String lang;
-        private String applicant;
-        private String inventor;
-        private String patentee;
+        private String lang = "";
+        private String applicant = "";
+        private String inventor = "";
+        private String patentee = "";
 
         private SnippetClassification classification;
     }
+
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class SnippetClassification {
-        private String ipc;
+        private String ipc = "";
     }
 
 }
