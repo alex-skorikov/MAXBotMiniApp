@@ -37,10 +37,10 @@ public class RospatentClient {
     // -----------------------------
 
     // --- Обычный текстовый поиск (queryMode = "q") ---
-    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
+    public PatentSearchResponse searchByQuery(String queryMode, String query, Integer limit, Integer offset) {
 
         Map<String, Object> body = Map.of(
-                "qn", query,
+                queryMode, query,
                 "limit", limit,
                 "offset", offset
         );

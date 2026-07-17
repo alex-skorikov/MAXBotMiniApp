@@ -14,12 +14,12 @@ public class PatentSearchService {
     }
 
     public PatentSearchResponse search(
-            String query,
             String queryMode,
+            String query,
             Integer limit,
             Integer offset
     ) {
-        return client.searchByQuery(query, limit, offset);
+        return client.searchByQuery(queryMode, query, limit, offset);
     }
 
 }

@@ -3,12 +3,14 @@ package org.maxbot.miniapp.controller;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -22,7 +24,7 @@ public class PatentSearchController {
     }
 
     @PostMapping("/search")
-    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
+    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
 
         PatentSearchResponse raw = service.search(
                 request.getQuery(),
@@ -56,8 +58,16 @@ public class PatentSearchController {
 
     @GetMapping("/test")
     public String test() {
-        log.info(">>> PatentSearchService /api/patents GET test");
-        return "OK";
+        Map<String, String> result = new HashMap<>();
+        try {
+            result.put("MaxBotService", ">>> OK");
+            PatentSearchResponse raw = service.search("q", "<jirf",
+                    5, 0);
+            result.put("PatentSearchService", ">>> OK");
+        } catch (Exception e) {
+            result.put("MaxBotService", ">>> Fail");
+        }
+        return result.toString();
     }
 
 }
