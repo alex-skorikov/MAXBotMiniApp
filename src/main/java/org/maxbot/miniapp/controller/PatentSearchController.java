@@ -7,6 +7,9 @@ import org.maxbot.miniapp.service.PatentSearchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/patents")
@@ -19,8 +22,8 @@ public class PatentSearchController {
         this.service = service;
     }
 
-    @PostMapping("/search")
-    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) {
+    @PostMapping("/search-sync")
+    public PatentSearchPagedResponse search_sync(@RequestBody PatentSearchRequest request) {
 
         PatentSearchResponse raw = service.search(
                 request.getQueryMode(),
@@ -51,6 +54,14 @@ public class PatentSearchController {
         response.setPagination(pagination);
         return response;
     }
+
+    @PostMapping("/search")
+    public Mono<PatentSearchPagedResponse> search(@RequestBody PatentSearchRequest req) {
+        return service.searchReactive(req.getQueryMode(), req.getQuery(), req.getLimit(), req.getOffset())
+                .map(resp -> getPatentSearchPagedResponse(req, resp));
+    }
+
+
 
     @GetMapping("/test")
     public String test() {
