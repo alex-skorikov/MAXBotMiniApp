@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -27,20 +26,8 @@ public class MaxApiClient {
                 .build();
     }
 
-    public Void sendMessage(int chatId, Map<String, Object> bodyValue) {
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/messages")
-                        .queryParam("chat_id", chatId)
-                        .build())
-                .bodyValue(bodyValue)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .block();
-    }
-
-    public Void sendMessage(int chatId, BotAnswerMessage bodyValue) {
-        return webClient.post()
+    public void sendMessage(int chatId, BotAnswerMessage bodyValue) {
+        webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
                         .queryParam("chat_id", chatId)
