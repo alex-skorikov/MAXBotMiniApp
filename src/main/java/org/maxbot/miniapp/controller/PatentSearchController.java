@@ -61,20 +61,13 @@ public class PatentSearchController {
                 .map(resp -> getPatentSearchPagedResponse(req, resp));
     }
 
-
-
     @GetMapping("/test")
-    public String test() {
-        String result = "";
-        try {
-            result = result.concat("MaxBotService \t\t\t >>> OK \n");
-            PatentSearchResponse raw = service.search("q", "Запрос",
-                    5, 1);
-            result = result.concat("PatentSearchService \t >>> OK");
-        } catch (Exception e) {
-            result = result.concat("MaxBotService >>> Fail: ").concat(e.getMessage());
-        }
-        return result;
+    public Mono<String> test() {
+        return service.searchReactive("q", "Запрос", 5, 1)
+                .map(resp -> "MaxBotService \t\t\t >>> OK\n" +
+                        "PatentSearchService \t >>> OK")
+                .onErrorResume(e -> Mono.just(
+                        "MaxBotService >>> Fail: " + e.getMessage()
+                ));
     }
-
 }
