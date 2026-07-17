@@ -58,7 +58,7 @@ public class PatentSearchController {
         try {
             result = result.concat("MaxBotService \t\t\t >>> OK \n");
             PatentSearchResponse raw = service.search("q", "Запрос",
-                    5, 0);
+                    5, 1);
             result = result.concat("PatentSearchService \t >>> OK");
         } catch (Exception e) {
             result = result.concat("MaxBotService >>> Fail: ").concat(e.getMessage());
