@@ -85,11 +85,17 @@ public class MaxWebhookController {
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
-                        maxApiClient.sendMessage(chatId, Map.of("text", info));
+                        BotAnswerMessage responseInfo = BotAnswerMessage.builder()
+                                .text(info)
+                                .build();
+                        maxApiClient.sendMessage(chatId, responseInfo);
                         break;
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
-                        maxApiClient.sendMessage(chatId, Map.of("text", "Введите поисковый запрос:"));
+                        BotAnswerMessage searchRq = BotAnswerMessage.builder()
+                                .text("Введите поисковый запрос:")
+                                .build();
+                        maxApiClient.sendMessage(chatId, searchRq);
                         break;
                 }
             }
@@ -110,7 +116,10 @@ public class MaxWebhookController {
 
         if (raw.getHits().isEmpty()) {
             userState.remove(userId);
-            maxApiClient.sendMessage(chatId, Map.of("text", "Ничего не найдено."));
+            BotAnswerMessage message = BotAnswerMessage.builder()
+                    .text("Ничего не найдено.")
+                    .build();
+            maxApiClient.sendMessage(chatId, message);
         } else {
             raw.getHits().forEach(hit -> {
                 String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
