@@ -35,7 +35,7 @@ public class MaxApiClient {
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class).subscribe();
     }
 
     public Mono<Void> sendAnswer(String callbackId, Map<String, Object> bodyValue) {
