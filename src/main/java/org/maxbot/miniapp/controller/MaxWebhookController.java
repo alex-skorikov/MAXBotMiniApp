@@ -30,7 +30,7 @@ public class MaxWebhookController {
     private static final Logger log = LoggerFactory.getLogger(MaxWebhookController.class);
     private final MaxApiClient maxApiClient;
 
-    public MaxWebhookController(@Value("${max.api.token}") String token,
+    public MaxWebhookController(@Value("${max.token}") String token,
                                 PatentSearchService patentSearchService,
                                 MaxApiClient maxApiClient) {
         this.patentSearchService = patentSearchService;
