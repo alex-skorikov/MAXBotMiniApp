@@ -12,6 +12,7 @@ public class CorsWebFluxConfig implements WebFluxConfigurer {
 
         registry.addMapping("/**")
                 .allowedOrigins(
+                        "https://maxbotminiapp-production.up.railway.app",
                         "https://max-webapp.onrender.com",
                         "https://maxbotminiapp.onrender.com",
                         "http://localhost:5173",
