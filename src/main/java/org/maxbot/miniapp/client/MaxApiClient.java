@@ -22,8 +22,7 @@ public class MaxApiClient {
     public MaxApiClient(@Value("${max.api.token}") String token, WebClient webClient) {
         this.token = token;
         this.webClient = webClient.mutate()
-                // До 19 июля 2026 перейти на https://platform-api2.max.ru
-                .baseUrl("https://platform-api.max.ru")
+                .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)
                 .build();
     }
