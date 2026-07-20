@@ -27,15 +27,16 @@ public class MaxApiClient {
                 .build();
     }
 
-    public void sendMessage(int chatId, BotAnswerMessage bodyValue) {
-        webClient.post()
+    public Mono<Void> sendMessage(int chatId, BotAnswerMessage bodyValue) {
+        return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
                         .queryParam("chat_id", chatId)
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class).subscribe();
+                .bodyToMono(Void.class)
+                .doOnError(e -> log.error("MAX API sendMessage error", e));
     }
 
     public Mono<Void> sendAnswer(String callbackId, Map<String, Object> bodyValue) {
@@ -46,10 +47,11 @@ public class MaxApiClient {
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
-                .bodyToMono(Void.class);
+                .bodyToMono(Void.class)
+                .doOnError(e -> log.error("MAX API sendAnswer error", e));
     }
 
-    public void sendMenu(int chatId) {
+    public Mono<Void> sendMenu(int chatId) {
         BotAnswerMessage response = BotAnswerMessage.builder()
                 .text("Выберите действие:")
                 .attachments(List.of(BotAnswerMessage.Attachment.builder()
@@ -73,6 +75,6 @@ public class MaxApiClient {
                 ))
                 .build();
 
-        sendMessage(chatId, response);
+        return sendMessage(chatId, response);
     }
 }
