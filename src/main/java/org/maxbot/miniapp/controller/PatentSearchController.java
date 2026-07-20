@@ -22,19 +22,6 @@ public class PatentSearchController {
         this.service = service;
     }
 
-    @PostMapping("/search-sync")
-    public PatentSearchPagedResponse search_sync(@RequestBody PatentSearchRequest request) {
-
-        PatentSearchResponse raw = service.search(
-                request.getQueryMode(),
-                request.getQuery(),
-                request.getLimit(),
-                request.getOffset()
-        );
-
-        return getPatentSearchPagedResponse(request, raw);
-    }
-
     private static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,
                                                                           PatentSearchResponse raw) {
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
