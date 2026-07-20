@@ -6,7 +6,6 @@ import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
-import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentCardService;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.maxbot.miniapp.service.UserService;
