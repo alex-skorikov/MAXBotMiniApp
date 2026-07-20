@@ -7,11 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +22,8 @@ public class MaxApiClient {
     public MaxApiClient(@Value("${max.api.token}") String token, WebClient webClient) {
         this.token = token;
         this.webClient = webClient.mutate()
-                .baseUrl("https://platform-api2.max.ru")
+                // До 19 июля 2026 перейти на https://platform-api2.max.ru
+                .baseUrl("https://platform-api.max.ru")
                 .defaultHeader("Authorization", token)
                 .build();
     }
@@ -40,10 +38,6 @@ public class MaxApiClient {
                 .bodyValue(bodyValue)
                 .retrieve()
                 .bodyToMono(Void.class)
-//                .retryWhen(
-//                        Retry.backoff(3, Duration.ofMillis(1000))
-//                                .filter(e -> e instanceof WebClientResponseException.NotFound)
-//                )
                 .doOnError(e -> log.error("MAX API sendMessage error", e));
     }
 
