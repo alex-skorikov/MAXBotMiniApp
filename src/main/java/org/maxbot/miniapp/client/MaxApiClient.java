@@ -40,7 +40,7 @@ public class MaxApiClient {
                 .retrieve()
                 .bodyToMono(Void.class)
                 .retryWhen(
-                        Retry.backoff(3, Duration.ofMillis(300))
+                        Retry.backoff(3, Duration.ofMillis(1000))
                                 .filter(e -> e instanceof WebClientResponseException.NotFound)
                 )
                 .doOnError(e -> log.error("MAX API sendMessage error", e));
