@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -17,11 +15,17 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-//                .defaultHeader("User-Agent", "curl/8.0.1")
-//                .defaultHeader("Accept", "*/*")
-//                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
-//                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-//                .defaultHeader(HttpHeaders.ACCEPT, "*/*")
+                .filter((request, next) -> next.exchange(request)
+                        .flatMap(response -> {
+                            if (response.statusCode().isError()) {
+                                return response.bodyToMono(String.class)
+                                        .flatMap(body -> {
+                                            System.err.println("Глобальный фильтр ошибок! Тело ответа: " + body);
+                                            return Mono.just(response);
+                                        });
+                            }
+                            return Mono.just(response);
+                        }))
                 .filter(logRequest())
                 .filter(logResponse())
                 .build();
