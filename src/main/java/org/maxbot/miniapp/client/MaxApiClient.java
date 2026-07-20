@@ -22,6 +22,7 @@ public class MaxApiClient {
 
     public MaxApiClient(@Value("${max.api.token}") String token, WebClient webClient) {
         this.token = token;
+        log.info("TOKEN = '{}'", token);
         this.webClient = webClient.mutate()
                 .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)
