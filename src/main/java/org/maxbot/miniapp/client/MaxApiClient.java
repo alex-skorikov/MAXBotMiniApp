@@ -31,6 +31,7 @@ public class MaxApiClient {
     }
 
     public Mono<Void> sendMessage(int chatId, BotAnswerMessage bodyValue) {
+        log.info(">>> Send Message: {}", bodyValue);
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
@@ -39,10 +40,10 @@ public class MaxApiClient {
                 .bodyValue(bodyValue)
                 .retrieve()
                 .bodyToMono(Void.class)
-                .retryWhen(
-                        Retry.backoff(3, Duration.ofMillis(1000))
-                                .filter(e -> e instanceof WebClientResponseException.NotFound)
-                )
+//                .retryWhen(
+//                        Retry.backoff(3, Duration.ofMillis(1000))
+//                                .filter(e -> e instanceof WebClientResponseException.NotFound)
+//                )
                 .doOnError(e -> log.error("MAX API sendMessage error", e));
     }
 
