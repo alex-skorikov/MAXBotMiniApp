@@ -46,12 +46,11 @@ public class MaxWebhookController {
             ObjectMapper mapper = new ObjectMapper();
             UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
-            // bot_started
             if ("bot_started".equals(update.getUpdateType())) {
-                return maxApiClient.sendMenu(update.getChatId());
+                return maxApiClient.sendMenu(update.getChatId())
+                        .onErrorResume(e -> Mono.empty());
             }
 
-            // message_created
             if ("message_created".equals(update.getUpdateType())) {
                 MessageDto msg = update.getMessage();
                 int chatId = msg.getRecipient().getChatId();
@@ -59,18 +58,18 @@ public class MaxWebhookController {
                 String text = msg.getBody().getText();
 
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    return handlePatentSearch("qn", text, userId, chatId);
+                    return handlePatentSearch("qn", text, userId, chatId)
+                            .onErrorResume(e -> Mono.empty());
                 }
 
-                return maxApiClient.sendMenu(chatId);
+                return maxApiClient.sendMenu(chatId)
+                        .onErrorResume(e -> Mono.empty());
             }
 
-            // callback
             if ("message_callback".equals(update.getUpdateType())) {
                 CallbackDto cb = update.getCallback();
                 int userId = cb.getUser().getUserId();
                 int chatId = update.getMessage().getRecipient().getChatId();
-
                 String payload = cb.getPayload();
 
                 switch (payload) {
@@ -79,14 +78,16 @@ public class MaxWebhookController {
                         BotAnswerMessage responseInfo = BotAnswerMessage.builder()
                                 .text(info)
                                 .build();
-                        return maxApiClient.sendMessage(chatId, responseInfo);
+                        return maxApiClient.sendMessage(chatId, responseInfo)
+                                .onErrorResume(e -> Mono.empty());
 
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
                         BotAnswerMessage searchRq = BotAnswerMessage.builder()
                                 .text("Введите поисковый запрос:")
                                 .build();
-                        return maxApiClient.sendMessage(chatId, searchRq);
+                        return maxApiClient.sendMessage(chatId, searchRq)
+                                .onErrorResume(e -> Mono.empty());
                 }
             }
 
@@ -97,7 +98,6 @@ public class MaxWebhookController {
             return Mono.empty();
         }
     }
-
 
     // ===========================
     // PATENT SEARCH
