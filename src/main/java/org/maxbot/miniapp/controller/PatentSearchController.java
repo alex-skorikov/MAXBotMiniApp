@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
-
 @RestController
 @RequestMapping("/api/patents")
 public class PatentSearchController {
