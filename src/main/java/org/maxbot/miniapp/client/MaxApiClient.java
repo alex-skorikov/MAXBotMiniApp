@@ -34,7 +34,7 @@ public class MaxApiClient {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/messages")
-                        .queryParam("chat_id", chatId)
+                        .queryParam("user_id", chatId)
                         .build())
                 .bodyValue(bodyValue)
                 .retrieve()
