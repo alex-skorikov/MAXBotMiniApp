@@ -18,10 +18,10 @@ public class WebClientConfig {
     public WebClient webClient() {
         return WebClient.builder()
 //                .defaultHeader("User-Agent", "curl/8.0.1")
-                .defaultHeader("Accept", "*/*")
+//                .defaultHeader("Accept", "*/*")
 //                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader(HttpHeaders.ACCEPT, "*/*")
+//                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+//                .defaultHeader(HttpHeaders.ACCEPT, "*/*")
                 .filter(logRequest())
                 .filter(logResponse())
                 .build();
