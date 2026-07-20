@@ -16,10 +16,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 
 @RestController
 public class MaxWebhookController {
@@ -37,110 +39,112 @@ public class MaxWebhookController {
     }
 
     @PostMapping("/webhook")
-    public void handleUpdate(@RequestBody String updates) {
+    public Mono<Void> handleUpdate(@RequestBody String updates) {
         try {
             log.info(">>> RAW UPDATE: {}", updates);
 
             ObjectMapper mapper = new ObjectMapper();
             UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
-            // --- Старт бота ---
+            // bot_started
             if ("bot_started".equals(update.getUpdateType())) {
-                maxApiClient.sendMenu(update.getChatId());
-                return;
+                return maxApiClient.sendMenu(update.getChatId());
             }
 
-            // --- На любое сообщение отправляем пока меню ---
+            // message_created
             if ("message_created".equals(update.getUpdateType())) {
                 MessageDto msg = update.getMessage();
                 int chatId = msg.getRecipient().getChatId();
                 int userId = msg.getSender().getUserId();
                 String text = msg.getBody().getText();
 
-                // Если пользователь в режиме поиска патентов
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    handlePatentSearch("qn", text, userId, chatId);
-                    return;
+                    return handlePatentSearch("qn", text, userId, chatId);
                 }
 
-                // Иначе показываем меню
-                maxApiClient.sendMenu(chatId);
-                return;
+                return maxApiClient.sendMenu(chatId);
             }
 
-            // --- CALLBACK ---
+            // callback
             if ("message_callback".equals(update.getUpdateType())) {
                 CallbackDto cb = update.getCallback();
                 int userId = cb.getUser().getUserId();
-                String callbackId = cb.getCallbackId();
-
-                if (cb.getCallbackId() == null) {
-                    log.warn("Callback received WITHOUT callback_id → ignoring");
-                    return;
-                }
+                int chatId = update.getMessage().getRecipient().getChatId();
 
                 String payload = cb.getPayload();
 
-                int chatId = update.getMessage().getRecipient().getChatId();
                 switch (payload) {
                     case "INFO":
                         String info = UserService.getUserInfo(cb, update);
                         BotAnswerMessage responseInfo = BotAnswerMessage.builder()
                                 .text(info)
                                 .build();
-                        maxApiClient.sendMessage(chatId, responseInfo);
-                        break;
+                        return maxApiClient.sendMessage(chatId, responseInfo);
+
                     case "PATENT_SEARCH":
                         userState.put(userId, "PATENT_SEARCH");
                         BotAnswerMessage searchRq = BotAnswerMessage.builder()
                                 .text("Введите поисковый запрос:")
                                 .build();
-                        maxApiClient.sendMessage(chatId, searchRq);
-                        break;
+                        return maxApiClient.sendMessage(chatId, searchRq);
                 }
             }
 
+            return Mono.empty();
+
         } catch (Exception e) {
             log.error("Error handling update", e);
+            return Mono.empty();
         }
     }
+
 
     // ===========================
     // PATENT SEARCH
     // ===========================
 
-    private void handlePatentSearch(String queryMode, String query, int userId, int chatId) {
+    private Mono<Void> handlePatentSearch(String queryMode, String query, int userId, int chatId) {
 
-        PatentSearchResponse raw = patentSearchService.search(queryMode, query,
-                 5, 0);
+        return patentSearchService.searchReactive(queryMode, query, 5, 0)
+                .flatMap(raw -> {
 
-        if (raw.getHits().isEmpty()) {
-            userState.remove(userId);
-            BotAnswerMessage message = BotAnswerMessage.builder()
-                    .text("Ничего не найдено.")
-                    .build();
-            maxApiClient.sendMessage(chatId, message);
-        } else {
-            raw.getHits().forEach(hit -> {
-                String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
-                BotAnswerMessage response = BotAnswerMessage.builder()
-                        .text(PatentCardService.formatPatentCard(hit))
-                        .attachments(List.of(BotAnswerMessage.Attachment.builder()
-                                .type("inline_keyboard")
-                                .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
-                                        .buttons(List.of(List.of(BotAnswerMessage.Button.builder()
-                                                .type("link")
-                                                .text("Ссылка")
-                                                .url(patentUrl)
-                                                .build())))
-                                        .build())
-                                .build()
-                        ))
-                        .build();
+                    if (raw.getHits().isEmpty()) {
+                        userState.remove(userId);
+                        BotAnswerMessage message = BotAnswerMessage.builder()
+                                .text("Ничего не найдено.")
+                                .build();
+                        return maxApiClient.sendMessage(chatId, message);
+                    }
 
-                maxApiClient.sendMessage(chatId, response);
-            });
-            userState.remove(userId);
-        }
+                    List<Mono<Void>> messages = raw.getHits().stream()
+                            .map(hit -> {
+                                String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
+                                BotAnswerMessage response = BotAnswerMessage.builder()
+                                        .text(PatentCardService.formatPatentCard(hit))
+                                        .attachments(List.of(
+                                                BotAnswerMessage.Attachment.builder()
+                                                        .type("inline_keyboard")
+                                                        .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                                                .buttons(List.of(List.of(
+                                                                        BotAnswerMessage.Button.builder()
+                                                                                .type("link")
+                                                                                .text("Ссылка")
+                                                                                .url(patentUrl)
+                                                                                .build()
+                                                                )))
+                                                                .build())
+                                                        .build()
+                                        ))
+                                        .build();
+
+                                return maxApiClient.sendMessage(chatId, response);
+                            })
+                            .toList();
+
+                    userState.remove(userId);
+
+                    return Mono.when(messages);
+                });
     }
+
 }
