@@ -7,8 +7,8 @@ import lombok.Setter;
 @Setter
 public class PatentSearchRequest {
 
+    private String queryMode;
     private String query;
-    private String queryMode; // "q" или "qn"
     private Integer limit;
     private Integer offset;
 

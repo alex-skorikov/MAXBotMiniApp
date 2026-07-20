@@ -8,14 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.ClientResponse;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,114 +27,66 @@ public class RospatentClient {
     private final WebClient webClient;
     private final String token;
 
-    private static final String URL =
-            "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
+    private static final String URL = "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
 
-    public RospatentClient(@Value("${rospatent.token}") String token) {
+    public RospatentClient(WebClient webClient, @Value("${rospatent.token}") String token) {
+        this.webClient = webClient;
         this.token = token;
-        this.webClient = WebClient.builder()
-                .baseUrl(URL)
-                .defaultHeader("User-Agent", "curl/8.0.1")
-                .defaultHeader("Accept", "*/*")
-                .defaultHeader("Connection", "keep-alive")
-                .defaultHeader("Accept-Encoding", "gzip, deflate, br")
-                .filter(logRequest())
-                .filter(logResponse())
-                .build();
     }
 
     // -----------------------------
-    // ЛОГИРОВАНИЕ ЗАПРОСОВ
-    // -----------------------------
-    private ExchangeFilterFunction logRequest() {
-        return ExchangeFilterFunction.ofRequestProcessor(request -> {
-            log.info("=== Rospatent REQUEST ===");
-            log.info("URI: {}", request.url());
-            log.info("Method: {}", request.method());
-            log.info("Headers:");
-            request.headers().forEach((name, values) ->
-                    values.forEach(value -> log.info("{}: {}", name, value))
-            );
-            return Mono.just(request);
-        });
-    }
-
-    // -----------------------------
-    // ЛОГИРОВАНИЕ ОТВЕТОВ
-    // -----------------------------
-    private ExchangeFilterFunction logResponse() {
-        return ExchangeFilterFunction.ofResponseProcessor(response -> {
-            log.info("=== Rospatent RESPONSE ===");
-            log.info("Status: {}", response.statusCode());
-
-            HttpHeaders headers = response.headers().asHttpHeaders();
-
-            return response.bodyToMono(String.class)
-                    .flatMap(body -> Mono.just(
-                            ClientResponse
-                                    .create(response.statusCode())
-                                    .headers(h -> h.addAll(headers))
-                                    .body(body)
-                                    .build()
-                    ));
-        });
-    }
-
-    // -----------------------------
-    // ПУБЛИЧНЫЕ МЕТОДЫ ПОИСКА
+    // МЕТОДЫ ПОИСКА
     // -----------------------------
 
-    /**
-     * Обычный текстовый поиск (queryMode = "q")
-     */
-    public PatentSearchResponse searchByQuery(String query, Integer limit, Integer offset) {
+    // --- Обычный текстовый поиск (queryMode = "q") ---
+    public PatentSearchResponse searchByQuery(String queryMode, String query, Integer limit, Integer offset) {
 
-        Map<String, Object> body = Map.of(
-                "qn", query,
-                "limit", limit,
-                "offset", offset
-        );
+        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
         return execute(body);
     }
 
-    /**
-     * Поиск по номеру (queryMode = "qn")
-     */
-    public PatentSearchResponse searchByNumber(String number) {
-        Map<String, Object> body = Map.of(
-                "qn", number
-        );
-
-        return execute(body);
-    }
-
-    // -----------------------------
-    // ЕДИНЫЙ МЕТОД ВЫПОЛНЕНИЯ ЗАПРОСА
-    // -----------------------------
     private PatentSearchResponse execute(Map<String, Object> body) {
+        log.info(">>> REQUEST RospatentClient : {}", body);
 
         Map<String, Object> json;
-
         try {
-            json = webClient.post()
-                    .header("Authorization", "Bearer " + token)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(body)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-                    })
-                    .block();
+            json = webClient.post().uri(URL).header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+            }).block();
         } catch (Exception e) {
             log.error("Rospatent API error", e);
             throw new RuntimeException("Rospatent API error: " + e.getMessage());
         }
 
+        log.info(">>> RESPONSE RospatentClient total: {}", json.get("total"));
+
         return json != null ? mapResponse(json) : new PatentSearchResponse();
     }
 
-    // -----------------------------
-    // МАППИНГ ОТВЕТА В DTO
-    // -----------------------------
+    // --- async ---
+    public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
+        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
+        return executeReactive(body);
+    }
+
+    private Mono<PatentSearchResponse> executeReactive(Map<String, Object> body) {
+        log.info(">>> REQUEST RospatentClient : {}", body);
+
+        return webClient.post()
+                .uri(URL)
+                .header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .timeout(Duration.ofSeconds(10))
+                .retryWhen(Retry.backoff(2, Duration.ofSeconds(1)))
+                .map(this::mapResponse)
+                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()))
+                .doOnError(e -> log.error("Rospatent API error", e));
+    }
+
+
+    // --- МАППИНГ ОТВЕТА В DTO ---
     private PatentSearchResponse mapResponse(Map<String, Object> json) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

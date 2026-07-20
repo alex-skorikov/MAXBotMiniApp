@@ -17,7 +17,7 @@ public class MaxSubscriptionsController {
 
     private final WebClient webClient;
 
-    public MaxSubscriptionsController(@Value("${max.api.token}") String token) {
+    public MaxSubscriptionsController(@Value("${max.token}") String token) {
         this.webClient = WebClient.builder()
                 .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)

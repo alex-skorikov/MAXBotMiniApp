@@ -3,12 +3,14 @@ package org.maxbot.miniapp.dto.bot;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.List;
 
 @Builder
 @Getter
 @Setter
+@ToString
 public class BotAnswerMessage {
 
     private final String text;
@@ -24,6 +26,7 @@ public class BotAnswerMessage {
     @Builder
     @Getter
     @Setter
+    @ToString
     public static class Attachment {
         private String type;
         private InlineKeyboardPayload payload;
@@ -39,6 +42,7 @@ public class BotAnswerMessage {
     @Builder
     @Getter
     @Setter
+    @ToString
     public static class InlineKeyboardPayload {
         private List<List<Button>> buttons;
 
@@ -52,6 +56,7 @@ public class BotAnswerMessage {
     @Builder
     @Getter
     @Setter
+    @ToString
     public static class Button {
         private String type;
         private String text;

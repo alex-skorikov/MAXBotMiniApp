@@ -4,30 +4,24 @@ import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentSearchService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/patents")
 public class PatentSearchController {
 
     private final PatentSearchService service;
+    private static final Logger log = LoggerFactory.getLogger(PatentSearchController.class);
 
     public PatentSearchController(PatentSearchService service) {
         this.service = service;
     }
 
-    @PostMapping("/search")
-    public PatentSearchPagedResponse search(@RequestBody PatentSearchRequest request) throws IOException {
-
-        PatentSearchResponse raw = service.search(
-                request.getQuery(),
-                request.getQueryMode(),
-                request.getLimit(),
-                request.getOffset()
-        );
-
+    private static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,
+                                                                          PatentSearchResponse raw) {
         PatentSearchPagedResponse response = new PatentSearchPagedResponse();
         response.setItems(raw.getHits());
 
@@ -43,8 +37,22 @@ public class PatentSearchController {
         pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
 
         response.setPagination(pagination);
-
         return response;
     }
 
+    @PostMapping("/search")
+    public Mono<PatentSearchPagedResponse> search(@RequestBody PatentSearchRequest req) {
+        return service.searchReactive(req.getQueryMode(), req.getQuery(), req.getLimit(), req.getOffset())
+                .map(resp -> getPatentSearchPagedResponse(req, resp));
+    }
+
+    @GetMapping("/test")
+    public Mono<String> test() {
+        return service.searchReactive("q", "Запрос", 5, 1)
+                .map(resp -> "MaxBotService \t\t\t >>> OK\n" +
+                        "PatentSearchService \t >>> OK")
+                .onErrorResume(e -> Mono.just(
+                        "MaxBotService >>> Fail: " + e.getMessage()
+                ));
+    }
 }

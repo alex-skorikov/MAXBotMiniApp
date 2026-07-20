@@ -1,8 +1,10 @@
 package org.maxbot.miniapp.service;
 
 import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 public class PatentSearchService {
@@ -14,20 +16,15 @@ public class PatentSearchService {
     }
 
     public PatentSearchResponse search(
-            String query,
             String queryMode,
+            String query,
             Integer limit,
             Integer offset
     ) {
-        if ("q".equalsIgnoreCase(queryMode)) {
-            return client.searchByQuery(query, limit, offset);
-        }
-
-        if ("qn".equalsIgnoreCase(queryMode)) {
-            return client.searchByNumber(query);
-        }
-
-        throw new IllegalArgumentException("Unknown queryMode: " + queryMode);
+        return client.searchByQuery(queryMode, query, limit, offset);
     }
 
+    public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
+        return client.searchReactive(queryMode, query, limit, offset);
+    }
 }
