@@ -46,8 +46,9 @@ public class MaxWebhookController {
             ObjectMapper mapper = new ObjectMapper();
             UpdateDto update = mapper.readValue(updates, UpdateDto.class);
 
+
             if ("bot_started".equals(update.getUpdateType())) {
-                return maxApiClient.sendMenu(update.getUserId())
+                return maxApiClient.sendMenu(update.getChatId())
                         .onErrorResume(e -> Mono.empty());
             }
 
@@ -58,11 +59,11 @@ public class MaxWebhookController {
                 String text = msg.getBody().getText();
 
                 if ("PATENT_SEARCH".equals(userState.get(userId))) {
-                    return handlePatentSearch("qn", text, userId)
+                    return handlePatentSearch("qn", text, userId, chatId)
                             .onErrorResume(e -> Mono.empty());
                 }
 
-                return maxApiClient.sendMenu(userId)
+                return maxApiClient.sendMenu(chatId)
                         .onErrorResume(e -> Mono.empty());
             }
 
@@ -78,7 +79,7 @@ public class MaxWebhookController {
                         BotAnswerMessage responseInfo = BotAnswerMessage.builder()
                                 .text(info)
                                 .build();
-                        return maxApiClient.sendMessage(userId, responseInfo)
+                        return maxApiClient.sendMessage(chatId, responseInfo)
                                 .onErrorResume(e -> Mono.empty());
 
                     case "PATENT_SEARCH":
@@ -86,7 +87,7 @@ public class MaxWebhookController {
                         BotAnswerMessage searchRq = BotAnswerMessage.builder()
                                 .text("Введите поисковый запрос:")
                                 .build();
-                        return maxApiClient.sendMessage(userId, searchRq)
+                        return maxApiClient.sendMessage(chatId, searchRq)
                                 .onErrorResume(e -> Mono.empty());
                 }
             }
@@ -103,7 +104,7 @@ public class MaxWebhookController {
     // PATENT SEARCH
     // ===========================
 
-    private Mono<Void> handlePatentSearch(String queryMode, String query, int userId) {
+    private Mono<Void> handlePatentSearch(String queryMode, String query, int userId, int chatId) {
 
         return patentSearchService.searchReactive(queryMode, query, 5, 0)
                 .flatMap(raw -> {
@@ -113,7 +114,7 @@ public class MaxWebhookController {
                         BotAnswerMessage message = BotAnswerMessage.builder()
                                 .text("Ничего не найдено.")
                                 .build();
-                        return maxApiClient.sendMessage(userId, message);
+                        return maxApiClient.sendMessage(chatId, message);
                     }
 
                     List<Mono<Void>> messages = raw.getHits().stream()
@@ -137,7 +138,7 @@ public class MaxWebhookController {
                                         ))
                                         .build();
 
-                                return maxApiClient.sendMessage(userId, response);
+                                return maxApiClient.sendMessage(chatId, response);
                             })
                             .toList();
 
