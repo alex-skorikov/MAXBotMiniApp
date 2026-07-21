@@ -5,21 +5,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-import org.springframework.web.reactive.config.CorsRegistry;
-import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 @Configuration
-public class CorsWebFluxConfig implements WebFluxConfigurer {
-
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("GET", "POST", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(false)
-                .maxAge(3600);
-    }
+public class CorsWebFluxConfig {
 
     @Bean
     public CorsWebFilter corsWebFilter() {
@@ -34,5 +22,5 @@ public class CorsWebFluxConfig implements WebFluxConfigurer {
 
         return new CorsWebFilter(source);
     }
-
 }
+
