@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class RospatentClient {
@@ -78,13 +79,22 @@ public class RospatentClient {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .timeout(Duration.ofSeconds(10))
-                .retryWhen(Retry.backoff(2, Duration.ofSeconds(1)))
+                .retryWhen(
+                        Retry.backoff(1, Duration.ofSeconds(2))
+                                .filter(e -> !(e instanceof TimeoutException))
+                )
+                .timeout(Duration.ofSeconds(30))
+                .onErrorResume(e -> {
+                    log.error("Rospatent API error", e);
+                    return Mono.just(Map.of(
+                            "total", 0,
+                            "available", 0,
+                            "hits", List.of()
+                    ));
+                })
                 .map(this::mapResponse)
-                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()))
-                .doOnError(e -> log.error("Rospatent API error", e));
+                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()));
     }
-
 
     // --- МАППИНГ ОТВЕТА В DTO ---
     private PatentSearchResponse mapResponse(Map<String, Object> json) {
