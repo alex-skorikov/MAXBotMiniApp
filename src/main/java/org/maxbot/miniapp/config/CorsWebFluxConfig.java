@@ -9,7 +9,7 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 @Configuration
 public class CorsWebFluxConfig {
 
-/*    @Bean
+    @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOriginPattern("*");
@@ -21,33 +21,8 @@ public class CorsWebFluxConfig {
         source.registerCorsConfiguration("/**", config);
 
         return new CorsWebFilter(source);
-    }*/
-
-    @Bean
-    public CorsWebFilter corsWebFilter() {
-
-        CorsConfiguration config = new CorsConfiguration();
-
-        // Разрешаем фронт на Vercel
-        config.addAllowedOrigin("https://max-webapp-five.vercel.app");
-
-        // Локальная разработка
-        config.addAllowedOrigin("http://localhost:5173");
-
-        // Разрешаем любые методы
-        config.addAllowedMethod("*");
-
-        // Разрешаем любые заголовки
-        config.addAllowedHeader("*");
-
-        // Если не используем куки — оставляем false
-        config.setAllowCredentials(false);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return new CorsWebFilter(source);
     }
+
 }
 
 
