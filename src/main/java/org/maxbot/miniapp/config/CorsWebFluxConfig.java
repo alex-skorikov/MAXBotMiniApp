@@ -45,7 +45,7 @@ public class CorsWebFluxConfig {
         corsConfig.setAllowedHeaders(Collections.singletonList("*"));
 
         // 4. Обязательно разрешаем отправку учетных данных (куки, Authorization заголовок)
-        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowCredentials(false);
 
         // 5. Время кэширования предварительного (preflight) OPTIONS-запроса браузером (1 час)
         corsConfig.setMaxAge(3600L);
