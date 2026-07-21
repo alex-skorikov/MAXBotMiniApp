@@ -20,7 +20,7 @@ public class MaxApiClient {
     private final WebClient webClient;
     private static final Logger log = LoggerFactory.getLogger(MaxApiClient.class);
 
-    public MaxApiClient(@Value("${max.api.token}") String token, WebClient webClient) {
+    public MaxApiClient(@Value("${max.token}") String token, WebClient webClient) {
         this.token = token;
         log.info("MAX_TOKEN = '{}'", token);
         this.webClient = webClient.mutate()
