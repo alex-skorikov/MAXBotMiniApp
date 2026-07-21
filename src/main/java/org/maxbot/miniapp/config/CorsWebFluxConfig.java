@@ -12,15 +12,10 @@ public class CorsWebFluxConfig {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
-
-        config.addAllowedOrigin("https://max-webapp-five.vercel.app");
         config.addAllowedOriginPattern("*");
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("OPTIONS");
+        config.addAllowedMethod("*");
         config.addAllowedHeader("*");
-        config.setAllowCredentials(false);
-        config.setMaxAge(3600L);
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
