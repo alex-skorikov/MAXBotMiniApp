@@ -11,6 +11,5 @@ public class PatentSearchRequest {
     private String query;
     private Integer limit;
     private Integer offset;
-    private String initData;
 
 }
