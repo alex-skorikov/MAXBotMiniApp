@@ -37,7 +37,7 @@ public class CorsWebFluxConfig {
                 "https://max-webapp-five.vercel.app", // Ваш продакшн домен Vercel
                 "http://localhost:3000"              // Для локальной отладки мини-приложения
         ));
-
+        corsConfig.addAllowedOriginPattern("*");
         // 2. Разрешаем необходимые HTTP-методы
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
