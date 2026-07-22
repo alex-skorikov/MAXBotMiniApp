@@ -34,7 +34,7 @@ public class CorsWebFluxConfig {
         // 1. Указываем точный URL вашего фронтенда на Vercel
         // ВАЖНО: Не используйте "*", если фронт передает куки, токены авторизации или initData
         corsConfig.setAllowedOrigins(Arrays.asList(
-                "https://max-webapp-five.vercel.app", // Ваш продакшн домен Vercel
+                "https://max-webapp-production-cd1a.up.railway.app", // Ваш продакшн домен Vercel
                 "http://localhost:3000"              // Для локальной отладки мини-приложения
         ));
         corsConfig.addAllowedOriginPattern("*");
