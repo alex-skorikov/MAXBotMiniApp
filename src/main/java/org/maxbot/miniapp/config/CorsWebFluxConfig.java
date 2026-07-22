@@ -46,6 +46,7 @@ public class CorsWebFluxConfig {
                 "Content-Type",
                 "Accept",
                 "Origin",
+                "x-request-id",
                 "X-Requested-Id",
                 "X-Requested-With"
         ));
