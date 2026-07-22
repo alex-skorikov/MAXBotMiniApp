@@ -12,55 +12,51 @@ import java.util.Collections;
 @Configuration
 public class CorsWebFluxConfig {
 
-    @Bean
-    public CorsWebFilter corsWebFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("https://max-webapp-production-cd1a.up.railway.app");
-        config.addAllowedOriginPattern("*");
-        config.addAllowedMethod("*");
-        config.addAllowedHeader("*");
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return new CorsWebFilter(source);
-    }
-
 //    @Bean
 //    public CorsWebFilter corsWebFilter() {
-//        CorsConfiguration corsConfig = new CorsConfiguration();
-//
-//        corsConfig.setAllowedOrigins(Arrays.asList(
-//                "https://max-webapp-production-cd1a.up.railway.app", // фронт
-//                "https://max.ru",
-//                "https://*.max.ru",
-//                "http://localhost:3000"                              // локальная отладка
-//        ));
-//
-//        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-//        corsConfig.setAllowedHeaders(Arrays.asList(
-//                "Authorization",
-//                "Content-Type",
-//                "Accept",
-//                "Origin",
-//                "x-request-id",
-//                "X-Requested-Id",
-//                "X-Requested-With"
-//        ));
-//
-//        corsConfig.setAllowCredentials(true); // ВАЖНО
-//
-//        corsConfig.setMaxAge(3600L);
+//        CorsConfiguration config = new CorsConfiguration();
+//        config.addAllowedOrigin("https://max-webapp-production-cd1a.up.railway.app");
+//        config.addAllowedOriginPattern("*");
+//        config.addAllowedMethod("*");
+//        config.addAllowedHeader("*");
+//        config.setAllowCredentials(true);
 //
 //        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", corsConfig);
+//        source.registerCorsConfiguration("/**", config);
 //
 //        return new CorsWebFilter(source);
 //    }
 
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
 
+        corsConfig.setAllowedOrigins(Arrays.asList(
+                "https://max-webapp-production-cd1a.up.railway.app", // фронт
+                "https://max.ru",
+                "https://*.max.ru"
+        ));
 
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "x-request-id",
+                "X-Requested-Id",
+                "X-Requested-With"
+        ));
+
+        corsConfig.setAllowCredentials(true); // ВАЖНО
+
+        corsConfig.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsWebFilter(source);
+    }
 }
 
 
