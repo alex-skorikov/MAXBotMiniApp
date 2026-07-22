@@ -31,31 +31,26 @@ public class CorsWebFluxConfig {
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
-        // 1. Указываем точный URL вашего фронтенда на Vercel
-        // ВАЖНО: Не используйте "*", если фронт передает куки, токены авторизации или initData
         corsConfig.setAllowedOrigins(Arrays.asList(
-                "https://max-webapp-production-cd1a.up.railway.app", // Ваш продакшн домен Vercel
-                "http://localhost:3000"              // Для локальной отладки мини-приложения
+                "https://max-webapp-production-cd1a.up.railway.app",
+                "https://t.me",
+                "https://web.telegram.org",
+                "https://miniapp.maxpatent.ru"
         ));
-        corsConfig.addAllowedOriginPattern("*");
-        // 2. Разрешаем необходимые HTTP-методы
-        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // 3. Разрешаем любые заголовки (или перечислите конкретные: Authorization, Content-Type и т.д.)
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(Collections.singletonList("*"));
 
-        // 4. Обязательно разрешаем отправку учетных данных (куки, Authorization заголовок)
-        corsConfig.setAllowCredentials(false);
+        corsConfig.setAllowCredentials(true); // ВАЖНО
 
-        // 5. Время кэширования предварительного (preflight) OPTIONS-запроса браузером (1 час)
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Применяем настройки CORS ко всем эндпоинтам бэкенда
         source.registerCorsConfiguration("/**", corsConfig);
 
         return new CorsWebFilter(source);
     }
+
 
 }
 
