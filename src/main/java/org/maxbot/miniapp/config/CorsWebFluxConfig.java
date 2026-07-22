@@ -32,9 +32,12 @@ public class CorsWebFluxConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
         corsConfig.setAllowedOrigins(Arrays.asList(
-                "https://max-webapp-production-cd1a.up.railway.app", // фронт
+                "https://max-webapp-production-cd1a.up.railway.app",
                 "https://max.ru",
-                "https://*.max.ru"
+                "https://webapp.max.ru",
+                "https://dev.max.ru",
+                "https://st.max.ru",
+                "http://localhost:3000"
         ));
 
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
