@@ -39,7 +39,14 @@ public class CorsWebFluxConfig {
         ));
 
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(Collections.singletonList("*"));
+//        corsConfig.setAllowedHeaders(Collections.singletonList("*"));
+        corsConfig.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
 
         corsConfig.setAllowCredentials(true); // ВАЖНО
 
