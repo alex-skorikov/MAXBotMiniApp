@@ -35,6 +35,7 @@ public class CorsWebFluxConfig {
                 "https://max-webapp-production-cd1a.up.railway.app", // фронт
                 "https://webapp.max.ru",                             // WebView MAX
                 "https://dev.max.ru",                                // dev WebView
+                "https://max.ru",                                // dev WebView
                 "http://localhost:3000"                              // локальная отладка
         ));
 
@@ -45,6 +46,7 @@ public class CorsWebFluxConfig {
                 "Content-Type",
                 "Accept",
                 "Origin",
+                "X-Requested-Id",
                 "X-Requested-With"
         ));
 
