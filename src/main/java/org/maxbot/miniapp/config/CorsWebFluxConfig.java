@@ -33,7 +33,7 @@ public class CorsWebFluxConfig {
 
         corsConfig.setAllowedOrigins(Arrays.asList(
                 "https://max-webapp-five.vercel.app",
-                "https://max-webapp-production-cd1a.up.railway.app",
+//                "https://max-webapp-production-cd1a.up.railway.app",
                 "https://max.ru",
                 "https://webapp.max.ru",
                 "https://dev.max.ru",
