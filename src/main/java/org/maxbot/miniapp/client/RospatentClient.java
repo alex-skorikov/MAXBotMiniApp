@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 @Component
 public class RospatentClient {
@@ -38,31 +39,7 @@ public class RospatentClient {
     // МЕТОДЫ ПОИСКА
     // -----------------------------
 
-    // --- Обычный текстовый поиск (queryMode = "q") ---
-    public PatentSearchResponse searchByQuery(String queryMode, String query, Integer limit, Integer offset) {
-
-        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
-        return execute(body);
-    }
-
-    private PatentSearchResponse execute(Map<String, Object> body) {
-        log.info(">>> REQUEST RospatentClient : {}", body);
-
-        Map<String, Object> json;
-        try {
-            json = webClient.post().uri(URL).header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-            }).block();
-        } catch (Exception e) {
-            log.error("Rospatent API error", e);
-            throw new RuntimeException("Rospatent API error: " + e.getMessage());
-        }
-
-        log.info(">>> RESPONSE RospatentClient total: {}", json.get("total"));
-
-        return json != null ? mapResponse(json) : new PatentSearchResponse();
-    }
-
-    // --- async ---
+    // --- Async ---
     public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
         Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
         return executeReactive(body);
@@ -78,13 +55,22 @@ public class RospatentClient {
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-                .timeout(Duration.ofSeconds(10))
-                .retryWhen(Retry.backoff(2, Duration.ofSeconds(1)))
+                .retryWhen(
+                        Retry.backoff(1, Duration.ofSeconds(2))
+                                .filter(e -> !(e instanceof TimeoutException))
+                )
+                .timeout(Duration.ofSeconds(30))
+                .onErrorResume(e -> {
+                    log.error("Rospatent API error", e);
+                    return Mono.just(Map.of(
+                            "total", 0,
+                            "available", 0,
+                            "hits", List.of()
+                    ));
+                })
                 .map(this::mapResponse)
-                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()))
-                .doOnError(e -> log.error("Rospatent API error", e));
+                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()));
     }
-
 
     // --- МАППИНГ ОТВЕТА В DTO ---
     private PatentSearchResponse mapResponse(Map<String, Object> json) {
@@ -106,6 +92,4 @@ public class RospatentClient {
         result.setHits(hits);
         return result;
     }
-
-
 }
