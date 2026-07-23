@@ -39,31 +39,7 @@ public class RospatentClient {
     // МЕТОДЫ ПОИСКА
     // -----------------------------
 
-    // --- Обычный текстовый поиск (queryMode = "q") ---
-    public PatentSearchResponse searchByQuery(String queryMode, String query, Integer limit, Integer offset) {
-
-        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
-        return execute(body);
-    }
-
-    private PatentSearchResponse execute(Map<String, Object> body) {
-        log.info(">>> REQUEST RospatentClient : {}", body);
-
-        Map<String, Object> json;
-        try {
-            json = webClient.post().uri(URL).header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON).bodyValue(body).retrieve().bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
-            }).block();
-        } catch (Exception e) {
-            log.error("Rospatent API error", e);
-            throw new RuntimeException("Rospatent API error: " + e.getMessage());
-        }
-
-        log.info(">>> RESPONSE RospatentClient total: {}", json.get("total"));
-
-        return json != null ? mapResponse(json) : new PatentSearchResponse();
-    }
-
-    // --- async ---
+    // --- Async ---
     public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
         Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
         return executeReactive(body);
@@ -116,6 +92,4 @@ public class RospatentClient {
         result.setHits(hits);
         return result;
     }
-
-
 }
