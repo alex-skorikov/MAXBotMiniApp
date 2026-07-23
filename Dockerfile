@@ -33,6 +33,8 @@ RUN keytool -importcert -noprompt -trustcacerts \
 
 # Копируем JAR из корня проекта
 COPY app.jar /app/app.jar
+# Копируем файл с токенами внутрь контейнера
+COPY token.env /app/token.env
 WORKDIR /app
 
 CMD ["java", "-jar", "app.jar"]
