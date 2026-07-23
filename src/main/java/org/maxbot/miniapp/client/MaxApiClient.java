@@ -5,7 +5,6 @@ import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -22,12 +21,10 @@ public class MaxApiClient {
 
     public MaxApiClient(@Value("${max.token}") String token, WebClient webClient) {
         this.token = token;
-        log.info("MAX_TOKEN = '{}'", token);
+//        log.info("MAX_TOKEN = '{}'", token);
         this.webClient = webClient.mutate()
                 .baseUrl("https://platform-api2.max.ru")
                 .defaultHeader("Authorization", token)
-//                .defaultHeader(HttpHeaders.USER_AGENT, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-//                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                 .build();
     }
 
