@@ -3,10 +3,8 @@ package org.maxbot.miniapp.stepalgo;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
-import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
-import org.maxbot.miniapp.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -48,9 +46,6 @@ public class BotStepsAlgo extends AbstractAlgo {
     @Override
     public AlgoStatus step1(UpdateDto upd) {
         log.info("{} Start step_1", nameAlgo);
-//        cb = upd.getCallback();
-//        userId = cb.getUser().getUserId();
-//        chatId = upd.getMessage().getRecipient().getChatId();
 
         if ("bot_started".equals(upd.getUpdateType()) || "message_created".equals(upd.getUpdateType())) {
             String text = "Добро пожаловать!" + "\n" + "Выберите базу:";
