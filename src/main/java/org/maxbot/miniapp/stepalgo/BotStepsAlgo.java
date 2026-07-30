@@ -48,9 +48,9 @@ public class BotStepsAlgo extends AbstractAlgo {
     @Override
     public AlgoStatus step1(UpdateDto upd) {
         log.info("{} Start step_1", nameAlgo);
-        cb = upd.getCallback();
-        userId = cb.getUser().getUserId();
-        chatId = upd.getMessage().getRecipient().getChatId();
+//        cb = upd.getCallback();
+//        userId = cb.getUser().getUserId();
+//        chatId = upd.getMessage().getRecipient().getChatId();
 
         if ("bot_started".equals(upd.getUpdateType()) || "message_created".equals(upd.getUpdateType())) {
             String text = "Добро пожаловать!" + "\n" + "Выберите базу:";
@@ -72,6 +72,9 @@ public class BotStepsAlgo extends AbstractAlgo {
     @Override
     public AlgoStatus step2(UpdateDto upd) {
         log.info("{} Start step_2", nameAlgo);
+        cb = upd.getCallback();
+        userId = cb.getUser().getUserId();
+        chatId = upd.getMessage().getRecipient().getChatId();
         String payload = cb.getPayload();
         if ("message_callback".equals(upd.getUpdateType())) {
             PatentSearchRequest patentSearchRequest = userState.get(userId);
