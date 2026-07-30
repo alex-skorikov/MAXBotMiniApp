@@ -41,7 +41,8 @@ public class MaxApiClient {
                 .doOnError(e -> log.error("MAX API sendMessage error", e));
     }
 
-    public Mono<Void> sendAnswer(String callbackId, Map<String, Object> bodyValue) {
+    public Mono<Void> sendAnswer(String callbackId, BotAnswerMessage bodyValue) {
+        log.info(">>> Send Message: {}", bodyValue);
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/answers")
@@ -53,7 +54,7 @@ public class MaxApiClient {
                 .doOnError(e -> log.error("MAX API sendAnswer error", e));
     }
 
-    public Mono<Void> sendMenu(int chatId) {
+    public Mono<Void> sendStartMenu(int chatId) {
         BotAnswerMessage response = BotAnswerMessage.builder()
                 .text("Выберите действие:")
                 .attachments(List.of(BotAnswerMessage.Attachment.builder()
@@ -78,5 +79,33 @@ public class MaxApiClient {
                 .build();
 
         return sendMessage(chatId, response);
+    }
+
+    public Mono<Void> sendMenu(int chatId, String text, List<List<BotAnswerMessage.Button>> buttons) {
+        BotAnswerMessage answerMessage = BotAnswerMessage.builder()
+                .text(text)
+                .attachments(List.of(BotAnswerMessage.Attachment.builder()
+                        .type("inline_keyboard")
+                        .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                .buttons(buttons)
+                                .build())
+                        .build()
+                ))
+                .build();
+        return sendMessage(chatId, answerMessage);
+    }
+
+    public Mono<Void> sendBaseAnswer(int chatId, String text, List<List<BotAnswerMessage.Button>> buttons) {
+        BotAnswerMessage answerMessage = BotAnswerMessage.builder()
+                .text(text)
+                .attachments(List.of(BotAnswerMessage.Attachment.builder()
+                        .type("inline_keyboard")
+                        .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
+                                .buttons(buttons)
+                                .build())
+                        .build()
+                ))
+                .build();
+        return sendAnswer(String.valueOf(chatId), answerMessage);
     }
 }

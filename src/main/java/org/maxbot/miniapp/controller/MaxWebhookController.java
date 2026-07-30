@@ -37,7 +37,7 @@ public class MaxWebhookController {
         this.maxApiClient = maxApiClient;
     }
 
-    @PostMapping("/webhook")
+    @PostMapping("/webhook_old")
     public Mono<Void> handleUpdate(@RequestBody String updates) {
         try {
             log.info(">>> RAW UPDATE: {}", updates);
@@ -47,7 +47,7 @@ public class MaxWebhookController {
 
 
             if ("bot_started".equals(update.getUpdateType())) {
-                return maxApiClient.sendMenu(update.getChatId())
+                return maxApiClient.sendStartMenu(update.getChatId())
                         .onErrorResume(e -> Mono.empty());
             }
 
@@ -62,7 +62,7 @@ public class MaxWebhookController {
                             .onErrorResume(e -> Mono.empty());
                 }
 
-                return maxApiClient.sendMenu(chatId)
+                return maxApiClient.sendStartMenu(chatId)
                         .onErrorResume(e -> Mono.empty());
             }
 
