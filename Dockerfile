@@ -11,8 +11,7 @@ COPY russian_trusted_sub_ca_pem.crt /usr/local/share/ca-certificates/
 # Обновляем системный truststore ОС
 RUN update-ca-certificates
 
-# Автоматически определяем путь к Java и задаем переменные окружения
-ENV JAVA_HOME=/usr/lib/jvm/bellsoft-java17-amd64
+# Используем уже существующую в образе переменную $JAVA_HOME и задаем пароль
 ENV CACERTS=${JAVA_HOME}/lib/security/cacerts
 ENV STOREPASS=changeit
 
