@@ -47,6 +47,8 @@ public class BotStepsAlgo extends AbstractAlgo {
     public AlgoStatus step1(UpdateDto upd) {
         log.info("{} Start step_1", nameAlgo);
 
+        log.info(">>> UpdateDto BotStepsAlgo : {}", upd);
+
         if ("bot_started".equals(upd.getUpdateType()) || "message_created".equals(upd.getUpdateType())) {
             String text = "Добро пожаловать!" + "\n" + "Выберите базу:";
             List<List<BotAnswerMessage.Button>> buttons = getButtons(Map.of(
