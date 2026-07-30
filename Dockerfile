@@ -10,8 +10,8 @@ COPY russian_trusted_sub_ca_pem.crt /usr/local/share/ca-certificates/
 # Обновляем системный truststore Debian
 RUN update-ca-certificates
 
-# Путь к Liberica JDK (точно найденный)
-ENV JAVA_HOME=/usr/lib/jvm/jdk-17.0.19-bellsoft-x86_64
+# Найденный путь к Liberica JDK
+ENV JAVA_HOME=/usr/lib/jvm/bellsoft-java17
 ENV CACERTS=${JAVA_HOME}/lib/security/cacerts
 ENV STOREPASS=changeit
 
