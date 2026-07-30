@@ -61,7 +61,7 @@ public class BotStepsAlgo extends AbstractAlgo {
             maxApiClient.sendMenu(upd.getChatId(), text, buttons)
                     .onErrorResume(e -> Mono.empty());
 
-            userState.put(userId, new PatentSearchRequest());
+            userState.put(upd.getChatId(), new PatentSearchRequest());
 
             return AlgoStatus.END;
         }
