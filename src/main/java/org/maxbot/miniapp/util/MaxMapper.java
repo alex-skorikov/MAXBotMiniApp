@@ -1,9 +1,12 @@
 package org.maxbot.miniapp.util;
 
+import org.maxbot.miniapp.controller.MaxWebhookController;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -12,6 +15,7 @@ import java.util.Map;
 public class MaxMapper {
 
     private record PayloadInfo(BotEvents eventType, String description) {}
+    private static final Logger log = LoggerFactory.getLogger(MaxMapper.class);
 
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.of(
             "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
@@ -52,6 +56,7 @@ public class MaxMapper {
             }
         }
 
+        log.info("MaxMapper found Event: {}", event);
         return event;
     }
 }

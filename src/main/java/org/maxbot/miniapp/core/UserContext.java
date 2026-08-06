@@ -9,6 +9,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class UserContext {
     private int userId;
     private String chatId;

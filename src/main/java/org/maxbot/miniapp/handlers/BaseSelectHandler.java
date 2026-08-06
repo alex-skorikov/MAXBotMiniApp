@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class SelectBaseHandler implements StepHandler, Action<BotStates, BotEvents> {
+public class BaseSelectHandler implements StepHandler, Action<BotStates, BotEvents> {
 
     @Override
     public void execute(StateContext<BotStates, BotEvents> context) {
