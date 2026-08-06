@@ -29,6 +29,6 @@ RUN keytool -importcert -noprompt -trustcacerts \
 WORKDIR /app
 
 # ❗ Копируем JAR из target/
-COPY target/app.jar /app/app.jar
+COPY target/*.jar /app/app.jar
 
 CMD ["java", "-jar", "/app/app.jar"]
