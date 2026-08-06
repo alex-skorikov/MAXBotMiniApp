@@ -14,7 +14,7 @@ public class HandlerRegistry {
 
     public HandlerRegistry(
             InitHandler init,
-            SelectBaseHandler selectBase,
+            BaseSelectHandler selectBase,
             FilterMenuHandler filterMenu,
             DateFilterHandler filterDate,
             SaveDateHandler saveDate,

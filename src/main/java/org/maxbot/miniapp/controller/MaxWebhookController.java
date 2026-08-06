@@ -43,47 +43,10 @@ public class MaxWebhookController {
         this.maxApiClient = maxApiClient;
     }
 
-/*    @PostMapping("/webhook")
-    public Mono<Void> webhook(@RequestBody Mono<UpdateDto> updateDto) {
-        return updateDto.flatMap(upd -> {
-            // 1. Извлекаем chatId из пришедшего вебхука
-            int chatId;
-            chatId = upd.getChatId();
-            if (chatId == 0){
-                chatId = upd.getMessage().getRecipient().getChatId();
-            }
-            String callbackId = Optional.ofNullable(upd)
-                    .map(UpdateDto::getCallback)
-                    .map(CallbackDto::getCallbackId)
-                    .orElse(null);
-
-            // 2. Маппим DTO в событие для стейт-машины
-            BotEvent event = maxMapper.toEvent(upd);
-
-            // 3. Передаем chatId и event в диспетчер
-//            if (callbackId == null) {
-//                return dispatcher.dispatch(chatId, event)
-//                        // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-//                        .flatMap(resp -> maxApiClient.sendMessage2(chatId, resp));
-//            } else {
-//                return dispatcher.dispatch(chatId, event)
-//                        // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-//                        .flatMap(resp -> maxApiClient.sendAnswer(callbackId, resp));
-//            }
-
-            int finalChatId = chatId;
-            return dispatcher.dispatch(chatId, event)
-                    // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-                    .flatMap(resp -> {
-                        log.info("Получен ответ от диспетчера: {}", resp); // Ваша строка логирования
-                        return maxApiClient.sendMessage2(finalChatId, resp); // Обязательный return
-                    });
-        });
-    }*/
-
     @PostMapping("/webhook")
     public Mono<Void> webhook(@RequestBody Mono<UpdateDto> updateDto) {
         return updateDto.flatMap(upd -> {
+            log.info(">>> Incoming webhook: {}", upd);
             // 1. Извлекаем chatId из пришедшего вебхука
             int chatId;
             chatId = upd.getChatId();
@@ -101,11 +64,11 @@ public class MaxWebhookController {
 
             // 3. Передаем chatId и event в диспетчер
             if (callbackId == null) {
-                return dispatcher.dispatch(chatId, event)
+                return dispatcher.dispatch(finalChatId, event)
                         // 4. Отправляем ответ пользователю, если автомат его сгенерировал
                         .flatMap(resp -> maxApiClient.sendMessage2(finalChatId, resp));
             } else {
-                return dispatcher.dispatch(chatId, event)
+                return dispatcher.dispatch(finalChatId, event)
                         // 4. Отправляем ответ пользователю, если автомат его сгенерировал
                         .flatMap(resp -> maxApiClient.sendAnswer(callbackId, resp));
             }
