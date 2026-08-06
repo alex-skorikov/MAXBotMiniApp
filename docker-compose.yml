@@ -2,8 +2,13 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: eclipse-temurin:17-jre
     container_name: max-miniapp
+    volumes:
+      - ./app.jar:/app/app.jar
+      - ./application.properties:/app/application.properties
+    working_dir: /app
+    command: ["java", "-jar", "app.jar"]
     environment:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379

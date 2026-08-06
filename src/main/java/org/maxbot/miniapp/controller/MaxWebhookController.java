@@ -45,8 +45,9 @@ public class MaxWebhookController {
 
     @PostMapping("/webhook")
     public Mono<Void> webhook(@RequestBody Mono<UpdateDto> updateDto) {
-        return updateDto.flatMap(upd -> {
-            log.info(">>> Incoming webhook: {}", upd);
+        return updateDto
+                .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
+                .flatMap(upd -> {
             // 1. Извлекаем chatId из пришедшего вебхука
             int chatId;
             chatId = upd.getChatId();
