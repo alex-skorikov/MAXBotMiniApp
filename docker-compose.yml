@@ -4,6 +4,10 @@ services:
   app:
     image: maxbotminiapp-app:latest
     container_name: max-miniapp
+    environment:
+      MAX_TOKEN: ${MAX_TOKEN}
+      ROSPATENT_TOKEN: ${ROSPATENT_TOKEN}
+      PORT: ${PORT}
     ports:
       - "8080:8080"
     restart: always
@@ -13,3 +17,4 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    restart: always
