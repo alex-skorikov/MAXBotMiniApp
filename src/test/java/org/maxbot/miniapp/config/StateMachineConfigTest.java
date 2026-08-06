@@ -9,12 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("test")
 class StateMachineConfigTest {
 
     @Autowired
