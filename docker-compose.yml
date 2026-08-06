@@ -1,26 +1,15 @@
-version: '3.8'
+version: "3.9"
 
 services:
   app:
-    image: eclipse-temurin:17-jre
+    image: maxbotminiapp-app:latest
     container_name: max-miniapp
-    volumes:
-      - ./app.jar:/app/app.jar
-      - ./application.properties:/app/application.properties
-    working_dir: /app
-    command: ["java", "-jar", "app.jar"]
-    environment:
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-    depends_on:
-      - redis
     ports:
       - "8080:8080"
+    restart: always
 
   redis:
     image: redis:7.2
     container_name: redis
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
-    restart: always
