@@ -40,7 +40,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "target/*.jar"
-          target: "/home/alex/MAXBotMiniApp/app.jar"
+          target: "/home/alex/MAXBotMiniApp/"
 
       - name: Restart Docker Compose
         uses: appleboy/ssh-action@v0.1.7
