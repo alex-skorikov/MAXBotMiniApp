@@ -24,11 +24,14 @@ jobs:
 
       - name: Build Docker image (no cache)
         run: |
+          export DOCKER_BUILDKIT=0
           docker build \
             --no-cache \
             --build-arg BUILD_VERSION=${{ github.sha }} \
             -t maxbotminiapp-app:${{ github.sha }} \
-            -t maxbotminiapp-app:latest .
+            -t maxbotminiapp-app:latest \
+            -f Dockerfile \
+            .
 
       - name: Copy docker-compose.yml to server
         uses: appleboy/scp-action@v0.1.7
