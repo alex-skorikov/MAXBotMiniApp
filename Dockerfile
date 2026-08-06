@@ -1,21 +1,16 @@
 FROM bellsoft/liberica-openjdk-debian:17
 
-# Обновляем пакеты и устанавливаем ca-certificates для Debian
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Копируем сертификаты Минцифры в системную директорию Debian
 COPY russian_trusted_root_ca_pem.crt /usr/local/share/ca-certificates/
 COPY russian_trusted_root_ca_gost_2025_pem.crt /usr/local/share/ca-certificates/
 COPY russian_trusted_sub_ca_pem.crt /usr/local/share/ca-certificates/
 
-# Обновляем системный truststore ОС
 RUN update-ca-certificates
 
-# Используем уже существующую в образе переменную $JAVA_HOME и задаем пароль
 ENV CACERTS=${JAVA_HOME}/lib/security/cacerts
 ENV STOREPASS=changeit
 
-# Импорт сертификатов Минцифры в Java truststore (cacerts)
 RUN keytool -importcert -noprompt -trustcacerts \
     -alias mincifry-root \
     -file /usr/local/share/ca-certificates/russian_trusted_root_ca_pem.crt \
@@ -31,9 +26,9 @@ RUN keytool -importcert -noprompt -trustcacerts \
     -file /usr/local/share/ca-certificates/russian_trusted_sub_ca_pem.crt \
     -keystore "${CACERTS}" -storepass "${STOREPASS}"
 
-# Настройка рабочей директории и копирование приложения
 WORKDIR /app
-COPY app.jar /app/app.jar
-COPY token.env /app/token.env
 
-CMD ["java", "-jar", "app.jar"]
+# ❗ Копируем JAR из target/
+COPY target/app.jar /app/app.jar
+
+CMD ["java", "-jar", "/app/app.jar"]
