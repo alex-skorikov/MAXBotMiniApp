@@ -87,10 +87,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>3.2.5</version>
-                <configuration>
-                    <mainClass>org.maxbot.miniapp.MaxBotMiniAppApplication</mainClass>
-                    <outputDirectory>${project.basedir}</outputDirectory>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
