@@ -33,6 +33,11 @@ public class StateMachineDispatcher {
         String userId = event.getUserId();
         String chatId1 = event.getChatId();
 
+        if (event.getType() == null) {
+            log.info("⚠️ [ДИСПЕТЧЕР] Получено необрабатываемое системное событие (null). Пропускаем.");
+            return Mono.empty(); // Завершаем обработку вебхука с HTTP 200 OK
+        }
+
         return Mono.fromCallable(() -> {
                     StateMachine<BotStates, BotEvents> machine = factory.getStateMachine(machineId);
 
