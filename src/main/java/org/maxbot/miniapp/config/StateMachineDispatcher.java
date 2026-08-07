@@ -53,6 +53,11 @@ public class StateMachineDispatcher {
                                 .getVariables()
                                 .get("userContext");
 
+                        if (event.getType() == null) {
+                            log.warn("Получено неизвестное событие, которое привело к null-payload. Пропускаем обработку. {}", event);
+                            return Mono.empty(); // Или верните дефолтный ивент, например BotEvent.UNKNOWN
+                        }
+
                         Message<BotEvents> message = MessageBuilder
                                 .withPayload(event.getType())
                                 .setHeader("event", event)

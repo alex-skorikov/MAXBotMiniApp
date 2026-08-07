@@ -27,7 +27,7 @@ RUN keytool -importcert -noprompt -trustcacerts \
     -keystore "${CACERTS}" -storepass "${STOREPASS}"
 
 WORKDIR /app
-
+RUN mkdir -p /app && chmod 777 /app
 # ❗ Копируем JAR из target/
 COPY target/*.jar /app/app.jar
 
