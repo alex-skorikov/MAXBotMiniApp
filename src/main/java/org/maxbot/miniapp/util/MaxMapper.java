@@ -61,11 +61,8 @@ public class MaxMapper {
 
             PayloadInfo info = PAYLOAD_MAPPING.get(payload);
 
-            if (info != null && info.eventType.equals(BotEvents.BACK)){
-                event.setType(userContext.getBotEvent());
-            }
             if (info != null) {
-                event.setType(info.eventType());
+                event.setType(info.eventType()); // Сюда запишется BotEvents.BACK
                 event.setPayloadDescription(info.description());
             }
         }

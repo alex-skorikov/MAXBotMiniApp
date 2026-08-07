@@ -5,10 +5,14 @@ import org.maxbot.miniapp.statemachine.BotStates;
 import org.maxbot.miniapp.util.StepAction;
 import org.maxbot.miniapp.util.ValidDateGuard;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
+import org.springframework.statemachine.config.builders.StateMachineConfigurationConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
+import org.springframework.statemachine.listener.StateMachineListenerAdapter;
+import org.springframework.statemachine.state.State;
 
 @Configuration
 @EnableStateMachineFactory
@@ -118,5 +122,22 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .target(BotStates.SELECT_FILTERS)
                 .event(BotEvents.BACK)
                 .action(stepAction);
+    }
+
+    @Override
+    public void configure(StateMachineConfigurationConfigurer<BotStates, BotEvents> config) throws Exception {
+        config
+                .withConfiguration()
+                .listener(new StateMachineListenerAdapter<>() {
+                    @Override
+                    public void eventNotAccepted(Message<BotEvents> event) {
+                        System.out.println("⚠️ СТЕЙТ-МАШИНА ОТВЕРГЛА ИВЕНТ: " + event.getPayload());
+                    }
+
+                    @Override
+                    public void stateChanged(State<BotStates, BotEvents> from, State<BotStates, BotEvents> to) {
+                        System.out.println("🔄 Стейт изменился: " + (from != null ? from.getId() : "null") + " -> " + to.getId());
+                    }
+                });
     }
 }
