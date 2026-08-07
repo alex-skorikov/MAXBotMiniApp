@@ -1,6 +1,5 @@
 package org.maxbot.miniapp.util;
 
-import org.maxbot.miniapp.controller.MaxWebhookController;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.repository.ContextRepository;
@@ -27,21 +26,27 @@ public class MaxMapper {
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.of(
             "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
             "PROM_SAMPLE", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Промобразцы"),
-            "MODEL", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
+            // 🟢 ИСПРАВЛЕНО: Добавили букву S на конце, чтобы совпадало с payload=MODELS из кнопки
+            "MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
             "ARRAYS_PANEL", new PayloadInfo(BotEvents.USER_SELECT_FILTERS, "Фильтры"),
             "DATE_PANEL", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Дата"),
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
 
     public BotEvent toEvent(UpdateDto upd, int chatId) {
-
-        UserContext userContext = contextRepository.load(String.valueOf(chatId));
-
         if (upd == null) return null;
 
+        // Загружаем контекст по валидному chatId, переданному из контроллера
+        UserContext userContext = contextRepository.load(String.valueOf(chatId));
+
         BotEvent event = new BotEvent();
-        event.setUserId(String.valueOf(upd.getUserId()));
-        event.setChatId(String.valueOf(upd.getChatId()));
+
+        // 🟢 ИСПРАВЛЕНО: Безопасно вытаскиваем userId, если на кнопке он равен 0
+        int validUserId = upd.getUserId() != 0 ? upd.getUserId() : (upd.getCallback() != null && upd.getCallback().getUser() != null ? upd.getCallback().getUser().getUserId() : 0);
+        event.setUserId(String.valueOf(validUserId));
+
+        // 🟢 ИСПРАВЛЕНО: Подставляем валидный chatId из аргумента метода, а не upd.getChatId()
+        event.setChatId(String.valueOf(chatId));
 
         String updateType = upd.getUpdateType();
         if (updateType == null) return event;
@@ -62,8 +67,15 @@ public class MaxMapper {
             PayloadInfo info = PAYLOAD_MAPPING.get(payload);
 
             if (info != null) {
-                event.setType(info.eventType()); // Сюда запишется BotEvents.BACK
-                event.setPayloadDescription(info.description());
+                // Если нажата кнопка НАЗАД
+                if (info.eventType().equals(BotEvents.BACK)) {
+                    event.setType(BotEvents.BACK);
+                    event.setPayloadDescription(info.description());
+                } else {
+                    // Для всех остальных кнопок (включая MODELS)
+                    event.setType(info.eventType());
+                    event.setPayloadDescription(info.description());
+                }
             }
         }
 
