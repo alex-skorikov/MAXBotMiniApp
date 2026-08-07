@@ -1,6 +1,7 @@
 package org.maxbot.miniapp.core;
 
 import lombok.*;
+import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
 import java.util.HashMap;
@@ -16,6 +17,7 @@ public class UserContext {
     private String selectedBase;
     private Map<String, Object> filters = new HashMap<>();
     private BotStates state;
+    private BotEvents botEvent;
 }
 
 
