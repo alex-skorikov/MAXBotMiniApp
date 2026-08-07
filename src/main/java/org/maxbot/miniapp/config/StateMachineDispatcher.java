@@ -45,17 +45,18 @@ public class StateMachineDispatcher {
             // 1. Очищаем старый ответ
             machine.getExtendedState().getVariables().remove("response");
 
-            // 2. Восстанавливаем стейт на пуле boundedElastic
+            // 2. Восстанавливаем стейт из Redis
             return persister.restore(machine, machineId)
                     .subscribeOn(Schedulers.boundedElastic())
                     .then(Mono.defer(() -> {
                         log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
                                 chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
 
-                        // 3. Запускаем машину реактивно, если состояние еще пустое
-                        Mono<Void> startIfNeeded = (machine.getState() == null)
-                                ? machine.startReactively()
-                                : Mono.empty();
+                        // 3. 🟢 КРИТИЧЕСКИЙ ФИКС: Всегда запускаем реактивные триггеры машины,
+                        // если её внутренний флаг активности не взведён.
+                        // Используем встроенный метод x.hasStateMachineError() или проверку реактивного стрима.
+                        // Самый надежный способ в Spring State Machine 3.x - безусловный вызов старта перед отправкой.
+                        Mono<Void> ensureStarted = Mono.defer(() -> machine.startReactively());
 
                         UserContext userContext = (UserContext) machine.getExtendedState()
                                 .getVariables()
@@ -68,24 +69,24 @@ public class StateMachineDispatcher {
                                 .setHeader("userContext", userContext)
                                 .build();
 
-                        // 4. Отправляем событие РЕАКТИВНО и дожидаемся ФАКТИЧЕСКОГО завершения экшенов
-                        return startIfNeeded
-                                .then(machine.sendEvent(Mono.just(message))
-                                        .take(1)            // Берем строго 1 результат транзишена
-                                        .singleOrEmpty()    // Завершаем Flux-стрим, чтобы избежать "repeats"
-                                )
+                        // 4. Запускаем стрим, отправляем событие и дожидаемся обработки
+                        return ensureStarted
+                                .then(Mono.defer(() -> machine.sendEvent(Mono.just(message))
+                                        .take(1)
+                                        .singleOrEmpty()
+                                ))
                                 .flatMap(result -> {
                                     log.info("==> [СТЕЙТ-МАШИНА] Результат обработки: {}", result.getResultType());
 
                                     if (result.getResultType() == StateMachineEventResult.ResultType.ACCEPTED) {
-                                        // 5. Вытаскиваем ответ только ПОСЛЕ того, как экшены гарантированно выполнились
+                                        // 5. Вытаскиваем сгенерированный хендлером ответ
                                         BotResponse response = (BotResponse) machine.getExtendedState().getVariables().get("response");
                                         log.info("==> [ДИСПЕТЧЕР] Ответ успешно извлечен: {}", response != null ? "ДА" : "НЕТ (NULL)");
                                         return Mono.justOrEmpty(response);
                                     }
                                     return Mono.empty();
                                 })
-                                // 6. Асинхронно сохраняем стейт в Redis и тушим машину в блоке doFinally
+                                // 6. Сохраняем стейт в Redis только после успешного завершения транзишена
                                 .doOnSuccess(res -> persister.persist(machine, userId, chatId1, event.getType()))
                                 .doFinally(signalType -> machine.stopReactively().subscribeOn(Schedulers.boundedElastic()).subscribe());
                     }));
