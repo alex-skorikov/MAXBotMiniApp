@@ -28,18 +28,27 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
     }
 
     /**
-     * КРИТИЧЕСКИЙ ФИКС: Явно регистрируем стейты и задаем начальное состояние
+     * КРИТИЧЕСКИЙ ФИКС: Регистрируем стейты и привязываем StepAction на ВХОД в состояния
      */
     @Override
     public void configure(StateMachineStateConfigurer<BotStates, BotEvents> states) throws Exception {
         states
                 .withStates()
                 .initial(BotStates.INIT) // Задаем стартовую точку бота
-                .states(java.util.EnumSet.allOf(BotStates.class)); // Регистрируем все остальные стейты
+
+                // 🟢 Назначаем stepAction на вход в конкретные состояния
+                .state(BotStates.SELECT_BASE, stepAction)
+                .state(BotStates.SELECT_FILTERS, stepAction)
+                .state(BotStates.FILTER_DATE, stepAction)
+                .state(BotStates.FILTER_ARRAYS, stepAction)
+                .state(BotStates.CONFIRM_SEARCH, stepAction)
+
+                // Регистрируем структуру всех остальных стейтов перечислением
+                .states(java.util.EnumSet.allOf(BotStates.class));
     }
 
     /**
-     * Конфигурация переходов (Транзишенов)
+     * Конфигурация переходов (Транзишенов) - теперь БЕЗ .action(stepAction)
      */
     @Override
     public void configure(StateMachineTransitionConfigurer<BotStates, BotEvents> transitions) throws Exception {
@@ -49,7 +58,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.INIT)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.USER_OPEN_CHAT)
-                .action(stepAction)
 
                 .and()
 
@@ -58,7 +66,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.SELECT_FILTERS)
                 .event(BotEvents.USER_SELECT_BASE)
-                .action(stepAction)
 
                 .and()
 
@@ -67,7 +74,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.FILTER_DATE)
                 .event(BotEvents.USER_INPUT_DATE)
-                .action(stepAction)
 
                 .and()
 
@@ -76,7 +82,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.FILTER_ARRAYS)
                 .event(BotEvents.USER_SELECT_FILTERS)
-                .action(stepAction)
 
                 .and()
 
@@ -85,7 +90,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.CONFIRM_SEARCH)
                 .event(BotEvents.USER_CONFIRM)
-                .action(stepAction)
+
                 .and()
 
                 // ==========================================
@@ -97,7 +102,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK)
-                .action(stepAction)
+
                 .and()
 
                 // Из подменю Даты возвращаемся в главное меню фильтров
@@ -105,7 +110,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.FILTER_DATE)
                 .target(BotStates.SELECT_FILTERS)
                 .event(BotEvents.BACK)
-                .action(stepAction)
+
                 .and()
 
                 // Из подменю Массивов возвращаемся в главное меню фильтров
@@ -113,15 +118,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.FILTER_ARRAYS)
                 .target(BotStates.SELECT_FILTERS)
                 .event(BotEvents.BACK)
-                .action(stepAction)
+
                 .and()
 
                 // Из экрана подтверждения возвращаемся обратно в меню фильтров
                 .withExternal()
                 .source(BotStates.CONFIRM_SEARCH)
                 .target(BotStates.SELECT_FILTERS)
-                .event(BotEvents.BACK)
-                .action(stepAction);
+                .event(BotEvents.BACK);
     }
 
     @Override
