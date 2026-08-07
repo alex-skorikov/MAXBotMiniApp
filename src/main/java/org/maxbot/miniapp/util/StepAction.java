@@ -21,7 +21,10 @@ public class StepAction implements Action<BotStates, BotEvents> {
     @Override
     public void execute(StateContext<BotStates, BotEvents> context) {
 
-        BotStates targetState = context.getSource().getId();
+        if (context.getTarget() == null) {
+            return;
+        }
+        BotStates targetState = context.getTarget().getId();
 
         BotEvent event = (BotEvent) context.getMessageHeader("event");
         UserContext userContext = (UserContext) context.getMessageHeader("userContext");
@@ -38,5 +41,6 @@ public class StepAction implements Action<BotStates, BotEvents> {
             context.getExtendedState().getVariables().put("response", response);
         }
     }
+
 }
 
