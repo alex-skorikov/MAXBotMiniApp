@@ -14,28 +14,34 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class BaseSelectHandler implements StepHandler, Action<BotStates, BotEvents> {
+public class BaseSelectHandler implements StepHandler {
 
-    @Override
-    public void execute(StateContext<BotStates, BotEvents> context) {
-        UserContext userContext = context.getMessageHeaders().get("userContext", UserContext.class);
-        BotEvent botEvent = context.getMessageHeaders().get("event", BotEvent.class);
-
-        // Если перешли вперед, сохраняем выбранную базу в контекст пользователя
-        if (botEvent != null && "USER_SELECT_BASE".equals(botEvent.getType().name())) {
-            userContext.setSelectedBase(botEvent.getPayload());
-        }
-
-        BotResponse response = handle(userContext, botEvent);
-        context.getExtendedState().getVariables().put("response", response);
-        context.getExtendedState().getVariables().put("userContext", userContext);
-    }
+//    @Override
+//    public void execute(StateContext<BotStates, BotEvents> context) {
+//        UserContext userContext = context.getMessageHeaders().get("userContext", UserContext.class);
+//        BotEvent botEvent = context.getMessageHeaders().get("event", BotEvent.class);
+//
+//        // Если перешли вперед, сохраняем выбранную базу в контекст пользователя
+//        if (botEvent != null && "USER_SELECT_BASE".equals(botEvent.getType().name())) {
+//            userContext.setSelectedBase(botEvent.getPayload());
+//        }
+//
+//        BotResponse response = handle(userContext, botEvent);
+//        context.getExtendedState().getVariables().put("response", response);
+//        context.getExtendedState().getVariables().put("userContext", userContext);
+//    }
 
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
-        String base = event.getPayload(); // например "Патенты"
-        ctx.setSelectedBase(base);
+
+        if (event != null && event.getPayload() != null && !"BACK".equals(event.getPayload())) {
+            String base = event.getPayload();
+            ctx.setSelectedBase(base);
+        }
+
+//        String base = event.getPayload(); // например "Патенты"
+//        ctx.setSelectedBase(base);
 
         List<List<BotResponse.Button>> buttons = BotAnswerUtil.getButtons(Map.of(
                 "Дата", "DATE",
