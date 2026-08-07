@@ -66,9 +66,7 @@ public class StateMachineDispatcher {
                                     log.info("==> [СТЕЙТ-МАШИНА] Результат обработки: {}", result.getResultType());
                                     if (result.getResultType() == StateMachineEventResult.ResultType.ACCEPTED) {
                                         // Даем асинхронным Action завершиться (безопасное реактивное ожидание)
-                                        return Mono.fromCallable(() -> (BotResponse) machine.getExtendedState().getVariables().get("response"))
-                                                .repeatWhenEmpty(4, flux -> flux.delayElements(java.time.Duration.ofMillis(50))) // 4 попытки каждые 50мс
-                                                .flatMap(Mono::justOrEmpty);
+                                        return Mono.fromCallable(() -> (BotResponse) machine.getExtendedState().getVariables().get("response"));
                                     }
                                     return Mono.empty();
                                 });
