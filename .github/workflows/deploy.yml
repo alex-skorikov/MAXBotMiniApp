@@ -10,51 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Build JAR
-        run: mvn -B package
+        run: mvn -B package --file pom.xml
 
-      - name: Build Docker image (no cache)
-        run: |
-          docker build \
-            --no-cache \
-            --build-arg BUILD_VERSION=${{ github.sha }} \
-            -t maxbotminiapp-app:${{ github.sha }} \
-            -t maxbotminiapp-app:latest \
-            -f Dockerfile \
-            .
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "SSH OK"
+            hostname
+            ls -l /home/alex/MAXBotMiniApp
 
-      - name: Copy docker-compose.yml to server
+      - name: Copy JAR to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"
+          source: "target/*.jar"
           target: "/home/alex/MAXBotMiniApp/"
 
-      - name: Copy Docker image to server
-        run: |
-          docker save maxbotminiapp-app:latest | gzip > image.tar.gz
-
-      - name: Upload Docker image to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "image.tar.gz"
-          target: "/home/alex/MAXBotMiniApp/"
-
-      - name: Restart Docker Compose on server
+      - name: Restart Docker Compose
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -62,7 +50,5 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/alex/MAXBotMiniApp
-            gunzip -f image.tar.gz
-            docker load < image.tar
             docker compose down
-            docker compose up -d --force-recreate
+            docker compose up -d --build
