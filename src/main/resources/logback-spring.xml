@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <!-- Лог в корень проекта -->
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>app.log</file>
-        <!-- Ротация по дням -->
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>/app/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+    <!-- 🟢 Задаем переменную для пути. Если она не передана, будет использоваться ./logs -->
+    <property name="LOG_DIR" value="${LOG_PATH:-./logs}" />
 
-            <!-- Храним только 1 день -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 🟢 Используем переменную -->
+        <file>${LOG_DIR}/app.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 🟢 Используем переменную -->
+            <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>
 
@@ -17,7 +19,6 @@
         </encoder>
     </appender>
 
-    <!-- STDOUT для docker logs -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
