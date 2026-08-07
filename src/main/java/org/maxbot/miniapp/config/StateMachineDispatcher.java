@@ -33,20 +33,19 @@ public class StateMachineDispatcher {
         String userId = event.getUserId();
         String chatId1 = event.getChatId();
 
-        // Переносим всю логику на безопасный эластичный пул потоков
         return Mono.fromCallable(() -> {
                     StateMachine<BotStates, BotEvents> machine = factory.getStateMachine(machineId);
 
-                    // 1. Очищаем старый ответ перед обработкой
+                    // 1. Очищаем старый ответ
                     machine.getExtendedState().getVariables().remove("response");
 
-                    // 2. Блокирующе восстанавливаем стейт из Redis (безопасно внутри fromCallable)
+                    // 2. Восстанавливаем стейт (теперь тут безопасный вызов реактивного метода через .block())
                     persister.restore(machine, machineId).block();
 
                     log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
                             chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
 
-                    // 3. Исправленный запуск машины: стартуем, только если состояние еще пустое
+                    // 3. Запускаем машину, если она пустая
                     if (machine.getState() == null) {
                         machine.startReactively().block();
                     }
@@ -62,23 +61,23 @@ public class StateMachineDispatcher {
                             .setHeader("userContext", userContext)
                             .build();
 
-                    // 4. Синхронная отправка события (без бесконечных Flux-цепочек)
+                    // 4. Синхронная отправка события
                     boolean accepted = machine.sendEvent(message);
-                    log.info("==> [СТЕЙТ-МАШИНА] Результат обработки (синхронный): {}", accepted ? "ACCEPTED" : "DENIED");
+                    log.info("==> [СТЕЙТ-МАШИНА] Результат обработки: {}", accepted ? "ACCEPTED" : "DENIED");
 
                     BotResponse response = null;
                     if (accepted) {
                         response = (BotResponse) machine.getExtendedState().getVariables().get("response");
                     }
 
-                    // 5. Сохраняем состояние в Redis
+                    // 5. Синхронное сохранение (так как персистер теперь возвращает void)
                     persister.persist(machine, userId, chatId1, event.getType());
 
-                    // 6. Останавливаем реактивные стримы машины
+                    // 6. Останавливаем стримы машины
                     machine.stopReactively().block();
 
                     return response;
                 })
-                .subscribeOn(Schedulers.boundedElastic()); // Изолируем выполнение от Netty EventLoop
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }
