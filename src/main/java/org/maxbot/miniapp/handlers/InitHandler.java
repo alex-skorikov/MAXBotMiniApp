@@ -14,26 +14,6 @@ import java.util.Map;
 @Component
 public class InitHandler implements StepHandler {
 
-//    @Override
-//    public void execute(StateContext<BotStates, BotEvents> context) {
-//        UserContext userContext = context.getMessageHeaders().get("userContext", UserContext.class);
-//        BotEvent botEvent = context.getMessageHeaders().get("event", BotEvent.class);
-//
-//        // Если при первом входе context еще пустой, подстрахуемся
-//        if (userContext == null) {
-//            userContext = new UserContext();
-//            String chatId = context.getMessageHeaders().get("chatId", String.class);
-//            if (chatId != null) userContext.setChatId(chatId);
-//        }
-//
-//        // Вызываем ваш оригинальный метод handle
-//        BotResponse response = handle(userContext, botEvent);
-//
-//        // КРИТИЧЕСКИ ВАЖНО: сохраняем ответ и контекст, чтобы диспетчер их увидел
-//        context.getExtendedState().getVariables().put("response", response);
-//        context.getExtendedState().getVariables().put("userContext", userContext);
-//    }
-
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
         List<List<BotResponse.Button>> buttons = BotAnswerUtil.getButtons(Map.of(

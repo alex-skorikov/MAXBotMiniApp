@@ -21,13 +21,16 @@ public class HandlerRegistry {
             FilterClassifiersHandler filterClassifiers,
             SaveClassifierHandler saveClassifier
     ) {
-        map.put(BotStates.INIT, init);
-        map.put(BotStates.SELECT_BASE, selectBase);
-        map.put(BotStates.SELECT_FILTERS, filterMenu);
-//        map.put(BotStates.FILTER_ARRAYS, filterMenu);
+        // 🟢 При первом старте (переход в SELECT_BASE) показываем приветствие и выбор баз
+        map.put(BotStates.SELECT_BASE, init);
+
+        // 🟢 Когда база выбрана (переход в SELECT_FILTERS), показываем главное меню фильтров
+        map.put(BotStates.SELECT_FILTERS, selectBase);
+
+        // Оставляем остальные подменю фильтров без изменений
         map.put(BotStates.FILTER_DATE, filterDate);
         map.put(BotStates.FILTER_CLASSIFIERS, filterClassifiers);
-        map.put(BotStates.DONE, saveDate); // пример
+        map.put(BotStates.DONE, saveDate);
     }
 
     public StepHandler getHandler(BotStates state) {
