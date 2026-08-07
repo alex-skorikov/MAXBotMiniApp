@@ -24,7 +24,6 @@ jobs:
 
       - name: Build Docker image (no cache)
         run: |
-          export DOCKER_BUILDKIT=0
           docker build \
             --no-cache \
             --build-arg BUILD_VERSION=${{ github.sha }} \
