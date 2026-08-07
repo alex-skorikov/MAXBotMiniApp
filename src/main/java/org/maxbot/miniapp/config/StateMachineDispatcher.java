@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.StateMachineEventResult;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -35,54 +36,59 @@ public class StateMachineDispatcher {
 
         if (event.getType() == null) {
             log.info("⚠️ [ДИСПЕТЧЕР] Получено необрабатываемое системное событие (null). Пропускаем.");
-            return Mono.empty(); // Завершаем обработку вебхука с HTTP 200 OK
+            return Mono.empty();
         }
 
-        return Mono.fromCallable(() -> {
-                    StateMachine<BotStates, BotEvents> machine = factory.getStateMachine(machineId);
+        return Mono.defer(() -> {
+            StateMachine<BotStates, BotEvents> machine = factory.getStateMachine(machineId);
 
-                    // 1. Очищаем старый ответ
-                    machine.getExtendedState().getVariables().remove("response");
+            // 1. Очищаем старый ответ
+            machine.getExtendedState().getVariables().remove("response");
 
-                    // 2. Восстанавливаем стейт (теперь тут безопасный вызов реактивного метода через .block())
-                    persister.restore(machine, machineId).block();
+            // 2. Восстанавливаем стейт на пуле boundedElastic
+            return persister.restore(machine, machineId)
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .then(Mono.defer(() -> {
+                        log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
+                                chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
 
-                    log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
-                            chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
+                        // 3. Запускаем машину реактивно, если состояние еще пустое
+                        Mono<Void> startIfNeeded = (machine.getState() == null)
+                                ? machine.startReactively()
+                                : Mono.empty();
 
-                    // 3. Запускаем машину, если она пустая
-                    if (machine.getState() == null) {
-                        machine.startReactively().block();
-                    }
+                        UserContext userContext = (UserContext) machine.getExtendedState()
+                                .getVariables()
+                                .get("userContext");
 
-                    UserContext userContext = (UserContext) machine.getExtendedState()
-                            .getVariables()
-                            .get("userContext");
+                        Message<BotEvents> message = MessageBuilder
+                                .withPayload(event.getType())
+                                .setHeader("event", event)
+                                .setHeader("chatId", chatId)
+                                .setHeader("userContext", userContext)
+                                .build();
 
-                    Message<BotEvents> message = MessageBuilder
-                            .withPayload(event.getType())
-                            .setHeader("event", event)
-                            .setHeader("chatId", chatId)
-                            .setHeader("userContext", userContext)
-                            .build();
+                        // 4. Отправляем событие РЕАКТИВНО и дожидаемся ФАКТИЧЕСКОГО завершения экшенов
+                        return startIfNeeded
+                                .then(machine.sendEvent(Mono.just(message))
+                                        .take(1)            // Берем строго 1 результат транзишена
+                                        .singleOrEmpty()    // Завершаем Flux-стрим, чтобы избежать "repeats"
+                                )
+                                .flatMap(result -> {
+                                    log.info("==> [СТЕЙТ-МАШИНА] Результат обработки: {}", result.getResultType());
 
-                    // 4. Синхронная отправка события
-                    boolean accepted = machine.sendEvent(message);
-                    log.info("==> [СТЕЙТ-МАШИНА] Результат обработки: {}", accepted ? "ACCEPTED" : "DENIED");
-
-                    BotResponse response = null;
-                    if (accepted) {
-                        response = (BotResponse) machine.getExtendedState().getVariables().get("response");
-                    }
-
-                    // 5. Синхронное сохранение (так как персистер теперь возвращает void)
-                    persister.persist(machine, userId, chatId1, event.getType());
-
-                    // 6. Останавливаем стримы машины
-                    machine.stopReactively().block();
-
-                    return response;
-                })
-                .subscribeOn(Schedulers.boundedElastic());
+                                    if (result.getResultType() == StateMachineEventResult.ResultType.ACCEPTED) {
+                                        // 5. Вытаскиваем ответ только ПОСЛЕ того, как экшены гарантированно выполнились
+                                        BotResponse response = (BotResponse) machine.getExtendedState().getVariables().get("response");
+                                        log.info("==> [ДИСПЕТЧЕР] Ответ успешно извлечен: {}", response != null ? "ДА" : "НЕТ (NULL)");
+                                        return Mono.justOrEmpty(response);
+                                    }
+                                    return Mono.empty();
+                                })
+                                // 6. Асинхронно сохраняем стейт в Redis и тушим машину в блоке doFinally
+                                .doOnSuccess(res -> persister.persist(machine, userId, chatId1, event.getType()))
+                                .doFinally(signalType -> machine.stopReactively().subscribeOn(Schedulers.boundedElastic()).subscribe());
+                    }));
+        });
     }
 }
