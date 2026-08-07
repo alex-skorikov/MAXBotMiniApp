@@ -74,7 +74,7 @@ public class StateMachineDispatcher {
                                 });
                     }))
                     // Сохраняем состояние при любом исходе обработки
-                    .doOnTerminate(() -> persister.persist(machine, userId, chatId1))
+                    .doOnTerminate(() -> persister.persist(machine, userId, chatId1, event.getType()))
                     .doOnError(error -> log.error("ОШИБКА В ДИСПЕТЧЕРЕ: ", error))
                     // Останавливаем реактивные стримы машины
                     .doFinally(signalType -> machine.stopReactively().subscribe());

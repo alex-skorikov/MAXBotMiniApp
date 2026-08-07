@@ -60,7 +60,7 @@ public class MaxWebhookController {
                     .orElse(null);
 
             // 2. Маппим DTO в событие для стейт-машины
-            BotEvent event = maxMapper.toEvent(upd);
+            BotEvent event = maxMapper.toEvent(upd, chatId);
             int finalChatId = chatId;
 
             // 3. Передаем chatId и event в диспетчер

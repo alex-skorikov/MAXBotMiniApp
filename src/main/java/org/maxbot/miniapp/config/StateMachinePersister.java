@@ -17,7 +17,6 @@ import java.util.Map;
 @Component
 public class StateMachinePersister {
 
-    // Внедряем ваш Redis-репозиторий
     private final ContextRepository contextRepository;
 
     public StateMachinePersister(ContextRepository contextRepository) {
@@ -55,7 +54,10 @@ public class StateMachinePersister {
     /**
      * Сохраняет текущее состояние и переменные в Redis
      */
-    public void persist(StateMachine<BotStates, BotEvents> stateMachine, String userId, String chatId) {
+    public void persist(StateMachine<BotStates, BotEvents> stateMachine,
+                        String userId,
+                        String chatId,
+                        BotEvents botEvent) {
         if (stateMachine.getState() == null) {
             return; // Защита от сохранения неинициализированной машины
         }
@@ -75,6 +77,7 @@ public class StateMachinePersister {
         // 2. ОБЯЗАТЕЛЬНО: Синхронизируем текущий стейт машины с полем внутри UserContext
         BotStates currentState = stateMachine.getState().getId();
         userContext.setState(currentState);
+        userContext.setBotEvent(botEvent);
         userContext.setChatId(chatId);
         // 3. Сохраняем обновленный контекст в Redis
         contextRepository.save(userContext);

@@ -2,6 +2,8 @@ package org.maxbot.miniapp.util;
 
 import org.maxbot.miniapp.controller.MaxWebhookController;
 import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.UserContext;
+import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -16,6 +18,11 @@ public class MaxMapper {
 
     private record PayloadInfo(BotEvents eventType, String description) {}
     private static final Logger log = LoggerFactory.getLogger(MaxMapper.class);
+    private final ContextRepository contextRepository;
+
+    public MaxMapper(ContextRepository contextRepository) {
+        this.contextRepository = contextRepository;
+    }
 
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.of(
             "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
@@ -26,7 +33,10 @@ public class MaxMapper {
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
 
-    public BotEvent toEvent(UpdateDto upd) {
+    public BotEvent toEvent(UpdateDto upd, int chatId) {
+
+        UserContext userContext = contextRepository.load(String.valueOf(chatId));
+
         if (upd == null) return null;
 
         BotEvent event = new BotEvent();
@@ -50,6 +60,10 @@ public class MaxMapper {
             event.setPayload(payload);
 
             PayloadInfo info = PAYLOAD_MAPPING.get(payload);
+
+            if (info != null && info.eventType.equals(BotEvents.BACK)){
+                event.setType(userContext.getBotEvent());
+            }
             if (info != null) {
                 event.setType(info.eventType());
                 event.setPayloadDescription(info.description());
