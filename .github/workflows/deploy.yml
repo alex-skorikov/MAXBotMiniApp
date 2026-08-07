@@ -1,48 +1,62 @@
-name: Deploy MAXBotMiniApp
+name: Production CI/CD (Deploy MAXBotMiniApp)
 
 on:
   push:
     branches:
-      - develop
+      - develop  # Запуск только при пуше в develop
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Set up JDK 17 (Liberica)
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: 'liberica'
           java-version: '17'
 
-      - name: Build JAR
-        run: mvn -B package --file pom.xml
+      # 1. Собираем свежий JAR в облаке GitHub (пропуская тесты для скорости)
+      - name: Build JAR with Maven
+        run: mvn -B -DskipTests clean package
 
-      - name: Test SSH connection
+      # 2. Очищаем целевую папку target на сервере перед копированием, чтобы не копить старые архивы
+      - name: Prepare server directories
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "SSH OK"
-            hostname
-            ls -l /home/alex/MAXBotMiniApp
+            mkdir -p /home/alex/MAXBotMiniApp/target
+            rm -f /home/alex/MAXBotMiniApp/target/*.jar
 
-      - name: Copy JAR to server
+      # 3. 🟢 КРИТИЧЕСКИЙ ФИКС SCP: копируем JAR-файл напрямую в папку target/ на сервере
+      - name: Copy JAR to server target directory
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "target/*.jar"
+          target: "/home/alex/MAXBotMiniApp/target/"
+          strip_components: 1  # Важно! Убирает создание лишней вложенной папки target внутри target
+
+      # 4. Копируем конфигурационные файлы, если они изменились в Git
+      - name: Copy Docker configuration files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml,Dockerfile,logback.xml"
           target: "/home/alex/MAXBotMiniApp/"
 
-      - name: Restart Docker Compose
+      # 5. 🚀 Жесткий перезапуск контейнеров с полной пересборкой без кэша
+      - name: SSH Remote Commands (Rebuild & Restart)
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -51,4 +65,5 @@ jobs:
           script: |
             cd /home/alex/MAXBotMiniApp
             docker compose down
-            docker compose up -d --build
+            docker compose build --no-cache
+            docker compose up -d --force-recreate
