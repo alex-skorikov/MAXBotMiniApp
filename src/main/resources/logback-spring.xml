@@ -3,7 +3,7 @@
 
     <!-- Лог в корень проекта -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/app/app.log</file>
+        <file>app.log</file>
         <!-- Ротация по дням -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>/app/app.%d{yyyy-MM-dd}.log</fileNamePattern>
