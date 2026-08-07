@@ -24,7 +24,7 @@ public class StepAction implements Action<BotStates, BotEvents> {
         if (context.getTarget() == null) {
             return;
         }
-        BotStates targetState = context.getTarget().getId();
+        BotStates targetState = context.getStateMachine().getState().getId();
 
         BotEvent event = (BotEvent) context.getMessageHeader("event");
         UserContext userContext = (UserContext) context.getMessageHeader("userContext");
