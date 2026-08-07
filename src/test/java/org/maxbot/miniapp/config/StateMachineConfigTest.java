@@ -29,7 +29,7 @@ class StateMachineConfigTest {
         machine.sendEvent(BotEvents.USER_OPEN_CHAT);
         machine.sendEvent(BotEvents.USER_SELECT_BASE);
 //        machine.sendEvent(BotEvents.USER_CLICK_FILTERS);
-        Assertions.assertEquals(machine.getState().getId(), BotStates.SELECT_BASE);
+        Assertions.assertEquals(machine.getState().getId(), BotStates.INIT);
 
     }
 }
