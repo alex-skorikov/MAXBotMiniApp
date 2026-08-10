@@ -18,6 +18,7 @@ public class UserContext {
     private String selectedBase;
     private String date;
     private Map<String, Object> filters = new HashMap<>();
+    private Map<String, Object> searchArrays = new HashMap<>();
     private BotStates state;
     private BotEvents botEvent;
 }
