@@ -139,8 +139,12 @@ public class MaxMapper {
         if ("message_created".equals(updateType) && BotStates.FILTER_CLASSIFIERS.equals(userContext.getState())) {
             MessageDto msg = upd.getMessage();
             String text = msg != null && msg.getBody() != null ? msg.getBody().getText() : null;
+            CallbackDto cb = upd.getCallback();
+            String payload = cb.getPayload();
+            event.setPayload(payload);
 
-            userContext.setClassifiers(text);
+            PayloadInfo info = PAYLOAD_MAPPING.get(payload);
+            userContext.setClassifiers(info.description());
             contextRepository.save(userContext);
 
             event.setText(text);
