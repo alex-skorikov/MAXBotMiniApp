@@ -22,6 +22,7 @@ public class UserContext {
     private String classifiers;
     private BotStates state;
     private BotEvents botEvent;
+    private String searchQuery;
 }
 
 
