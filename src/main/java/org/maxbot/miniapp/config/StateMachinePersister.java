@@ -28,7 +28,7 @@ public class StateMachinePersister {
     }
 
     /**
-     * 🟢 ИСПРАВЛЕНО: Восстанавливает состояние автомата из Redis через реактивный сброс регионов
+     * Восстанавливает состояние автомата из Redis через реактивный сброс регионов
      */
     public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String chatId) {
         return Mono.defer(() -> {
@@ -58,7 +58,7 @@ public class StateMachinePersister {
     }
 
     /**
-     * 🟢 ИСПРАВЛЕНО: Синхронный метод сохранения (возвращает void, работает стабильно)
+     * Синхронный метод сохранения (возвращает void, работает стабильно)
      */
     public void persist(StateMachine<BotStates, BotEvents> stateMachine,
                         String userId,
