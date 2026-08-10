@@ -80,6 +80,11 @@ public class MaxMapper {
             return event;
         }
 
+        // Stop bot
+        if ("bot_stopped".equals(updateType)){
+           contextRepository.delete(String.valueOf(chatId));
+        }
+
         // 3. НАЖАТИЕ ИНЛАЙН-КНОПКИ
         if ("message_callback".equals(updateType) && upd.getCallback() != null) {
             CallbackDto cb = upd.getCallback();
