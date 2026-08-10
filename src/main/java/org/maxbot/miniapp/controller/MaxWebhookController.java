@@ -51,7 +51,7 @@ public class MaxWebhookController {
                     if (event.getCallbackId() == null) {
                         return dispatcher.dispatch(finalChatId, event)
                                 // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-                                .flatMap(resp -> maxApiClient.sendMessage2(finalChatId, resp));
+                                .flatMap(resp -> maxApiClient.sendMessage(finalChatId, resp));
                     } else {
                         return dispatcher.dispatch(finalChatId, event)
                                 // 4. Отправляем ответ пользователю, если автомат его сгенерировал

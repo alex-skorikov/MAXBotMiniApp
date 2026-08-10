@@ -2,7 +2,6 @@ package org.maxbot.miniapp.client;
 
 
 import org.maxbot.miniapp.core.BotResponse;
-import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,18 +26,7 @@ public class MaxApiClient {
                 .build();
     }
 
-    public Mono<Void> sendMessage(int chatId, BotAnswerMessage bodyValue) {
-        log.info(">>> Send Message: {}", bodyValue);
-        return webClient.post()
-                .uri(uriBuilder -> uriBuilder.path("/messages")
-                        .queryParam("chat_id", chatId).build())
-                .bodyValue(bodyValue)
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(e -> log.error("MAX API sendMessage error", e));
-    }
-
-    public Mono<Void> sendMessage2(int chatId, BotResponse resp) {
+    public Mono<Void> sendMessage(int chatId, BotResponse resp) {
         return webClient.post()
                 .uri(uriBuilder -> uriBuilder.path("/messages")
                         .queryParam("chat_id", chatId).build())
