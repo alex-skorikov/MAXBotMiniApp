@@ -12,8 +12,6 @@ import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
@@ -29,7 +27,7 @@ class StateMachineConfigTest {
         machine.sendEvent(BotEvents.USER_OPEN_CHAT);
         machine.sendEvent(BotEvents.USER_SELECT_BASE);
 //        machine.sendEvent(BotEvents.USER_CLICK_FILTERS);
-        Assertions.assertEquals(machine.getState().getId(), BotStates.SELECT_FILTERS);
+        Assertions.assertEquals(machine.getState().getId(), BotStates.BASE_SELECTED);
 
     }
 }

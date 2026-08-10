@@ -33,17 +33,20 @@ public class BaseSelectHandler implements StepHandler {
 
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
-        String selectDate = ctx.getSelectedBase() !=null? ctx.getDate() : "";
-        String selectFilter = ctx.getFilters().toString();
-        String selectArrays = ctx.getSearchArrays().toString();
+        String selectDate = ctx.getSelectedBase();
+        String classifiers = ctx.getClassifiers();
+        String selectArrays = ctx.getSearchArrays();
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Выбрана база: ").append(selectBase).append("\n");
-        if (selectBase != null){
-            stringBuilder.append("Установлена дата: ").append(selectDate).append("\n");
+        if (selectDate != null){
+            stringBuilder.append("Фильтр по дате установлен: ").append(selectDate).append("\n");
         }
-        if (selectFilter != null){
-            stringBuilder.append("Установлены фильтры: ").append(selectFilter).append("\n");
+        if (!selectArrays.isEmpty()){
+            stringBuilder.append("Выбран массив: ").append(selectArrays).append("\n");
+        }
+        if (!classifiers.isEmpty()){
+            stringBuilder.append("Клсссифкатор ").append(classifiers).append(" установлен");
         }
 
         return BotResponse.builder()

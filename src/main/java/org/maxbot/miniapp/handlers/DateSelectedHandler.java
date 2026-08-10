@@ -11,12 +11,6 @@ import java.util.List;
 @Component
 public class DateSelectedHandler implements StepHandler {
 
-    private final MaxApiClient apiClient;
-
-    public DateSelectedHandler(MaxApiClient apiClient) {
-        this.apiClient = apiClient;
-    }
-
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
 //        List<List<BotResponse.Button>> buttons = new java.util.ArrayList<>();
@@ -36,11 +30,8 @@ public class DateSelectedHandler implements StepHandler {
 //                        .build()
 //                )).build();
 
-        BotResponse botResponse = BotResponse.builder()
+       return BotResponse.builder()
                 .text("Фильтр по дате установлен")
                 .build();
-        apiClient.sendMessage(Integer.parseInt(event.getChatId()), botResponse);
-        return botResponse;
-
     }
 }
