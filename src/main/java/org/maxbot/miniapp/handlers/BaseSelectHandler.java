@@ -33,7 +33,7 @@ public class BaseSelectHandler implements StepHandler {
 
         // --- Формируем ответ безопасно
         String selectBase = ctx.getSelectedBase();
-        String selectDate = ctx.getDate(); // 🟢 ФИКС: Считываем именно дату (.getDate()), а не базу заново
+        String selectDate = ctx.getDate();
         String classifiers = ctx.getClassifiers();
         String selectArrays = ctx.getSearchArrays();
 
