@@ -27,21 +27,21 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         this.validDateGuard = validDateGuard;
     }
 
-    /**
-     * КРИТИЧЕСКИЙ ФИКС: Регистрируем стейты и привязываем StepAction на ВХОД в состояния
-     */
     @Override
     public void configure(StateMachineStateConfigurer<BotStates, BotEvents> states) throws Exception {
         states
                 .withStates()
                 .initial(BotStates.INIT) // Задаем стартовую точку бота
 
-                // 🟢 Назначаем stepAction на вход в конкретные состояния
                 .state(BotStates.SELECT_BASE, stepAction)
                 .state(BotStates.SELECT_FILTERS, stepAction)
                 .state(BotStates.FILTER_DATE, stepAction)
+                .state(BotStates.SELECT_DATE, stepAction)
+
                 .state(BotStates.FILTER_ARRAYS, stepAction)
                 .state(BotStates.CONFIRM_SEARCH, stepAction)
+
+                .state(BotStates.DONE, stepAction)
 
                 // Регистрируем структуру всех остальных стейтов перечислением
                 .states(java.util.EnumSet.allOf(BotStates.class));
