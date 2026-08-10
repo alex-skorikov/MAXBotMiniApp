@@ -10,7 +10,7 @@ import java.util.Map;
 @Component
 public class HandlerRegistry {
 
-    private static final Map<BotStates, StepHandler> map = new EnumMap<>(BotStates.class);
+    private final Map<BotStates, StepHandler> map = new EnumMap<>(BotStates.class);
 
     public HandlerRegistry(
             InitHandler init,
