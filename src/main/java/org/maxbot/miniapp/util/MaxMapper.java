@@ -40,15 +40,15 @@ public class MaxMapper {
             entry("SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Переход к поисковым массивам")),
             entry("CLASSIFIERS", new PayloadInfo(BotEvents.USER_SEARCH_CLASSIFIERS, "Переход к классификаторам")),
 
-            entry("COUNTRY_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Россия и страны СНГ")),
-            entry("RST_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Минимум РСТ")),
-            entry("INDUSTRIAL_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Промышленные образцы")),
-            entry("SMALL_PF_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Страны с малым ПФ")),
+            entry("COUNTRY_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Россия и страны СНГ")),
+            entry("RST_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Минимум РСТ")),
+            entry("INDUSTRIAL_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Промышленные образцы")),
+            entry("SMALL_PF_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
 
-            entry("COUNTRY_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Россия и страны СНГ")),
-            entry("RST_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Минимум РСТ")),
-            entry("INDUSTRIAL_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Промышленные образцы")),
-            entry("SMALL_PF_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
+//            entry("COUNTRY_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Россия и страны СНГ")),
+//            entry("RST_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Минимум РСТ")),
+//            entry("INDUSTRIAL_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Промышленные образцы")),
+//            entry("SMALL_PF_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
 
             entry("SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов")),
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
