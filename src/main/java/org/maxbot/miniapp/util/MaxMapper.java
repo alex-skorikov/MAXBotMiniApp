@@ -38,7 +38,7 @@ public class MaxMapper {
             entry("RST_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Минимум РСТ")),
             entry("INDUSTRIAL_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Промышленные образцы")),
             entry("SMALL_PF_INPUT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
-            entry("START_SEARCH", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Запуск поиска патентов")),
+            entry("START_SEARCH", new PayloadInfo(BotEvents.USER_PROCEED_TO_SEARCH, "Запуск поиска патентов")),
             entry("SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов")),
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
     );
