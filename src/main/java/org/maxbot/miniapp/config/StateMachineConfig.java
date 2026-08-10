@@ -130,19 +130,12 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
-                // Из подменю Массивов возвращаемся в главное меню фильтров
+                // Из подменю ввода строки поиска возвращаемся в меню выбора даты
                 .withExternal()
-                .source(BotStates.FILTER_ARRAYS)
-                .target(BotStates.SELECT_FILTERS)
-                .event(BotEvents.BACK)
-
-                .and()
-
-                // Из экрана подтверждения возвращаемся обратно в меню фильтров
-                .withExternal()
-                .source(BotStates.CONFIRM_SEARCH)
-                .target(BotStates.SELECT_FILTERS)
+                .source(BotStates.SELECT_DATE)
+                .target(BotStates.FILTER_DATE)
                 .event(BotEvents.BACK);
+
     }
 
     @Override
