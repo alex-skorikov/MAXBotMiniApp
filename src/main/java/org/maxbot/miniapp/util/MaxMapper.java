@@ -108,7 +108,7 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
-            userContext.setDate(LocalDate.parse(upd.getMessage().getBody().getText()));
+            userContext.setDate(upd.getMessage().getBody().getText());
             contextRepository.save(userContext);
 
             event.setText(text);

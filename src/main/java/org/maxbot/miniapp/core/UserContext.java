@@ -16,7 +16,7 @@ public class UserContext {
     private int userId;
     private String chatId;
     private String selectedBase;
-    private LocalDate date;
+    private String date;
     private Map<String, Object> filters = new HashMap<>();
     private BotStates state;
     private BotEvents botEvent;
