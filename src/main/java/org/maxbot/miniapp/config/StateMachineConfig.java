@@ -79,7 +79,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 // Запрос даты поиска, возврат в фильтры
                 .withExternal()
                 .source(BotStates.FILTER_DATE)
-                .target(BotStates.BASE_SELECTED)
+                .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_SELECTED_DATE)
                 .guard(validDateGuard)
                 .and()
