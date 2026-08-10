@@ -77,6 +77,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
+                .withExternal()
+                .source(BotStates.FILTER_DATE)
+                .target(BotStates.SELECT_DATE)
+                .event(BotEvents.USER_SELECTED_DATE)
+                .guard(validDateGuard)        // опционально
+
+                .and()
+
                 // Переход 4. Из меню фильтров заходим в подменю настроек Массивов или Классификаторов
                 .withExternal()
                 .source(BotStates.SELECT_FILTERS)
