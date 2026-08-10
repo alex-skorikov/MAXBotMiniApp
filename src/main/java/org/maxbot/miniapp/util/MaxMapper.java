@@ -120,7 +120,7 @@ public class MaxMapper {
             return event;
         }
 
-        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.SELECT_DATE)) {
+        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.SEARCH)) {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
