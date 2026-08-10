@@ -110,6 +110,9 @@ public class MaxMapper {
             event.setText(text);
             event.setType(BotEvents.USER_SELECTED_DATE);
             event.setPayloadDescription("Ввод даты");
+
+            log.info(">>> MaxMapper found Event: {}", event);
+            log.info(">>> MaxMapper found UserContext: {}", userContext);
             return event;
         }
 
@@ -117,12 +120,15 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
-            userContext.getFilters().put("date", event.getText());
+            userContext.getFilters().put("search_query", event.getText());
             contextRepository.save(userContext);
 
             event.setText(text);
             event.setType(BotEvents.USER_SEARCH_PATENT);
             event.setPayloadDescription("Ввод поискового запроса");
+
+            log.info(">>> MaxMapper found Event: {}", event);
+            log.info(">>> MaxMapper found UserContext: {}", userContext);
             return event;
         }
 
