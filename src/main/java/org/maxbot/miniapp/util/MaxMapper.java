@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Map.entry;
+
 @Component
 public class MaxMapper {
 
@@ -29,23 +31,27 @@ public class MaxMapper {
         this.contextRepository = contextRepository;
     }
 
-    private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.of(
-            "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
-            "PROM_SAMPLE", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Промобразцы"),
-            "MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
-            "DATE_INPUT", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Выбор даты"),
-            "DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана"),
+    private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.ofEntries(
+            entry("PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты")),
+            entry("PROM_SAMPLE", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Промобразцы")),
+            entry("MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели")),
+            entry("DATE_INPUT", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Выбор даты")),
+            entry("DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана")),
 
+            entry("COUNTRY_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Россия и страны СНГ")),
+            entry("RST_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Минимум РСТ")),
+            entry("INDUSTRIAL_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Промышленные образцы")),
+            entry("SMALL_PF_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Страны с малым ПФ")),
 
-            "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
+            entry("COUNTRY_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Россия и страны СНГ")),
+            entry("RST_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Минимум РСТ")),
+            entry("INDUSTRIAL_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Промышленные образцы")),
+            entry("SMALL_PF_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
 
+            entry("SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов")),
 
-//            "SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SELECT_SEARCH_ARRAY, "Поисковые массивы"),
-//            "CLASSIFIERS", new PayloadInfo(BotEvents.USER_SELECT_CLASSIFIERS, "Классификаторы"),
-
-
-            "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
-    );
+            entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
+            );
 
     public BotEvent toEvent(UpdateDto upd, int chatId) {
         if (upd == null) return null;
@@ -78,9 +84,9 @@ public class MaxMapper {
             return event;
         }
 
-        // Stop bot
-        if ("bot_stopped".equals(updateType)){
-           contextRepository.delete(String.valueOf(chatId));
+        // Stop bot - удаляем контекст пользователя
+        if ("bot_stopped".equals(updateType)) {
+            contextRepository.delete(String.valueOf(chatId));
         }
 
         // 3. НАЖАТИЕ ИНЛАЙН-КНОПКИ
@@ -114,6 +120,22 @@ public class MaxMapper {
             event.setText(text);
             event.setType(BotEvents.USER_SELECTED_DATE);
             event.setPayloadDescription("Ввод даты");
+
+            log.info(">>> MaxMapper found Event: {}", event);
+            log.info(">>> MaxMapper found UserContext: {}", userContext);
+            return event;
+        }
+
+        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.FILTER_CLASSIFIERS)) {
+            MessageDto msg = upd.getMessage();
+            String text = msg.getBody().getText();
+
+            userContext.setClassifiers(upd.getMessage().getBody().getText());
+            contextRepository.save(userContext);
+
+            event.setText(text);
+            event.setType(BotEvents.USER_SELECT_CLASSIFIERS);
+            event.setPayloadDescription("Ввод поискового запроса");
 
             log.info(">>> MaxMapper found Event: {}", event);
             log.info(">>> MaxMapper found UserContext: {}", userContext);

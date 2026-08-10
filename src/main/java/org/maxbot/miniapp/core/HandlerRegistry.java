@@ -17,16 +17,29 @@ public class HandlerRegistry {
             BaseSelectHandler selectBase,
             DateFilterHandler filterDate,
             DateSelectedHandler dateSelectedHandler,
-            SearchHandler searchHandler
+            SearchHandler searchHandler,
+            ArrayFilterHandler arrayFilterHandler,
+            ArraySelectHandler arraySelectHandler,
+            ClassifiersFilterHandler classifiersFilterHandler,
+            ClassifiersSelectHandler classifiersSelectHandler
     ) {
         // Старт
         map.put(BotStates.SELECT_BASE, init);
         // Выбор базы, показываем главное меню фильтров
-        map.put(BotStates.SELECT_FILTERS, selectBase);
+        map.put(BotStates.BASE_SELECTED, selectBase);
         // Выбор фильтра ДАТА, запрос даты в формате yyyy-mm-dd
         map.put(BotStates.FILTER_DATE, filterDate);
-        // Дата выбрана, запрос текста для поиска
+        // Дата выбрана
         map.put(BotStates.SELECT_DATE, dateSelectedHandler);
+        // Выбор поискового массива
+        map.put(BotStates.FILTER_SEARCH_ARRAY, arrayFilterHandler);
+        // Поисковый массив выбран
+        map.put(BotStates.SELECT_SEARCH_ARRAY, arraySelectHandler);
+        // Выбор классификатора
+        map.put(BotStates.FILTER_CLASSIFIERS, classifiersFilterHandler);
+        // Классификатор выбран
+        map.put(BotStates.SELECT_CLASSIFIERS, classifiersSelectHandler);
+
         // Ввод поискового запроса
         map.put(BotStates.SEARCH, searchHandler);
         
