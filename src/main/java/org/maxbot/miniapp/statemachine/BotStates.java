@@ -8,6 +8,8 @@ public enum BotStates {
     FILTER_DATE,       // Ввод/выбор даты
     SELECT_DATE,       // Ввод/выбор даты
 
+    SEARCH_ARRAY,      // Поисковые массивы
+
     SEARCH,     // Поиск
 
     DONE
