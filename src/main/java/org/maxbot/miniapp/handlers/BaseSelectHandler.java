@@ -31,8 +31,23 @@ public class BaseSelectHandler implements StepHandler {
                 .payload("BACK")
                 .build()));
 
+        // --- Формируем ответ
+        String selectBase = ctx.getSelectedBase();
+        String selectDate = ctx.getSelectedBase() !=null? ctx.getDate() : "";
+        String selectFilter = ctx.getFilters().toString();
+        String selectArrays = ctx.getSearchArrays().toString();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Выбрана база: ").append(selectBase).append("\n");
+        if (selectBase != null){
+            stringBuilder.append("Установлена дата: ").append(selectDate).append("\n");
+        }
+        if (selectFilter != null){
+            stringBuilder.append("Установлены фильтры: ").append(selectFilter).append("\n");
+        }
+
         return BotResponse.builder()
-                .text("Выбрана база: " + ctx.getSelectedBase() + "\nВыберите фильтры")
+                .text(stringBuilder.toString())
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()
