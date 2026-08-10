@@ -69,7 +69,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
-                // Переход 3. Из меню фильтров заходим в подменю настройки Даты
+                // Переход 3. Из меню фильтров заходим в подменю выбора Даты
                 .withExternal()
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.FILTER_DATE)

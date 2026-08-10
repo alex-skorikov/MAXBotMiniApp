@@ -35,6 +35,12 @@ public class MaxMapper {
             "MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
             "DATE_INPUT", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Выбор даты"),
             "DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана"),
+
+
+            "SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SELECT_SEARCH_ARRAY, "Поисковые массивы"),
+            "CLASSIFIERS", new PayloadInfo(BotEvents.USER_SELECT_CLASSIFIERS, "Классификаторы"),
+
+
             "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
@@ -44,6 +50,8 @@ public class MaxMapper {
 
         // Загружаем контекст по валидному chatId, переданному из контроллера
         UserContext userContext = contextRepository.load(String.valueOf(chatId));
+        log.info("MaxMapper found UserContext: {}", userContext);
+
 
         BotEvent event = new BotEvent();
 
