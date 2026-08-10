@@ -3,9 +3,10 @@ package org.maxbot.miniapp.handlers;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
-
+@Component
 public class SearchHandler implements StepHandler {
 
     @Override
