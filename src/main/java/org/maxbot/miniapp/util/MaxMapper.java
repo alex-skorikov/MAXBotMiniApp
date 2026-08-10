@@ -7,6 +7,7 @@ import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
+import org.maxbot.miniapp.statemachine.BotStates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -32,8 +33,9 @@ public class MaxMapper {
             "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
             "PROM_SAMPLE", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Промобразцы"),
             "MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
-//            "ARRAYS_PANEL", new PayloadInfo(BotEvents.USER_SELECT_FILTERS, "Фильтры"),
-            "DATE", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Дата"),
+            "DATE_INPUT", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Выбор даты"),
+            "DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана"),
+            "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
 
@@ -89,16 +91,24 @@ public class MaxMapper {
             }
         }
 
-//        if ("message_created".equals(upd.getUpdateType())) {
+        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.FILTER_DATE)) {
+            MessageDto msg = upd.getMessage();
+            String text = msg.getBody().getText();
+
+            event.setText(text);
+            event.setType(BotEvents.USER_SELECTED_DATE);
+            event.setPayloadDescription("Ввод даты");
+            return event;
+        }
+
+//        if ("message_created".equals(updateType)) {
 //            MessageDto msg = upd.getMessage();
-//            int chatId = msg.getRecipient().getChatId();
-//            int userId = msg.getSender().getUserId();
 //            String text = msg.getBody().getText();
 //
-//            if ("PATENT_SEARCH".equals(userState.get(userId))) {
-//                return handlePatentSearch("qn", text, userId, chatId)
-//                        .onErrorResume(e -> Mono.empty());
-//            }
+//            event.setText(text);
+//            event.setType(BotEvents.USER_SEARCH_PATENT);
+//            event.setPayloadDescription("Ввод даты");
+//            return event;
 //        }
 
 
