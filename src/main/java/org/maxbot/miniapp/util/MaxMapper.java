@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +37,9 @@ public class MaxMapper {
             entry("DATE_INPUT", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Выбор даты")),
             entry("DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана")),
 
+            entry("SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Переход к поисковым массивам")),
+            entry("CLASSIFIERS", new PayloadInfo(BotEvents.USER_SEARCH_CLASSIFIERS, "Переход к классификаторам")),
+
             entry("COUNTRY_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Россия и страны СНГ")),
             entry("RST_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Минимум РСТ")),
             entry("INDUSTRIAL_INPUT", new PayloadInfo(BotEvents.USER_SEARCH_ARRAY, "Выбор массива Промышленные образцы")),
@@ -49,9 +51,8 @@ public class MaxMapper {
             entry("SMALL_PF_SELECT", new PayloadInfo(BotEvents.USER_SELECT_ARRAY, "Страны с малым ПФ")),
 
             entry("SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов")),
-
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
-            );
+    );
 
     public BotEvent toEvent(UpdateDto upd, int chatId) {
         if (upd == null) return null;
@@ -63,7 +64,6 @@ public class MaxMapper {
 
         int validUserId = upd.getUserId() != 0 ? upd.getUserId() : (upd.getCallback() != null && upd.getCallback().getUser() != null ? upd.getCallback().getUser().getUserId() : 0);
         event.setUserId(String.valueOf(validUserId));
-
         event.setChatId(String.valueOf(chatId));
 
         // Сохраняем callbackId для выбора варианта ответа
@@ -87,6 +87,7 @@ public class MaxMapper {
         // Stop bot - удаляем контекст пользователя
         if ("bot_stopped".equals(updateType)) {
             contextRepository.delete(String.valueOf(chatId));
+            return event;
         }
 
         // 3. НАЖАТИЕ ИНЛАЙН-КНОПКИ
@@ -98,23 +99,32 @@ public class MaxMapper {
             PayloadInfo info = PAYLOAD_MAPPING.get(payload);
 
             if (info != null) {
-                // Если нажата кнопка НАЗАД
-                if (info.eventType().equals(BotEvents.BACK)) {
-                    event.setType(BotEvents.BACK);
-                    event.setPayloadDescription(info.description());
-                } else {
-                    // Для всех остальных кнопок
-                    event.setType(info.eventType());
-                    event.setPayloadDescription(info.description());
+                boolean needSave = false;
+
+                // Автосохранение выбранной базы
+                if (info.eventType() == BotEvents.USER_SELECT_BASE) {
+                    userContext.setSelectedBase(info.description());
+                    needSave = true;
                 }
+                // Автосохранение выбранного массива
+                if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
+                    userContext.setSearchArrays(info.description());
+                    needSave = true;
+                }
+                if (needSave) {
+                    contextRepository.save(userContext);
+                }
+
+                event.setType(info.eventType());
+                event.setPayloadDescription(info.description());
             }
         }
 
-        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.FILTER_DATE)) {
+        if ("message_created".equals(updateType) && BotStates.FILTER_DATE.equals(userContext.getState())) {
             MessageDto msg = upd.getMessage();
-            String text = msg.getBody().getText();
+            String text = msg != null && msg.getBody() != null ? msg.getBody().getText() : null;
 
-            userContext.setDate(upd.getMessage().getBody().getText());
+            userContext.setDate(text);
             contextRepository.save(userContext);
 
             event.setText(text);
@@ -126,11 +136,11 @@ public class MaxMapper {
             return event;
         }
 
-        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.FILTER_CLASSIFIERS)) {
+        if ("message_created".equals(updateType) && BotStates.FILTER_CLASSIFIERS.equals(userContext.getState())) {
             MessageDto msg = upd.getMessage();
-            String text = msg.getBody().getText();
+            String text = msg != null && msg.getBody() != null ? msg.getBody().getText() : null;
 
-            userContext.setClassifiers(upd.getMessage().getBody().getText());
+            userContext.setClassifiers(text);
             contextRepository.save(userContext);
 
             event.setText(text);
@@ -142,12 +152,14 @@ public class MaxMapper {
             return event;
         }
 
-        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.SEARCH)) {
+        if ("message_created".equals(updateType) && BotStates.SEARCH.equals(userContext.getState())) {
             MessageDto msg = upd.getMessage();
-            String text = msg.getBody().getText();
+            String text = msg != null && msg.getBody() != null ? msg.getBody().getText() : null;
 
-            userContext.getFilters().put("search_query", upd.getMessage().getBody().getText());
-            contextRepository.save(userContext);
+            if (userContext.getFilters() != null) {
+                userContext.getFilters().put("search_query", text);
+                contextRepository.save(userContext);
+            }
 
             event.setText(text);
             event.setType(BotEvents.USER_SEARCH_PATENT);
@@ -157,7 +169,6 @@ public class MaxMapper {
             log.info(">>> MaxMapper found UserContext: {}", userContext);
             return event;
         }
-
 
         log.info(">>> MaxMapper found Event: {}", event);
         log.info(">>> MaxMapper found UserContext: {}", userContext);
