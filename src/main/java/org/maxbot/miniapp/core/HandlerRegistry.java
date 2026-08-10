@@ -15,22 +15,25 @@ public class HandlerRegistry {
     public HandlerRegistry(
             InitHandler init,
             BaseSelectHandler selectBase,
-            FilterMenuHandler filterMenu,
             DateFilterHandler filterDate,
             SaveDateHandler saveDate,
-            FilterClassifiersHandler filterClassifiers,
+            ClassifiersFilterHandler filterClassifiers,
             SaveClassifierHandler saveClassifier
     ) {
-        // 🟢 При первом старте (переход в SELECT_BASE) показываем приветствие и выбор баз
+        // Старт
         map.put(BotStates.SELECT_BASE, init);
 
-        // 🟢 Когда база выбрана (переход в SELECT_FILTERS), показываем главное меню фильтров
+        // Выбор базы, показываем главное меню фильтров
         map.put(BotStates.SELECT_FILTERS, selectBase);
 
-        // Оставляем остальные подменю фильтров без изменений
+        // Выбор фильтра ДАТА, запрос даты в формате yyyy-mm-dd
         map.put(BotStates.FILTER_DATE, filterDate);
-        map.put(BotStates.FILTER_CLASSIFIERS, filterClassifiers);
+
+        // Запрос текста для поиска
         map.put(BotStates.DONE, saveDate);
+
+        map.put(BotStates.FILTER_CLASSIFIERS, filterClassifiers);
+
     }
 
     public StepHandler getHandler(BotStates state) {

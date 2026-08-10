@@ -2,6 +2,7 @@ package org.maxbot.miniapp.util;
 
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
+import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
@@ -9,13 +10,17 @@ import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class MaxMapper {
 
-    private record PayloadInfo(BotEvents eventType, String description) {}
+    private record PayloadInfo(BotEvents eventType, String description) {
+    }
+
     private static final Logger log = LoggerFactory.getLogger(MaxMapper.class);
     private final ContextRepository contextRepository;
 
@@ -26,10 +31,9 @@ public class MaxMapper {
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.of(
             "PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты"),
             "PROM_SAMPLE", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Промобразцы"),
-            // 🟢 ИСПРАВЛЕНО: Добавили букву S на конце, чтобы совпадало с payload=MODELS из кнопки
             "MODELS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Полезные модели"),
-            "ARRAYS_PANEL", new PayloadInfo(BotEvents.USER_SELECT_FILTERS, "Фильтры"),
-            "DATE_PANEL", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Дата"),
+//            "ARRAYS_PANEL", new PayloadInfo(BotEvents.USER_SELECT_FILTERS, "Фильтры"),
+            "DATE", new PayloadInfo(BotEvents.USER_INPUT_DATE, "Дата"),
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
 
@@ -41,18 +45,24 @@ public class MaxMapper {
 
         BotEvent event = new BotEvent();
 
-        // 🟢 ИСПРАВЛЕНО: Безопасно вытаскиваем userId, если на кнопке он равен 0
         int validUserId = upd.getUserId() != 0 ? upd.getUserId() : (upd.getCallback() != null && upd.getCallback().getUser() != null ? upd.getCallback().getUser().getUserId() : 0);
         event.setUserId(String.valueOf(validUserId));
 
-        // 🟢 ИСПРАВЛЕНО: Подставляем валидный chatId из аргумента метода, а не upd.getChatId()
         event.setChatId(String.valueOf(chatId));
+
+        // Сохраняем callbackId для выбора варианта ответа
+        String callbackId = Optional.ofNullable(upd)
+                .map(UpdateDto::getCallback)
+                .map(CallbackDto::getCallbackId)
+                .orElse(null);
+
+        event.setCallbackId(callbackId);
 
         String updateType = upd.getUpdateType();
         if (updateType == null) return event;
 
         // 1. ПЕРВЫЙ СТАРТ
-        if ("bot_started".equals(updateType) || "message_created".equals(updateType)) {
+        if ("bot_started".equals(updateType)) {
             event.setType(BotEvents.USER_OPEN_CHAT);
             event.setPayloadDescription("Старт бота");
             return event;
@@ -72,12 +82,25 @@ public class MaxMapper {
                     event.setType(BotEvents.BACK);
                     event.setPayloadDescription(info.description());
                 } else {
-                    // Для всех остальных кнопок (включая MODELS)
+                    // Для всех остальных кнопок
                     event.setType(info.eventType());
                     event.setPayloadDescription(info.description());
                 }
             }
         }
+
+//        if ("message_created".equals(upd.getUpdateType())) {
+//            MessageDto msg = upd.getMessage();
+//            int chatId = msg.getRecipient().getChatId();
+//            int userId = msg.getSender().getUserId();
+//            String text = msg.getBody().getText();
+//
+//            if ("PATENT_SEARCH".equals(userState.get(userId))) {
+//                return handlePatentSearch("qn", text, userId, chatId)
+//                        .onErrorResume(e -> Mono.empty());
+//            }
+//        }
+
 
         log.info("MaxMapper found Event: {}", event);
         return event;

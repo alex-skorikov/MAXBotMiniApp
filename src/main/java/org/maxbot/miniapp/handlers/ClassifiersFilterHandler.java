@@ -4,7 +4,7 @@ import org.maxbot.miniapp.core.*;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FilterClassifiersHandler implements StepHandler {
+public class ClassifiersFilterHandler implements StepHandler {
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {

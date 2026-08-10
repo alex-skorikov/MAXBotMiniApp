@@ -1,11 +1,9 @@
 package org.maxbot.miniapp.handlers;
 
-import org.maxbot.miniapp.core.*;
-import org.maxbot.miniapp.statemachine.BotEvents; // Импортируем ваши ивенты
-import org.maxbot.miniapp.statemachine.BotStates;
+import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.util.BotAnswerUtil;
-import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.action.Action; // Импортируем Action
 import org.springframework.stereotype.Component;
 
 import java.util.List;

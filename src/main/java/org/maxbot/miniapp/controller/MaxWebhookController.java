@@ -54,24 +54,24 @@ public class MaxWebhookController {
             if (chatId == 0) {
                 chatId = upd.getMessage().getRecipient().getChatId();
             }
-            String callbackId = Optional.ofNullable(upd)
-                    .map(UpdateDto::getCallback)
-                    .map(CallbackDto::getCallbackId)
-                    .orElse(null);
+//            String callbackId = Optional.ofNullable(upd)
+//                    .map(UpdateDto::getCallback)
+//                    .map(CallbackDto::getCallbackId)
+//                    .orElse(null);
 
             // 2. Маппим DTO в событие для стейт-машины
             BotEvent event = maxMapper.toEvent(upd, chatId);
             int finalChatId = chatId;
 
             // 3. Передаем chatId и event в диспетчер
-            if (callbackId == null) {
+            if (event.getCallbackId() == null) {
                 return dispatcher.dispatch(finalChatId, event)
                         // 4. Отправляем ответ пользователю, если автомат его сгенерировал
                         .flatMap(resp -> maxApiClient.sendMessage2(finalChatId, resp));
             } else {
                 return dispatcher.dispatch(finalChatId, event)
                         // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-                        .flatMap(resp -> maxApiClient.sendAnswer(callbackId, resp));
+                        .flatMap(resp -> maxApiClient.sendAnswer(event.getCallbackId(), resp));
             }
 
         });
