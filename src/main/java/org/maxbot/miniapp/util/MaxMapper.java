@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
 
@@ -107,6 +108,9 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
+            userContext.setDate(LocalDate.parse(upd.getMessage().getBody().getText()));
+            contextRepository.save(userContext);
+
             event.setText(text);
             event.setType(BotEvents.USER_SELECTED_DATE);
             event.setPayloadDescription("Ввод даты");
@@ -120,7 +124,7 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
-            userContext.getFilters().put("search_query", event.getText());
+            userContext.getFilters().put("search_query", upd.getMessage().getBody().getText());
             contextRepository.save(userContext);
 
             event.setText(text);
