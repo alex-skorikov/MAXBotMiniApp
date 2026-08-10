@@ -11,7 +11,6 @@ import org.maxbot.miniapp.statemachine.BotStates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Optional;
@@ -110,10 +109,6 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
-            Map<String, Object> filters = userContext.getFilters();
-            filters.put("data", upd.getMessage().getBody().getText());
-            userContext.setFilters(filters);
-
             event.setText(text);
             event.setType(BotEvents.USER_SELECTED_DATE);
             event.setPayloadDescription("Ввод даты");
@@ -123,10 +118,6 @@ public class MaxMapper {
         if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.SELECT_DATE)) {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
-
-            Map<String, Object> filters = userContext.getFilters();
-            filters.put("search_string", upd.getMessage().getBody().getText());
-            userContext.setFilters(filters);
 
             event.setText(text);
             event.setType(BotEvents.USER_SEARCH_PATENT);
