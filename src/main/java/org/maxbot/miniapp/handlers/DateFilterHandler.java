@@ -14,8 +14,14 @@ public class DateFilterHandler implements StepHandler {
     public BotResponse handle(UserContext ctx, BotEvent event) {
         List<List<BotResponse.Button>> buttons = new java.util.ArrayList<>();
 
+        buttons.add(List.of(BotResponse.Button.builder()
+                .type("callback")
+                .text("\uD83D\uDD19 Назад к выбору базы")
+                .payload("BACK")
+                .build()));
+
         return BotResponse.builder()
-                .text("📅 Введите дату в формате 2020-01-01:")
+                .text("\uD83D\uDCC5 Введите дату в формате 2020-01-01:")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder().buttons(buttons).build())
