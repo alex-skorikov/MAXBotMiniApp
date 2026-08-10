@@ -36,7 +36,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .state(BotStates.SELECT_BASE, stepAction)
                 .state(BotStates.BASE_SELECTED, stepAction)
                 .state(BotStates.FILTER_DATE, stepAction)
-                .state(BotStates.SELECT_DATE, stepAction)
+//                .state(BotStates.SELECT_DATE, stepAction)
                 .state(BotStates.SEARCH, stepAction)
                 .state(BotStates.FILTER_SEARCH_ARRAY, stepAction)
                 .state(BotStates.SELECT_SEARCH_ARRAY, stepAction)
@@ -79,7 +79,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 // Запрос даты поиска, возврат в фильтры
                 .withExternal()
                 .source(BotStates.FILTER_DATE)
-                .target(BotStates.SELECT_DATE)
+                .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECTED_DATE)
                 .guard(validDateGuard)
                 .and()
