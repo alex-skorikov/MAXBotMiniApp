@@ -31,11 +31,7 @@ public class SearchHandler implements StepHandler {
 
         return BotResponse.builder()
                 .text("Здесь будут результаты поиска:")
-                .attachments(List.of(BotResponse.Attachment.builder()
-//                        .type("inline_keyboard")
-//                        .payload(BotResponse.InlineKeyboardPayload.builder().buttons(buttons).build())
-                        .build()
-                )).build();
+                .build();
     }
 
     // ===========================
