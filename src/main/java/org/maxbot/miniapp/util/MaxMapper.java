@@ -51,8 +51,6 @@ public class MaxMapper {
 
         // Загружаем контекст по валидному chatId, переданному из контроллера
         UserContext userContext = contextRepository.load(String.valueOf(chatId));
-        log.info("MaxMapper found UserContext: {}", userContext);
-
 
         BotEvent event = new BotEvent();
 
@@ -119,6 +117,9 @@ public class MaxMapper {
             MessageDto msg = upd.getMessage();
             String text = msg.getBody().getText();
 
+            userContext.getFilters().put("date", event.getText());
+            contextRepository.save(userContext);
+
             event.setText(text);
             event.setType(BotEvents.USER_SEARCH_PATENT);
             event.setPayloadDescription("Ввод поискового запроса");
@@ -126,7 +127,8 @@ public class MaxMapper {
         }
 
 
-        log.info("MaxMapper found Event: {}", event);
+        log.info(">>> MaxMapper found Event: {}", event);
+        log.info(">>> MaxMapper found UserContext: {}", userContext);
         return event;
     }
 }

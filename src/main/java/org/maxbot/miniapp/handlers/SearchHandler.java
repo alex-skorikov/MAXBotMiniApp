@@ -23,8 +23,6 @@ public class SearchHandler implements StepHandler {
     public BotResponse handle(UserContext ctx, BotEvent event) {
         List<List<BotResponse.Button>> buttons = new java.util.ArrayList<>();
 
-        ctx.getFilters().put("date", event.getText());
-
         buttons.add(List.of(BotResponse.Button.builder()
                 .type("callback")
                 .text("\uD83D\uDD19 Назад к вводу запроса поиска")

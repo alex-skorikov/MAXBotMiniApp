@@ -22,7 +22,7 @@ public class DateSelectedHandler implements StepHandler {
 
 
         return BotResponse.builder()
-                .text("Введите поисковый запрос:")
+                .text("Фильтр по дате установлен \nВведите поисковый запрос:")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder().buttons(buttons).build())
