@@ -13,7 +13,7 @@ public class BotEvent {
     private String chatId;
     private BotEvents type;
     private String text;
-    private String callbackData;
+    private String callbackId;
     private String payload;
     private String payloadDescription;
 
