@@ -22,7 +22,7 @@ public class SearchQueryWaitingHandler implements StepHandler {
                 .build()));
 
         return BotResponse.builder()
-                .text("📝 **Шаг 2: Ввод поискового запроса**\n\nВсе фильтры успешно настроены! Теперь отправьте в чат текстовое сообщение с ключевыми словами для поиска патентов (например: *\"беспилотный летательный аппарат\"*):")
+                .text("📝 **Ввод поискового запроса**")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()

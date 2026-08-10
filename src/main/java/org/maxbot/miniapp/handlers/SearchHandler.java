@@ -1,109 +1,115 @@
 package org.maxbot.miniapp.handlers;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.maxbot.miniapp.client.MaxApiClient; // Укажите ваш правильный импорт для клиента
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
-import org.maxbot.miniapp.service.PatentSearchService; // Предположим, сервис лежит тут
+import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.PatentCardService;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class SearchHandler implements StepHandler {
 
     private final PatentSearchService patentSearchService;
-
-    public SearchHandler(PatentSearchService patentSearchService) {
-        this.patentSearchService = patentSearchService;
-    }
+    private final MaxApiClient maxApiClient; // Внедряем клиент для прямой отправки сообщений
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
-        String base = ctx.getSelectedBase();      // "Патенты", "Промобразцы" и др.
-        String date = ctx.getDate();              // "2021-02-03"
-        String array = ctx.getSearchArrays();     // "Россия и страны СНГ"
-        String classifier = ctx.getClassifiers(); // "HYU"
+        String query = ctx.getSearchQuery();
+        int chatId = Integer.parseInt(ctx.getChatId());
 
-        String query = event.getText();
-
-        String searchResult;
-        try {
-            searchResult = String.valueOf(patentSearchService.searchReactive("q", query, 5, 1));
-        } catch (Exception e) {
-            searchResult = "❌ Произошла ошибка при поиске патентов. Попробуйте позже.";
+        if (query == null || query.isBlank()) {
+            sendTextMessage(chatId, "❌ Поисковый запрос пуст. Вернитесь назад.");
+            return null;
         }
 
-        // 4. Формируем клавиатуру инлайн-кнопок
-        List<List<BotResponse.Button>> buttons = new java.util.ArrayList<>();
+        try {
+            // Синхронно дожидаемся ответа от Роспатента
+            var searchResponse = patentSearchService.searchReactive("q", query, 5, 0).block();
 
-        // Кнопка возврата к вводу текста
+            if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
+                sendTextMessage(chatId, "🔍 **Результаты поиска по запросу \"" + query + "\":**\n\nНичего не найдено.");
+            } else {
+                // Формируем клавиатуру для карточек (если нужна)
+                List<List<BotResponse.Button>> controlButtons = createControlButtons();
+
+                // Итерируемся по найденным патентам и отправляем их пользователю
+                searchResponse.getHits().forEach(hit -> {
+                    String patentUrl = "https://rospatent.gov.ru" + hit.getId();
+                    String formattedCard = PatentCardService.formatPatentCard(hit);
+
+                    BotResponse response = BotResponse.builder()
+                            .text(formattedCard)
+                            .attachments(List.of(
+                                    BotResponse.Attachment.builder()
+                                            .type("inline_keyboard")
+                                            .payload(BotResponse.InlineKeyboardPayload.builder()
+                                                    .buttons(List.of(List.of(
+                                                            BotResponse.Button.builder()
+                                                                    .type("link")
+                                                                    .text("🔗 Открыть патент")
+                                                                    .url(patentUrl)
+                                                                    .build()
+                                                    )))
+                                                    .build())
+                                            .build()
+                            ))
+                            .build();
+
+                    // Отправляем каждую карточку патента в чат
+                    maxApiClient.sendMessage(chatId, response).block();
+                });
+
+                // В самом конце отправляем меню управления (Назад / Сбросить)
+                BotResponse finalMenu = BotResponse.builder()
+                        .text("Выше показаны первые 5 результатов. Что делаем дальше?")
+                        .attachments(List.of(
+                                BotResponse.Attachment.builder()
+                                        .type("inline_keyboard")
+                                        .payload(BotResponse.InlineKeyboardPayload.builder()
+                                                .buttons(controlButtons)
+                                                .build())
+                                        .build()
+                        ))
+                        .build();
+
+                maxApiClient.sendMessage(chatId, finalMenu).block();
+            }
+
+        } catch (Exception e) {
+            log.error("Ошибка выполнения поиска патентов для чата {}", chatId, e);
+            sendTextMessage(chatId, "❌ Произошла ошибка при поиске патентов. Попробуйте позже.");
+        }
+
+        // Возвращаем null, так как мы уже сами всё отправили через maxApiClient
+        return null;
+    }
+
+    private void sendTextMessage(int chatId, String text) {
+        BotResponse response = BotResponse.builder().text(text).build();
+        maxApiClient.sendMessage(chatId, response).block();
+    }
+
+    private List<List<BotResponse.Button>> createControlButtons() {
+        List<List<BotResponse.Button>> buttons = new ArrayList<>();
         buttons.add(List.of(BotResponse.Button.builder()
                 .type("callback")
                 .text("🔙 Назад к вводу запроса")
                 .payload("BACK")
                 .build()));
-
         buttons.add(List.of(BotResponse.Button.builder()
                 .type("callback")
-                .text("🔄 Сбросить фильтры и начать заново")
-                .payload("BACK_TO_START") // Не забудьте прописать этот payload в MaxMapper -> BotEvents.BACK
+                .text("🔄 Начать заново")
+                .payload("BACK_TO_START")
                 .build()));
-
-        return BotResponse.builder()
-                .text("🔍 **Результаты поиска по запросу \"" + query + "\":**\n\n" + searchResult)
-                .attachments(List.of(BotResponse.Attachment.builder()
-                        .type("inline_keyboard")
-                        .payload(BotResponse.InlineKeyboardPayload.builder()
-                                .buttons(buttons)
-                                .build())
-                        .build()
-                ))
-                .build();
+        return buttons;
     }
 }
-
-
-// ===========================
-    // PATENT SEARCH
-    // ===========================
-
-//    private Mono<Void> handlePatentSearch(String queryMode, String query, int userId, int chatId) {
-//
-//        return patentSearchService.searchReactive(queryMode, query, 5, 0)
-//                .flatMap(raw -> {
-//
-//                    if (raw.getHits().isEmpty()) {
-//                        BotAnswerMessage message = BotAnswerMessage.builder()
-//                                .text("Ничего не найдено.")
-//                                .build();
-//                        return maxApiClient.sendMessage(chatId, message);
-//                    }
-//
-//                    List<Mono<Void>> messages = raw.getHits().stream()
-//                            .map(hit -> {
-//                                String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + hit.getId();
-//                                BotAnswerMessage response = BotAnswerMessage.builder()
-//                                        .text(PatentCardService.formatPatentCard(hit))
-//                                        .attachments(List.of(
-//                                                BotAnswerMessage.Attachment.builder()
-//                                                        .type("inline_keyboard")
-//                                                        .payload(BotAnswerMessage.InlineKeyboardPayload.builder()
-//                                                                .buttons(List.of(List.of(
-//                                                                        BotAnswerMessage.Button.builder()
-//                                                                                .type("link")
-//                                                                                .text("Ссылка")
-//                                                                                .url(patentUrl)
-//                                                                                .build()
-//                                                                )))
-//                                                                .build())
-//                                                        .build()
-//                                        ))
-//                                        .build();
-//
-//                                return maxApiClient.sendMessage(chatId, response);
-//                            })
-//                            .toList();
-//                    return Mono.when(messages);
-//                });
-//    }
-//}
