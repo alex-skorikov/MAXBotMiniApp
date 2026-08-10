@@ -93,8 +93,8 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 // Выбор поискового массива, возврат в меню фильтров
                 .withExternal()
-                .source(BotStates.BASE_SELECTED)
-                .target(BotStates.FILTER_SEARCH_ARRAY)
+                .source(BotStates.FILTER_SEARCH_ARRAY)
+                .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECT_ARRAY)
                 .and()
 
