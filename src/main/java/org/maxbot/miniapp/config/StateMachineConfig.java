@@ -37,9 +37,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .state(BotStates.SELECT_FILTERS, stepAction)
                 .state(BotStates.FILTER_DATE, stepAction)
                 .state(BotStates.SELECT_DATE, stepAction)
-
-                .state(BotStates.FILTER_ARRAYS, stepAction)
-                .state(BotStates.CONFIRM_SEARCH, stepAction)
+                .state(BotStates.SEARCH, stepAction)
 
                 .state(BotStates.DONE, stepAction)
 
@@ -58,7 +56,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.INIT)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.USER_OPEN_CHAT)
-
                 .and()
 
                 // База выбрана -> Выберите фильтры
@@ -66,7 +63,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.SELECT_FILTERS)
                 .event(BotEvents.USER_SELECT_BASE)
-
                 .and()
 
                 // Из меню фильтров заходим в подменю выбора Даты
@@ -74,7 +70,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.FILTER_DATE)
                 .event(BotEvents.USER_INPUT_DATE)
-
                 .and()
 
                 // Запрос даты поиска
@@ -83,31 +78,13 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_SELECTED_DATE)
                 .guard(validDateGuard)
-
                 .and()
 
-                // Запрос слов/строки поиска
+                // Запрос слов/строки поиска поиск
                 .withExternal()
                 .source(BotStates.SELECT_DATE)
-                .target(BotStates.DONE)
+                .target(BotStates.SEARCH)
                 .event(BotEvents.USER_SEARCH_PATENT)
-
-                .and()
-
-                // Переход 4. Из меню фильтров заходим в подменю настроек Массивов или Классификаторов
-                .withExternal()
-                .source(BotStates.SELECT_FILTERS)
-                .target(BotStates.FILTER_ARRAYS)
-                .event(BotEvents.USER_SELECT_FILTERS)
-
-                .and()
-
-                // Переход 5. к экрану подтверждения поиска
-                .withExternal()
-                .source(BotStates.SELECT_FILTERS)
-                .target(BotStates.CONFIRM_SEARCH)
-                .event(BotEvents.USER_CONFIRM)
-
                 .and()
 
                 // ==========================================

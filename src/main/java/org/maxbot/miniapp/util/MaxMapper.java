@@ -40,8 +40,8 @@ public class MaxMapper {
             "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
 
 
-            "SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SELECT_SEARCH_ARRAY, "Поисковые массивы"),
-            "CLASSIFIERS", new PayloadInfo(BotEvents.USER_SELECT_CLASSIFIERS, "Классификаторы"),
+//            "SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SELECT_SEARCH_ARRAY, "Поисковые массивы"),
+//            "CLASSIFIERS", new PayloadInfo(BotEvents.USER_SELECT_CLASSIFIERS, "Классификаторы"),
 
 
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
