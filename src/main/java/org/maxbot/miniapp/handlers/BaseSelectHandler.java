@@ -27,26 +27,29 @@ public class BaseSelectHandler implements StepHandler {
 
         buttons.add(List.of(BotResponse.Button.builder()
                 .type("callback")
-                .text("\uD83D\uDD19 Назад к выбору базы")
+                .text("🔙 Назад к выбору базы")
                 .payload("BACK")
                 .build()));
 
-        // --- Формируем ответ
+        // --- Формируем ответ безопасно
         String selectBase = ctx.getSelectedBase();
-        String selectDate = ctx.getSelectedBase();
+        String selectDate = ctx.getDate(); // 🟢 ФИКС: Считываем именно дату (.getDate()), а не базу заново
         String classifiers = ctx.getClassifiers();
         String selectArrays = ctx.getSearchArrays();
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Выбрана база: ").append(selectBase).append("\n");
-        if (selectDate != null){
+        stringBuilder.append("Выбрана база: ").append(selectBase != null ? selectBase : "Не выбрана").append("\n");
+
+        if (selectDate != null && !selectDate.isBlank()) {
             stringBuilder.append("Фильтр по дате установлен: ").append(selectDate).append("\n");
         }
-        if (!selectArrays.isEmpty()){
+
+        if (selectArrays != null && !selectArrays.isBlank()) {
             stringBuilder.append("Выбран массив: ").append(selectArrays).append("\n");
         }
-        if (!classifiers.isEmpty()){
-            stringBuilder.append("Клсссифкатор ").append(classifiers).append(" установлен");
+
+        if (classifiers != null && !classifiers.isBlank()) {
+            stringBuilder.append("Классификатор ").append(classifiers).append(" установлен");
         }
 
         return BotResponse.builder()
