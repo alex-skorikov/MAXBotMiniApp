@@ -21,7 +21,7 @@ public class BaseSelectHandler implements StepHandler {
         }
 
         List<List<BotResponse.Button>> buttons = BotAnswerUtil.getButtons(Map.of(
-                "Дата", "DATE",
+                "Дата", "DATE_INPUT",
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
 
