@@ -14,7 +14,10 @@ public class PatentSearchService {
         this.client = client;
     }
 
-    public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
+    public Mono<PatentSearchResponse> searchReactive(String queryMode,
+                                                     String query,
+                                                     Integer limit,
+                                                     Integer offset) {
         return client.searchReactive(queryMode, query, limit, offset);
     }
 }

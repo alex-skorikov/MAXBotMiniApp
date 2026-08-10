@@ -112,7 +112,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.USER_SELECT_CLASSIFIERS)
                 .and()
 
-                // Запрос слов/строки поиска поиск
+                // Переход из главного меню к экрану ввода поисковой строки
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.SELECT_DATE)
+                .event(BotEvents.USER_INPUT_DATE)
+                .and()
+
+                // Запрос слов/строки поиска
                 .withExternal()
                 .source(BotStates.SELECT_DATE)
                 .target(BotStates.SEARCH)

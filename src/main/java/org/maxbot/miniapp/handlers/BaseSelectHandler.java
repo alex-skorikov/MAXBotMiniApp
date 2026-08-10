@@ -52,6 +52,14 @@ public class BaseSelectHandler implements StepHandler {
             stringBuilder.append("Классификатор ").append(classifiers).append(" установлен");
         }
 
+        if (selectDate != null && selectArrays != null && classifiers != null) {
+            buttons.add(0, List.of(BotResponse.Button.builder()
+                    .type("callback")
+                    .text("🔍 Поиск патентов")
+                    .payload("START_SEARCH") // Уникальный payload для перехода к вводу строки
+                    .build()));
+        }
+
         return BotResponse.builder()
                 .text(stringBuilder.toString())
                 .attachments(List.of(BotResponse.Attachment.builder()

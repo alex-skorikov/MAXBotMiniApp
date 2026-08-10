@@ -131,6 +131,15 @@ public class MaxMapper {
                 event.setType(BotEvents.USER_SELECT_CLASSIFIERS);
                 event.setPayloadDescription("Ввод классификатора");
             }
+            case SELECT_DATE -> {
+                // 1. Сохраняем поисковый запрос пользователя в карту фильтров в Redis
+                userContext.setSearchQuery(text);
+                contextRepository.save(userContext);
+
+                // 2. Инициализируем ивент для стейт-машины, чтобы она переключилась в SEARCH
+                event.setType(BotEvents.USER_SEARCH_PATENT); // Используем наш ивент
+                event.setPayloadDescription("Ввод поискового запроса: " + text);
+            }
             case SEARCH -> {
                 userContext.getFilters().put("search_query", text);
                 contextRepository.save(userContext);
