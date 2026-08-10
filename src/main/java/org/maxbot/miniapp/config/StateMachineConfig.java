@@ -48,12 +48,12 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
     }
 
     /**
-     * Конфигурация переходов (Транзишенов) - теперь БЕЗ .action(stepAction)
+     * Конфигурация переходов
      */
     @Override
     public void configure(StateMachineTransitionConfigurer<BotStates, BotEvents> transitions) throws Exception {
         transitions
-                // Переход 1: Открытие чата/выбор базы (Добро пожаловать)
+                // Открытие чата/выбор базы (Добро пожаловать)
                 .withExternal()
                 .source(BotStates.INIT)
                 .target(BotStates.SELECT_BASE)
@@ -61,7 +61,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
-                // Переход 2: База выбрана -> Выберите фильтры
+                // База выбрана -> Выберите фильтры
                 .withExternal()
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.SELECT_FILTERS)
@@ -69,7 +69,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
-                // Переход 3. Из меню фильтров заходим в подменю выбора Даты
+                // Из меню фильтров заходим в подменю выбора Даты
                 .withExternal()
                 .source(BotStates.SELECT_FILTERS)
                 .target(BotStates.FILTER_DATE)
@@ -77,11 +77,20 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
 
                 .and()
 
+                // Запрос даты поиска
                 .withExternal()
                 .source(BotStates.FILTER_DATE)
                 .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_SELECTED_DATE)
-                .guard(validDateGuard)        // опционально
+                .guard(validDateGuard)
+
+                .and()
+
+                // Запрос слов/строки поиска
+                .withExternal()
+                .source(BotStates.SELECT_DATE)
+                .target(BotStates.DONE)
+                .event(BotEvents.USER_SEARCH_PATENT)
 
                 .and()
 

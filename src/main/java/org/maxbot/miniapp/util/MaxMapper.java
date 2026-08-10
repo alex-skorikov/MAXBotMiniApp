@@ -37,11 +37,13 @@ public class MaxMapper {
             "DATE_SELECTED", new PayloadInfo(BotEvents.USER_SELECTED_DATE, "Дата выбрана"),
 
 
+            "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
+
+
             "SEARCH_ARRAYS", new PayloadInfo(BotEvents.USER_SELECT_SEARCH_ARRAY, "Поисковые массивы"),
             "CLASSIFIERS", new PayloadInfo(BotEvents.USER_SELECT_CLASSIFIERS, "Классификаторы"),
 
 
-            "SEARCH_PATENT", new PayloadInfo(BotEvents.USER_SEARCH_PATENT, "Поиск патентов"),
             "BACK", new PayloadInfo(BotEvents.BACK, "Назад")
     );
 
@@ -109,15 +111,15 @@ public class MaxMapper {
             return event;
         }
 
-//        if ("message_created".equals(updateType)) {
-//            MessageDto msg = upd.getMessage();
-//            String text = msg.getBody().getText();
-//
-//            event.setText(text);
-//            event.setType(BotEvents.USER_SEARCH_PATENT);
-//            event.setPayloadDescription("Ввод даты");
-//            return event;
-//        }
+        if ("message_created".equals(updateType) && userContext.getState().equals(BotStates.SELECT_DATE)) {
+            MessageDto msg = upd.getMessage();
+            String text = msg.getBody().getText();
+
+            event.setText(text);
+            event.setType(BotEvents.USER_SEARCH_PATENT);
+            event.setPayloadDescription("Ввод поискового запроса");
+            return event;
+        }
 
 
         log.info("MaxMapper found Event: {}", event);
