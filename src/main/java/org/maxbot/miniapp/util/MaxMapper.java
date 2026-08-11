@@ -123,8 +123,24 @@ public class MaxMapper {
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
         if (info == null) {
             if ("BACK_TO_START".equals(payload)) {
-                contextRepository.delete(String.valueOf(userContext.getChatId()));
+                // ИСПРАВЛЕНО: Загружаем контекст и обнуляем бизнес-поля, не удаляя сам ключ из Redis
+                UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getChatId()));
+                if (freshCtx == null) {
+                    freshCtx = userContext;
+                }
+
+                freshCtx.setSelectedBase(null);
+                freshCtx.setSearchArrays(null);
+                freshCtx.setDate(null);
+                freshCtx.setClassifiers(null);
+                freshCtx.setSearchQuery(null);
+                freshCtx.setSearchOffset(0);
+                contextRepository.save(freshCtx);
+
+                log.info("🔄 Все фильтры поиска успешно сброшены в Redis для чата {}", userContext.getChatId());
+
                 event.setType(BotEvents.BACK_TO_START);
+                event.setPayloadDescription("Сброс фильтров и возврат в начало");
                 return;
             }
             return;
@@ -205,7 +221,7 @@ public class MaxMapper {
 
                     // Экранируем ID для сборки полностью валидного адреса
                     String encodedId = java.net.URLEncoder.encode(hit.getId(), java.nio.charset.StandardCharsets.UTF_8);
-                    String patentUrl = "https://rospatent.gov.ru" + encodedId;
+                    String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + encodedId;
 
                     // Шаг 56-58: Название, авторы, дата, МПК
                     // Шаг 59: Прямая текстовая ссылка (Платформа гарантированно сделает её кликабельной без ошибок 400)
