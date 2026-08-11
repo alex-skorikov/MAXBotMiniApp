@@ -14,6 +14,6 @@ public class MaxBotMiniAppApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(MaxBotMiniAppApplication.class, args);
-        log.info("BUILD VERSION 1: {}", LocalDateTime.now());
+        log.info("BUILD VERSION 2: {}", LocalDateTime.now());
     }
 }

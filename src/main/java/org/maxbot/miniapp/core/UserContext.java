@@ -4,7 +4,6 @@ import lombok.*;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
