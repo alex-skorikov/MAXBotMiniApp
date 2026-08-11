@@ -48,21 +48,58 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
     public void configure(StateMachineTransitionConfigurer<BotStates, BotEvents> transitions) throws Exception {
         transitions
                 // СТАРТ БОТА
-                .withExternal().source(BotStates.INIT).target(BotStates.SELECT_BASE).event(BotEvents.USER_OPEN_CHAT).and()
+                .withExternal()
+                .source(BotStates.INIT)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.USER_OPEN_CHAT)
+                .and()
+
                 // ВЫБОР БАЗЫ -> ГЛАВНОЕ МЕНЮ ФИЛЬТРОВ
-                .withExternal().source(BotStates.SELECT_BASE).target(BotStates.BASE_SELECTED).event(BotEvents.USER_SELECT_BASE).and()
+                .withExternal()
+                .source(BotStates.SELECT_BASE)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.USER_SELECT_BASE)
+                .and()
 
                 // ПОДМЕНЮ: ДАТА
-                .withExternal().source(BotStates.BASE_SELECTED).target(BotStates.FILTER_DATE).event(BotEvents.USER_INPUT_DATE).and()
-                .withExternal().source(BotStates.FILTER_DATE).target(BotStates.BASE_SELECTED).event(BotEvents.USER_SELECTED_DATE).guard(validDateGuard).and()
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.FILTER_DATE)
+                .event(BotEvents.USER_INPUT_DATE)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_DATE)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.USER_SELECTED_DATE)
+                .guard(validDateGuard)
+                .and()
 
                 // ПОДМЕНЮ: ПОИСКОВЫЕ МАССИВЫ
-                .withExternal().source(BotStates.BASE_SELECTED).target(BotStates.FILTER_SEARCH_ARRAY).event(BotEvents.USER_SEARCH_ARRAY).and()
-                .withExternal().source(BotStates.FILTER_SEARCH_ARRAY).target(BotStates.BASE_SELECTED).event(BotEvents.USER_SELECT_ARRAY).and()
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.FILTER_SEARCH_ARRAY)
+                .event(BotEvents.USER_SEARCH_ARRAY)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_SEARCH_ARRAY)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.USER_SELECT_ARRAY)
+                .and()
 
                 // ПОДМЕНЮ: КЛАССИФИКАТОРЫ
-                .withExternal().source(BotStates.BASE_SELECTED).target(BotStates.FILTER_CLASSIFIERS).event(BotEvents.USER_SEARCH_CLASSIFIERS).and()
-                .withExternal().source(BotStates.FILTER_CLASSIFIERS).target(BotStates.BASE_SELECTED).event(BotEvents.USER_SELECT_CLASSIFIERS).and()
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.FILTER_CLASSIFIERS)
+                .event(BotEvents.USER_SEARCH_CLASSIFIERS)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_CLASSIFIERS)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.USER_SELECT_CLASSIFIERS)
+                .and()
 
                 // КНОПКА "СТАРТ ПОИСКА" -> Стейк ожидания ввода текста (SELECT_DATE)
                 .withExternal()
@@ -78,16 +115,52 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.USER_SEARCH_PATENT) // Вызывается внутри handleMessageCreated
                 .and()
 
+                // Циклический переход для пагинации (Кнопки Вперёд / Назад)
+                .withExternal()
+                .source(BotStates.SEARCH)
+                .target(BotStates.SEARCH)
+                .event(BotEvents.USER_SEARCH_PATENT)
+                .and()
+
+                // Переход по кнопке «Сбросить» из экрана поиска в самое начало
+                .withExternal()
+                .source(BotStates.SEARCH)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.BACK_TO_START)
+                .and()
+
                 // ==========================================
                 // КНОПКИ «НАЗАД»
                 // ==========================================
-                .withExternal().source(BotStates.BASE_SELECTED).target(BotStates.SELECT_BASE).event(BotEvents.BACK).and()
-                .withExternal().source(BotStates.FILTER_DATE).target(BotStates.BASE_SELECTED).event(BotEvents.BACK).and()
-                .withExternal().source(BotStates.FILTER_SEARCH_ARRAY).target(BotStates.BASE_SELECTED).event(BotEvents.BACK).and()
-                .withExternal().source(BotStates.FILTER_CLASSIFIERS).target(BotStates.BASE_SELECTED).event(BotEvents.BACK).and()
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.BACK)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_DATE)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.BACK)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_SEARCH_ARRAY)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.BACK)
+                .and()
+
+                .withExternal()
+                .source(BotStates.FILTER_CLASSIFIERS)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.BACK)
+                .and()
 
                 // Из экрана ввода строки поиска возвращаемся обратно в меню фильтров
-                .withExternal().source(BotStates.SELECT_DATE).target(BotStates.BASE_SELECTED).event(BotEvents.BACK);
+                .withExternal()
+                .source(BotStates.SELECT_DATE)
+                .target(BotStates.BASE_SELECTED)
+                .event(BotEvents.BACK);
     }
 
 
