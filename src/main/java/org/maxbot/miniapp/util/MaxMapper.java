@@ -156,20 +156,14 @@ public class MaxMapper {
             }
             if ("BACK_TO_START".equals(payload)) {
                 // Полный сброс параметров поиска в Redis при начале заново
-                userContext.setSearchQuery(null);
-                userContext.setSearchOffset(0);
-                contextRepository.save(userContext);
-
+                contextRepository.delete(String.valueOf(event.getChatId()));
+                log.info("🗑️ Контекст пользователя {} полностью очищен в Redis по кнопке сброса", event.getChatId());
                 event.setType(BotEvents.BACK_TO_START);
                 event.setPayloadDescription("Сброс фильтров и возврат в начало");
                 return;
             }
             return;
         }
-
-
-//        PayloadInfo info = PAYLOAD_MAPPING.get(payload);
-//        if (info == null) return;
 
         // Бизнес-мутации контекста на основе инлайн-кликов
         boolean needSave = false;
