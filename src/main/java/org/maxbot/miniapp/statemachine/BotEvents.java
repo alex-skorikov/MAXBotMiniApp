@@ -15,5 +15,8 @@ public enum BotEvents {
     USER_PROCEED_TO_SEARCH,
     USER_SEARCH_PATENT,
 
+    ADVANCED_SEARCH,
+    BACK_TO_START,
+
     BACK
 }

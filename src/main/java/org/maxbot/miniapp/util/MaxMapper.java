@@ -2,16 +2,24 @@ package org.maxbot.miniapp.util;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.repository.ContextRepository;
+import org.maxbot.miniapp.service.PatentCardService;
+import org.maxbot.miniapp.service.PatentSearchService;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Schedulers;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,9 +30,11 @@ import static java.util.Map.entry;
 @RequiredArgsConstructor
 public class MaxMapper {
 
-    private record PayloadInfo(BotEvents eventType, String description) {}
-
+    private record PayloadInfo(BotEvents eventType, String description) {
+    }
+    private final MaxApiClient maxApiClient;
     private final ContextRepository contextRepository;
+    private final PatentSearchService patentSearchService;
 
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.ofEntries(
             entry("PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты")),
@@ -90,8 +100,79 @@ public class MaxMapper {
         String payload = upd.getCallback().getPayload();
         event.setPayload(payload);
 
+
+        // =========================================================================
+        // ДИНАМИЧЕСКИЙ ОБРАБОТЧИК: Нажатие на конкретный патент (Шаги 52-59 по схеме)
+        // =========================================================================
+        if (payload != null && payload.startsWith("DOC_VIEW_")) {
+            String docId = payload.substring("DOC_VIEW_".length());
+
+            log.info("Запрошен детальный просмотр документа с ID: {}", docId);
+
+            // Зануляем тип ивента стейт-машины, чтобы она осталась в текущем стейте SEARCH
+            event.setType(null);
+            event.setPayloadDescription("Просмотр документа " + docId);
+
+            // Вызываем локальный асинхронный метод для отправки карточки
+            sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId);
+            return;
+        }
+
+        // =========================================================================
+        // ДИНАМИЧЕСКИЙ ОБРАБОТЧИК: Пагинация результатов поиска (Шаги 49-51 по схеме)
+        // =========================================================================
+        if ("SEARCH_NEXT_PAGE".equals(payload)) {
+            int currentOffset = userContext.getSearchOffset();
+            int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
+
+            userContext.setSearchOffset(currentOffset + limit);
+            contextRepository.save(userContext);
+
+            event.setType(BotEvents.USER_SEARCH_PATENT); // Перезапускаем стейт SEARCH с новым offset
+            event.setPayloadDescription("Переход на следующую страницу поиска патентов");
+            return;
+        }
+
+        if ("SEARCH_PREV_PAGE".equals(payload)) {
+            int currentOffset = userContext.getSearchOffset();
+            int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
+
+            userContext.setSearchOffset(Math.max(0, currentOffset - limit));
+            contextRepository.save(userContext);
+
+            event.setType(BotEvents.USER_SEARCH_PATENT); // Перезапускаем стейт SEARCH с новым offset
+            event.setPayloadDescription("Переход на предыдущую страницу поиска патентов");
+            return;
+        }
+
+        // =========================================================================
+        // СТАТИЧЕСКИЙ ОБРАБОТЧИК: Базовые переходы по PAYLOAD_MAPPING
+        // =========================================================================
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
-        if (info == null) return;
+
+        // Обработка кнопок Расширенного поиска и Сброса, если они пришли из createControlButtons()
+        if (info == null) {
+            if ("ADVANCED_SEARCH".equals(payload)) {
+                event.setType(BotEvents.ADVANCED_SEARCH);
+                event.setPayloadDescription("Переход к расширенному поиску");
+                return;
+            }
+            if ("BACK_TO_START".equals(payload)) {
+                // Полный сброс параметров поиска в Redis при начале заново
+                userContext.setSearchQuery(null);
+                userContext.setSearchOffset(0);
+                contextRepository.save(userContext);
+
+                event.setType(BotEvents.BACK_TO_START);
+                event.setPayloadDescription("Сброс фильтров и возврат в начало");
+                return;
+            }
+            return;
+        }
+
+
+//        PayloadInfo info = PAYLOAD_MAPPING.get(payload);
+//        if (info == null) return;
 
         // Бизнес-мутации контекста на основе инлайн-кликов
         boolean needSave = false;
@@ -150,4 +231,49 @@ public class MaxMapper {
             default -> log.debug("Текстовое сообщение пропущено для стейта: {}", currentState);
         }
     }
+
+    // Вспомогательный метод для выполнения Шагов 53-59 по схеме
+    private void sendSinglePatentCardAsync(int chatId, String docId) {
+        // Шаги 53-55: Асинхронный реактивный запрос в Роспатент (проверьте сигнатуру вашего метода поиска по ID)
+        patentSearchService.searchReactive("id", docId, 1, 0)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(searchResponse -> {
+                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
+                        return maxApiClient.sendMessage(chatId, BotResponse.builder()
+                                .text("❌ Не удалось найти детальную информацию по документу " + docId)
+                                .build());
+                    }
+
+                    var hit = searchResponse.getHits().get(0);
+                    String encodedId = URLEncoder.encode(hit.getId(), StandardCharsets.UTF_8);
+                    String patentUrl = "https://rospatent.gov.ru" + encodedId;
+
+                    // Шаг 56-58: Сборка текстового блока "Название, авторы, дата, МПК"
+                    String formattedText = PatentCardService.formatPatentCard(hit);
+
+                    // Шаг 59: Отправка сообщения с инлайн-кнопкой [Ссылка]
+                    BotResponse cardResponse = BotResponse.builder()
+                            .text(formattedText)
+                            .attachments(List.of(
+                                    BotResponse.Attachment.builder()
+                                            .type("inline_keyboard")
+                                            .payload(BotResponse.InlineKeyboardPayload.builder()
+                                                    .buttons(List.of(List.of(
+                                                            BotResponse.Button.builder()
+                                                                    .type("link")
+                                                                    .text("🔗 Открыть оригинал патента")
+                                                                    .url(patentUrl)
+                                                                    .build()
+                                                    )))
+                                                    .build())
+                                            .build()
+                            ))
+                            .build();
+
+                    return maxApiClient.sendMessage(chatId, cardResponse);
+                })
+                .doOnError(err -> log.error("Не удалось открыть карточку патента {}", docId, err))
+                .subscribe(); // Асинхронная подписка на поток отправки
+    }
+
 }

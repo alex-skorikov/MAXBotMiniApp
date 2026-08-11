@@ -23,6 +23,8 @@ public class UserContext {
     private BotStates state;
     private BotEvents botEvent;
     private String searchQuery;
+    private int searchOffset = 0;
+    private int searchLimit = 5;
 }
 
 
