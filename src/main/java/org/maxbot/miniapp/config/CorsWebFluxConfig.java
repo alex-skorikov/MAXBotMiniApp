@@ -16,7 +16,7 @@ public class CorsWebFluxConfig {
         CorsConfiguration corsConfig = new CorsConfiguration();
 
         corsConfig.setAllowedOrigins(Arrays.asList(
-                "https://max-webapp-production-cc6e.up.railway.app",
+                "https://logiq-synapse.ru",
                 "https://max.ru",
                 "https://webapp.max.ru",
                 "https://dev.max.ru",

@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  app:
+    image: maxbotminiapp-app:latest
+    container_name: max-miniapp
+    build: .
+    environment:
+      MAX_TOKEN: ${MAX_TOKEN}
+      ROSPATENT_TOKEN: ${ROSPATENT_TOKEN}
+      PORT: ${PORT}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./logs:/app/logs
+    restart: always
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always

@@ -1,0 +1,22 @@
+package org.maxbot.miniapp.statemachine;
+
+public enum BotEvents {
+    USER_OPEN_CHAT,
+    USER_SELECT_BASE,
+
+    USER_INPUT_DATE,
+    USER_SELECTED_DATE,
+
+    USER_SEARCH_ARRAY,
+    USER_SELECT_ARRAY,
+
+    USER_SEARCH_CLASSIFIERS,
+    USER_SELECT_CLASSIFIERS,
+    USER_PROCEED_TO_SEARCH,
+    USER_SEARCH_PATENT,
+
+    ADVANCED_SEARCH,
+    BACK_TO_START,
+
+    BACK
+}

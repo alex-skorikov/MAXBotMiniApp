@@ -27,12 +27,13 @@ public class MaxSubscriptionsController {
 
     /**
      * Создаёт подписку на webhook
+     * Необходимо когда меняется домен
      */
     @PostMapping
     public Mono<String> createSubscription() {
 
         Map<String, Object> body = Map.of(
-                "url", "https://maxbotminiapp-production.up.railway.app/webhook"
+                "url", "https://logiq-synapse.ru/webhook"
         );
 
         System.out.println(">>> Creating webhook subscription: " + body);
