@@ -6,10 +6,8 @@ import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
-import org.maxbot.miniapp.repository.ContextRepository; // Нужен для сохранения offset
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.ArrayList;
@@ -22,15 +20,13 @@ public class SearchHandler implements StepHandler {
 
     private final PatentSearchService patentSearchService;
     private final MaxApiClient maxApiClient;
-    private final ContextRepository contextRepository;
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
         String query = ctx.getSearchQuery();
         int chatId = Integer.parseInt(ctx.getChatId());
 
-        // Задаем дефолтные значения пагинации, если они еще не установлены
-        int limit = ctx.getSearchLimit() > 0 ? ctx.getSearchLimit() : 5;
+        int limit = (ctx.getSearchLimit() > 0) ? ctx.getSearchLimit() : 5;
         int offset = ctx.getSearchOffset();
 
         if (query == null || query.isBlank()) {
@@ -47,29 +43,28 @@ public class SearchHandler implements StepHandler {
                                 .build());
                     }
 
-                    long totalFound = searchResponse.getTotal();
+                    long totalFound = searchResponse.getTotal() != 0 ? searchResponse.getTotal() : searchResponse.getHits().size();
 
-                    // Шаг 49: Формируем текст "Найдено X документов"
+                    // Шаг 49: "Найдено 42 документа"
                     StringBuilder textBuilder = new StringBuilder();
                     textBuilder.append("🔍 **Результаты поиска по запросу:** \"").append(query).append("\"\n");
                     textBuilder.append("📊 **Найдено документов:** ").append(totalFound).append("\n\n");
-                    textBuilder.append("Выберите документ ниже для просмотра подробной карточки:");
+                    textBuilder.append("Выберите интересующий документ для просмотра подробной карточки:");
 
                     List<List<BotResponse.Button>> buttons = new ArrayList<>();
 
-                    // Шаг 50: Формируем инлайн-кнопки для каждого документа [Документ 1], [Документ 2]
+                    // Шаг 50: Вертикальный список инлайн-кнопок [Документ 1] [Документ 2]
                     searchResponse.getHits().forEach(hit -> {
-                        String docId = hit.getId(); // Например, "RU123456"
+                        String docId = hit.getId();
                         buttons.add(List.of(BotResponse.Button.builder()
                                 .type("callback")
                                 .text("📄 " + docId)
-                                .payload("DOC_VIEW_" + docId) // Будет обрабатываться в MaxMapper
+                                .payload("DOC_VIEW_" + docId) // Ловится динамически в MaxMapper
                                 .build()));
                     });
 
-                    // Шаг 51: Навигационная панель [Назад] [Вперёд] [Расширенный поиск]
+                    // Шаг 51: Навигационный блок [Назад] [Вперёд]
                     List<BotResponse.Button> navigationRow = new ArrayList<>();
-
                     if (offset > 0) {
                         navigationRow.add(BotResponse.Button.builder()
                                 .type("callback")
@@ -77,7 +72,6 @@ public class SearchHandler implements StepHandler {
                                 .payload("SEARCH_PREV_PAGE")
                                 .build());
                     }
-
                     if (offset + limit < totalFound) {
                         navigationRow.add(BotResponse.Button.builder()
                                 .type("callback")
@@ -85,12 +79,11 @@ public class SearchHandler implements StepHandler {
                                 .payload("SEARCH_NEXT_PAGE")
                                 .build());
                     }
-
                     if (!navigationRow.isEmpty()) {
                         buttons.add(navigationRow);
                     }
 
-                    // Кнопка системного управления и расширенного поиска
+                    // Системные действия
                     buttons.add(List.of(
                             BotResponse.Button.builder()
                                     .type("callback")
@@ -118,10 +111,7 @@ public class SearchHandler implements StepHandler {
 
                     return maxApiClient.sendMessage(chatId, resultsMenu);
                 })
-                .doOnError(e -> {
-                    log.error("Ошибка построения списка документов для чата {}", chatId, e);
-                    sendTextMessageAsync(chatId, "❌ Произошла ошибка при выводе списка результатов.");
-                })
+                .doOnError(e -> log.error("Ошибка генерации списка патентов", e))
                 .subscribe();
 
         return null;
