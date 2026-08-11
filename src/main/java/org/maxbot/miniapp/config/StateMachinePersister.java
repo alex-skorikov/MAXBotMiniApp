@@ -65,15 +65,12 @@ public class StateMachinePersister {
                         String chatId,
                         BotEvents botEvent) {
         if (stateMachine.getState() == null) {
-            return; // Защита от сохранения неинициализированной машины
+            return;
         }
 
-        // 1. Извлекаем текущий UserContext из ExtendedState работающей машины
-        UserContext userContext = (UserContext) stateMachine.getExtendedState()
-                .getVariables()
-                .get("userContext");
+        UserContext userContext = contextRepository.load(chatId);
 
-        // Если контекста почему-то нет в машине, создаем аварийный объект
+        // Если в Redis контекста ещё нет (самый первый старт), тогда создаем новый
         if (userContext == null) {
             userContext = new UserContext();
             try {
@@ -84,14 +81,15 @@ public class StateMachinePersister {
             userContext.setChatId(chatId);
         }
 
-        // 2. Синхронизируем текущий стейт машины с полем внутри UserContext
+        // 2. Синхронизируем текущий стейт машины с полем внутри актуального UserContext
         BotStates currentState = stateMachine.getState().getId();
         userContext.setState(currentState);
         userContext.setBotEvent(botEvent);
         userContext.setChatId(chatId);
 
-        // 3. Сохраняем обновленный контекст в Redis
+        // 3. Сохраняем обновленный контекст обратно в Redis
         contextRepository.save(userContext);
-        log.info("💾 Стейт [{}] успешно сохранен в Redis для чата {}", currentState, chatId);
+        log.info("💾 Стейт [{}] успешно синхронизирован и сохранен в Redis для чата {}", currentState, chatId);
     }
+
 }

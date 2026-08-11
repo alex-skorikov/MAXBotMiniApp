@@ -130,10 +130,6 @@ public class MaxMapper {
             return;
         }
 
-        // =========================================================================
-        // ИСПРАВЛЕНИЕ БАГА: Перед сохранением ПОВТОРНО перечитываем актуальный контекст из Redis,
-        // чтобы не затереть данные, если стейт-машина изменила контекст в параллельном потоке.
-        // =========================================================================
         UserContext freshContext = contextRepository.load(String.valueOf(userContext.getChatId()));
         if (freshContext == null) {
             freshContext = userContext;
@@ -226,6 +222,4 @@ public class MaxMapper {
                 .doOnError(err -> log.error("Критическая ошибка при загрузке документа {}", docId, err))
                 .subscribe();
     }
-
-
 }
