@@ -232,48 +232,39 @@ public class MaxMapper {
         }
     }
 
-    // Вспомогательный метод для выполнения Шагов 53-59 по схеме
+    // Метод асинхронного извлечения данных конкретного патента без изменения стейта (Шаги 53-59)
     private void sendSinglePatentCardAsync(int chatId, String docId) {
-        // Шаги 53-55: Асинхронный реактивный запрос в Роспатент (проверьте сигнатуру вашего метода поиска по ID)
+        // Шаги 53-55: GET /docs/{id}
         patentSearchService.searchReactive("id", docId, 1, 0)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
-                                .text("❌ Не удалось найти детальную информацию по документу " + docId)
+                                .text("❌ Не удалось загрузить информацию по документу " + docId)
                                 .build());
                     }
 
                     var hit = searchResponse.getHits().get(0);
-                    String encodedId = URLEncoder.encode(hit.getId(), StandardCharsets.UTF_8);
+
+                    // Экранируем ID для сборки полностью валидного адреса
+                    String encodedId = java.net.URLEncoder.encode(hit.getId(), java.nio.charset.StandardCharsets.UTF_8);
                     String patentUrl = "https://rospatent.gov.ru" + encodedId;
 
-                    // Шаг 56-58: Сборка текстового блока "Название, авторы, дата, МПК"
-                    String formattedText = PatentCardService.formatPatentCard(hit);
+                    // Шаг 56-58: Название, авторы, дата, МПК
+                    // Шаг 59: Прямая текстовая ссылка (Платформа гарантированно сделает её кликабельной без ошибок 400)
+                    String formattedText = PatentCardService.formatPatentCard(hit) +
+                            "\n\n🔗 Ссылка на оригинал патента:\n" + patentUrl + "\n" +
+                            "— — — — — — — — — — — — — — —";
 
-                    // Шаг 59: Отправка сообщения с инлайн-кнопкой [Ссылка]
                     BotResponse cardResponse = BotResponse.builder()
                             .text(formattedText)
-                            .attachments(List.of(
-                                    BotResponse.Attachment.builder()
-                                            .type("inline_keyboard")
-                                            .payload(BotResponse.InlineKeyboardPayload.builder()
-                                                    .buttons(List.of(List.of(
-                                                            BotResponse.Button.builder()
-                                                                    .type("link")
-                                                                    .text("🔗 Открыть оригинал патента")
-                                                                    .url(patentUrl)
-                                                                    .build()
-                                                    )))
-                                                    .build())
-                                            .build()
-                            ))
-                            .build();
+                            .build(); // Отправляем без блока инлайн-кнопок
 
                     return maxApiClient.sendMessage(chatId, cardResponse);
                 })
-                .doOnError(err -> log.error("Не удалось открыть карточку патента {}", docId, err))
-                .subscribe(); // Асинхронная подписка на поток отправки
+                .doOnError(err -> log.error("Критическая ошибка при загрузке документа {}", docId, err))
+                .subscribe();
     }
+
 
 }
