@@ -7,6 +7,7 @@ import lombok.ToString;
 import org.maxbot.miniapp.dto.bot.BotAnswerMessage;
 
 import java.util.List;
+
 @Builder
 @Getter
 @Setter
@@ -16,11 +17,14 @@ public class BotResponse {
 
     private final String text;
     private List<BotResponse.Attachment> attachments;
+    private String format;
 
     public BotResponse(String text,
-                            List<BotResponse.Attachment> attachments) {
+                       List<BotResponse.Attachment> attachments,
+                       String format) {
         this.text = text;
         this.attachments = attachments;
+        this.format = format;
     }
 
     // ===== Attachment =====
