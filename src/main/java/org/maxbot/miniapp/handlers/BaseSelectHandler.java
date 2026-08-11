@@ -14,12 +14,6 @@ public class BaseSelectHandler implements StepHandler {
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
-
-//        if (event != null && event.getPayload() != null && !"BACK".equals(event.getPayload())) {
-//            String base = event.getPayloadDescription();
-//            ctx.setSelectedBase(base);
-//        }
-
         List<List<BotResponse.Button>> buttons = BotAnswerUtil.getButtons(Map.of(
                 "Дата", "DATE_INPUT",
                 "Поисковые массивы", "SEARCH_ARRAYS",

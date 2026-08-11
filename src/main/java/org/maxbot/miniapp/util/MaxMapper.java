@@ -205,7 +205,7 @@ public class MaxMapper {
 
                     // Экранируем ID для сборки полностью валидного адреса
                     String encodedId = java.net.URLEncoder.encode(hit.getId(), java.nio.charset.StandardCharsets.UTF_8);
-                    String patentUrl = "https://rospatent.gov.ru" + encodedId;
+                    String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + encodedId;
 
                     // Шаг 56-58: Название, авторы, дата, МПК
                     // Шаг 59: Прямая текстовая ссылка (Платформа гарантированно сделает её кликабельной без ошибок 400)
