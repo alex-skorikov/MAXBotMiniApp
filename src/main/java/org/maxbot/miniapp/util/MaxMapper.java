@@ -97,91 +97,61 @@ public class MaxMapper {
         String payload = upd.getCallback().getPayload();
         event.setPayload(payload);
 
-
-        // =========================================================================
-        // ДИНАМИЧЕСКИЙ ОБРАБОТЧИК: Нажатие на конкретный патент (Шаги 52-59 по схеме)
-        // =========================================================================
+        // Динамические обработчики (пагинация и просмотр)
         if (payload != null && payload.startsWith("DOC_VIEW_")) {
             String docId = payload.substring("DOC_VIEW_".length());
-
-            log.info("Запрошен детальный просмотр документа с ID: {}", docId);
-
-            // Зануляем тип ивента стейт-машины, чтобы она осталась в текущем стейте SEARCH
             event.setType(null);
             event.setPayloadDescription("Просмотр документа " + docId);
-
-            // Вызываем локальный асинхронный метод для отправки карточки
             sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId);
             return;
         }
 
-        // =========================================================================
-        // ДИНАМИЧЕСКИЙ ОБРАБОТЧИК: Пагинация результатов поиска (Шаги 49-51 по схеме)
-        // =========================================================================
-        if ("SEARCH_NEXT_PAGE".equals(payload)) {
+        if ("SEARCH_NEXT_PAGE".equals(payload) || "SEARCH_PREV_PAGE".equals(payload)) {
             int currentOffset = userContext.getSearchOffset();
             int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
 
-            userContext.setSearchOffset(currentOffset + limit);
+            if ("SEARCH_NEXT_PAGE".equals(payload)) {
+                userContext.setSearchOffset(currentOffset + limit);
+            } else {
+                userContext.setSearchOffset(Math.max(0, currentOffset - limit));
+            }
             contextRepository.save(userContext);
-
-            event.setType(BotEvents.USER_SEARCH_PATENT); // Перезапускаем стейт SEARCH с новым offset
-            event.setPayloadDescription("Переход на следующую страницу поиска патентов");
+            event.setType(BotEvents.USER_SEARCH_PATENT);
             return;
         }
 
-        if ("SEARCH_PREV_PAGE".equals(payload)) {
-            int currentOffset = userContext.getSearchOffset();
-            int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
-
-            userContext.setSearchOffset(Math.max(0, currentOffset - limit));
-            contextRepository.save(userContext);
-
-            event.setType(BotEvents.USER_SEARCH_PATENT); // Перезапускаем стейт SEARCH с новым offset
-            event.setPayloadDescription("Переход на предыдущую страницу поиска патентов");
-            return;
-        }
-
-        // =========================================================================
-        // СТАТИЧЕСКИЙ ОБРАБОТЧИК: Базовые переходы по PAYLOAD_MAPPING
-        // =========================================================================
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
-
-        // Обработка кнопок Расширенного поиска и Сброса, если они пришли из createControlButtons()
         if (info == null) {
-            if ("ADVANCED_SEARCH".equals(payload)) {
-                event.setType(BotEvents.ADVANCED_SEARCH);
-                event.setPayloadDescription("Переход к расширенному поиску");
-                return;
-            }
             if ("BACK_TO_START".equals(payload)) {
-                // Полный сброс параметров поиска в Redis при начале заново
-                contextRepository.delete(String.valueOf(event.getChatId()));
-                log.info("🗑️ Контекст пользователя {} полностью очищен в Redis по кнопке сброса", event.getChatId());
+                contextRepository.delete(String.valueOf(userContext.getChatId()));
                 event.setType(BotEvents.BACK_TO_START);
-                event.setPayloadDescription("Сброс фильтров и возврат в начало");
                 return;
             }
             return;
         }
 
-        // Бизнес-мутации контекста на основе инлайн-кликов
-        boolean needSave = false;
-        if (info.eventType() == BotEvents.USER_SELECT_BASE) {
-            userContext.setSelectedBase(info.description());
-            needSave = true;
-        } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-            userContext.setSearchArrays(info.description());
-            needSave = true;
+        // =========================================================================
+        // ИСПРАВЛЕНИЕ БАГА: Перед сохранением ПОВТОРНО перечитываем актуальный контекст из Redis,
+        // чтобы не затереть данные, если стейт-машина изменила контекст в параллельном потоке.
+        // =========================================================================
+        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getChatId()));
+        if (freshContext == null) {
+            freshContext = userContext;
         }
 
-        if (needSave) {
-            contextRepository.save(userContext);
+        if (info.eventType() == BotEvents.USER_SELECT_BASE) {
+            freshContext.setSelectedBase(info.description());
+            freshContext.setSearchOffset(0);
+            contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
+        } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
+            freshContext.setSearchArrays(info.description());
+            contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
         }
 
         event.setType(info.eventType());
         event.setPayloadDescription(info.description());
     }
+
 
     private void handleMessageCreated(UpdateDto upd, BotEvent event, UserContext userContext) {
         MessageDto msg = upd.getMessage();
