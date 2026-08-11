@@ -13,6 +13,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,8 +48,10 @@ public class SearchHandler implements StepHandler {
 
                     // Трансформируем список хитов в поток отправки сообщений
                     return Flux.fromIterable(searchResponse.getHits())
+
                             .flatMap(hit -> {
-                                String patentUrl = "https://rospatent.gov.ru" + hit.getId();
+                                String encodedId = URLEncoder.encode(hit.getId(), StandardCharsets.UTF_8);
+                                String patentUrl = "https://rospatent.gov.ru" + encodedId;
                                 String formattedCard = PatentCardService.formatPatentCard(hit);
 
                                 BotResponse cardResponse = BotResponse.builder()
@@ -58,7 +62,7 @@ public class SearchHandler implements StepHandler {
                                                         .payload(BotResponse.InlineKeyboardPayload.builder()
                                                                 .buttons(List.of(List.of(
                                                                         BotResponse.Button.builder()
-                                                                                .type("link")
+                                                                                .type("link") // Убедитесь, что ваша платформа поддерживает тип "link" с полем "url"
                                                                                 .text("🔗 Открыть патент")
                                                                                 .url(patentUrl)
                                                                                 .build()
@@ -70,6 +74,7 @@ public class SearchHandler implements StepHandler {
 
                                 return maxApiClient.sendMessage(chatId, cardResponse);
                             })
+
                             // После отправки всех карточек, отправляем финальное меню управления
                             .then(Mono.defer(() -> {
                                 BotResponse finalMenu = BotResponse.builder()
