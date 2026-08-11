@@ -13,6 +13,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +36,8 @@ public class SearchHandler implements StepHandler {
             return null;
         }
 
-        // Запускаем реактивную цепочку асинхронно, изолируя её в пуле boundedElastic
         patentSearchService.searchReactive("q", query, 5, 0)
-                .subscribeOn(Schedulers.boundedElastic()) // ИСПРАВЛЕНО: Уводим выполнение из параллельного потока
+                .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
@@ -44,36 +45,29 @@ public class SearchHandler implements StepHandler {
                                 .build());
                     }
 
-                    // Трансформируем список хитов в поток отправки сообщений
+                    // Асинхронно отправляем каждую карточку патента
                     return Flux.fromIterable(searchResponse.getHits())
                             .flatMap(hit -> {
-                                String patentUrl = "https://rospatent.gov.ru" + hit.getId();
-                                String formattedCard = PatentCardService.formatPatentCard(hit);
+                                // 1. Безопасно экранируем ID документа для формирования валидного URL
+                                String encodedId = URLEncoder.encode(hit.getId(), StandardCharsets.UTF_8);
+                                String patentUrl = "https://rospatent.gov.ru" + encodedId;
+
+                                // 2. Вшиваем ссылку прямо в текст карточки с Markdown-разметкой
+                                String formattedCard = PatentCardService.formatPatentCard(hit) +
+                                        "\n\n🔗 **[Открыть полную карточку патента](" + patentUrl + ")**\n" +
+                                        "— — — — — — — — — — — — — — —";
 
                                 BotResponse cardResponse = BotResponse.builder()
                                         .text(formattedCard)
-                                        .attachments(List.of(
-                                                BotResponse.Attachment.builder()
-                                                        .type("inline_keyboard")
-                                                        .payload(BotResponse.InlineKeyboardPayload.builder()
-                                                                .buttons(List.of(List.of(
-                                                                        BotResponse.Button.builder()
-                                                                                .type("link")
-                                                                                .text("🔗 Открыть патент")
-                                                                                .url(patentUrl)
-                                                                                .build()
-                                                                )))
-                                                                .build())
-                                                        .build()
-                                        ))
+                                        .format("markdown") // Указываем платформе, что используем Markdown-разметку
                                         .build();
 
                                 return maxApiClient.sendMessage(chatId, cardResponse);
                             })
-                            // После отправки всех карточек, отправляем финальное меню управления
+                            // 3. Строго ПОСЛЕ отправки всех карточек выводим навигационное меню
                             .then(Mono.defer(() -> {
                                 BotResponse finalMenu = BotResponse.builder()
-                                        .text("Выше показаны результаты поиска. Что делаем дальше?")
+                                        .text("Выше показаны результаты поиска (Топ-5). Что делаем дальше?")
                                         .attachments(List.of(
                                                 BotResponse.Attachment.builder()
                                                         .type("inline_keyboard")
@@ -87,13 +81,12 @@ public class SearchHandler implements StepHandler {
                             }));
                 })
                 .doOnError(e -> {
-                    log.error("Ошибка асинхронного поиска патентов для чата {}", chatId, e);
+                    log.error("Критическая ошибка асинхронного поиска патентов для чата {}", chatId, e);
                     sendTextMessageAsync(chatId, "❌ Произошла ошибка при поиске патентов. Попробуйте позже.");
                 })
-                .subscribe(); // ИСПРАВЛЕНО: Вместо .block() подписываемся на неблокирующий поток
+                .subscribe();
 
-        // Возвращаем null, так как отправка происходит асинхронно через реактивную подписку выше
-        return null;
+        return null; // Уведомляем диспетчер стейт-машины, что синхронный ответ слать не нужно
     }
 
     private void sendTextMessageAsync(int chatId, String text) {
