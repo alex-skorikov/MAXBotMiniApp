@@ -15,10 +15,10 @@ public class BaseSelectHandler implements StepHandler {
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
 
-        if (event != null && event.getPayload() != null && !"BACK".equals(event.getPayload())) {
-            String base = event.getPayloadDescription();
-            ctx.setSelectedBase(base);
-        }
+//        if (event != null && event.getPayload() != null && !"BACK".equals(event.getPayload())) {
+//            String base = event.getPayloadDescription();
+//            ctx.setSelectedBase(base);
+//        }
 
         List<List<BotResponse.Button>> buttons = BotAnswerUtil.getButtons(Map.of(
                 "Дата", "DATE_INPUT",
@@ -31,7 +31,7 @@ public class BaseSelectHandler implements StepHandler {
                 .payload("BACK")
                 .build()));
 
-        // --- Формируем ответ безопасно
+        // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
         String selectDate = ctx.getDate();
         String classifiers = ctx.getClassifiers();
