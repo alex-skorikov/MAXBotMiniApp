@@ -45,7 +45,6 @@ public class SearchHandler implements StepHandler {
 
                     long totalFound = searchResponse.getTotal() != 0 ? searchResponse.getTotal() : searchResponse.getHits().size();
 
-                    // Шаг 49: "Найдено 42 документа"
                     StringBuilder textBuilder = new StringBuilder();
                     textBuilder.append("🔍 **Результаты поиска по запросу:** \"").append(query).append("\"\n");
                     textBuilder.append("📊 **Найдено документов:** ").append(totalFound).append("\n\n");
@@ -53,7 +52,6 @@ public class SearchHandler implements StepHandler {
 
                     List<List<BotResponse.Button>> buttons = new ArrayList<>();
 
-                    // Шаг 50: Вертикальный список инлайн-кнопок [Документ 1] [Документ 2]
                     searchResponse.getHits().forEach(hit -> {
                         String docId = hit.getId();
                         buttons.add(List.of(BotResponse.Button.builder()
@@ -63,7 +61,6 @@ public class SearchHandler implements StepHandler {
                                 .build()));
                     });
 
-                    // Шаг 51: Навигационный блок [Назад] [Вперёд]
                     List<BotResponse.Button> navigationRow = new ArrayList<>();
                     if (offset > 0) {
                         navigationRow.add(BotResponse.Button.builder()
@@ -83,7 +80,6 @@ public class SearchHandler implements StepHandler {
                         buttons.add(navigationRow);
                     }
 
-                    // Системные действия
                     buttons.add(List.of(
                             BotResponse.Button.builder()
                                     .type("callback")

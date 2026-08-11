@@ -52,10 +52,6 @@ public class StateMachineDispatcher {
                         log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
                                 chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
 
-                        // 3. 🟢 КРИТИЧЕСКИЙ ФИКС: Всегда запускаем реактивные триггеры машины,
-                        // если её внутренний флаг активности не взведён.
-                        // Используем встроенный метод x.hasStateMachineError() или проверку реактивного стрима.
-                        // Самый надежный способ в Spring State Machine 3.x - безусловный вызов старта перед отправкой.
                         Mono<Void> ensureStarted = Mono.defer(() -> machine.startReactively());
 
                         UserContext userContext = (UserContext) machine.getExtendedState()
