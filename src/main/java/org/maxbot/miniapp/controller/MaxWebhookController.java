@@ -36,28 +36,44 @@ public class MaxWebhookController {
         return updateDto
                 .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
                 .flatMap(upd -> {
-                    // 1. Извлекаем chatId из пришедшего вебхука
-                    int chatId;
-                    chatId = upd.getChatId();
-                    if (chatId == 0) {
+                    // 1. БЕЗОПАСНО извлекаем chatId без риска получить NullPointerException
+                    int chatId = upd.getChatId();
+
+                    if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
                         chatId = upd.getMessage().getRecipient().getChatId();
+                    }
+
+                    // Защита: если chatId не определен, не пускаем обработку дальше
+                    if (chatId == 0) {
+                        log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
+                        return Mono.empty();
                     }
 
                     // 2. Маппим DTO в событие для стейт-машины
                     BotEvent event = maxMapper.toEvent(upd, chatId);
-                    int finalChatId = chatId;
-
-                    // 3. Передаем chatId и event в диспетчер
-                    if (event.getCallbackId() == null) {
-                        return dispatcher.dispatch(finalChatId, event)
-                                // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-                                .flatMap(resp -> maxApiClient.sendMessage(finalChatId, resp));
-                    } else {
-                        return dispatcher.dispatch(finalChatId, event)
-                                // 4. Отправляем ответ пользователю, если автомат его сгенерировал
-                                .flatMap(resp -> maxApiClient.sendAnswer(event.getCallbackId(), resp));
+                    if (event == null) {
+                        return Mono.empty();
                     }
 
-                });
+                    int finalChatId = chatId;
+
+                    // 3. Диспетчеризация и отправка ответа
+                    if (event.getCallbackId() == null) {
+                        return dispatcher.dispatch(finalChatId, event)
+                                .flatMap(resp -> {
+                                    if (resp == null) return Mono.empty(); // Защита от пустых ответов
+                                    return maxApiClient.sendMessage(finalChatId, resp);
+                                });
+                    } else {
+                        return dispatcher.dispatch(finalChatId, event)
+                                .flatMap(resp -> {
+                                    if (resp == null) return Mono.empty();
+                                    return maxApiClient.sendAnswer(event.getCallbackId(), resp);
+                                });
+                    }
+                })
+                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука патентов", error))
+                .onErrorComplete();
     }
+
 }
