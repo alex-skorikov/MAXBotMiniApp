@@ -27,7 +27,6 @@ class StateMachineConfigTest {
     @MockBean
     private StepAction stepAction;
 
-    // 🔥 Заменяем @MockBean на @SpyBean для ValidDateGuard, чтобы метод negate() не возвращал null
     @SpyBean
     private ValidDateGuard validDateGuard;
 
@@ -57,12 +56,10 @@ class StateMachineConfigTest {
         stateMachine.sendEvent(BotEvents.USER_INPUT_DATE);
         assertEquals(BotStates.FILTER_DATE, stateMachine.getState().getId());
 
-        // Для Spy-объекта используем конструкцию doReturn
         Mockito.doReturn(true).when(validDateGuard).evaluate(any());
 
         stateMachine.sendEvent(BotEvents.USER_SELECTED_DATE);
 
-        // Теперь машина гарантированно выберет верхний успешный переход
         assertEquals(BotStates.BASE_SELECTED, stateMachine.getState().getId());
     }
 
