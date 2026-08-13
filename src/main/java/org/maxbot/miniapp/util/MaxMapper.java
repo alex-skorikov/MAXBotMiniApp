@@ -201,7 +201,11 @@ public class MaxMapper {
                 event.setType(BotEvents.USER_SEARCH_PATENT);
                 event.setPayloadDescription("Ввод поискового запроса");
             }
-            default -> log.debug("Текстовое сообщение пропущено для стейта: {}", currentState);
+            default -> {
+                // На любое сообщение отправляем приветственное
+                event.setType(BotEvents.BACK_TO_START);
+                event.setCallbackId(null);
+            }
         }
     }
 
