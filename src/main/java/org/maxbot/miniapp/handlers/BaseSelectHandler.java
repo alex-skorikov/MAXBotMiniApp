@@ -6,6 +6,7 @@ import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.util.BotAnswerUtil;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +20,11 @@ public class BaseSelectHandler implements StepHandler {
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
 
-        buttons.add(List.of(BotResponse.Button.builder()
-                .type("callback")
-                .text("🔙 Назад к выбору базы")
-                .payload("BACK")
-                .build()));
+//        buttons.add(List.of(BotResponse.Button.builder()
+//                .type("callback")
+//                .text("🔙 Назад к выбору базы")
+//                .payload("BACK")
+//                .build()));
 
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
@@ -46,13 +47,33 @@ public class BaseSelectHandler implements StepHandler {
             stringBuilder.append("Классификатор: ").append(classifiers).append(" установлен");
         }
 
-        if (selectDate != null && selectArrays != null && classifiers != null) {
-            buttons.add(0, List.of(BotResponse.Button.builder()
-                    .type("callback")
-                    .text("🔍 Поиск патентов")
-                    .payload("START_SEARCH") // Уникальный payload для перехода к вводу строки
-                    .build()));
-        }
+//        if (selectDate != null && selectArrays != null && classifiers != null) {
+//        buttons.add(0, List.of(BotResponse.Button.builder()
+//                .type("callback")
+//                .text("🔍 Поиск патентов")
+//                .payload("START_SEARCH") // payload для перехода к вводу строки
+//                .build()));
+//        }
+
+        // Кнопки переходов
+        List<BotResponse.Button> navigationRow = new ArrayList<>();
+        navigationRow.add(BotResponse.Button.builder()
+                .type("callback")
+                .text("⬅️ Назад")
+                .payload("BACK")
+                .build());
+        navigationRow.add(BotResponse.Button.builder()
+                .type("callback")
+                .text("🔍 Поиск патентов")
+                .payload("START_SEARCH") // payload для перехода к вводу строки
+                .build());
+        navigationRow.add(BotResponse.Button.builder()
+                .type("callback")
+                .text("🔄 Сбросить")
+                .payload("BACK_TO_START")
+                .build());
+
+        buttons.add(navigationRow);
 
         return BotResponse.builder()
                 .notify(false)
