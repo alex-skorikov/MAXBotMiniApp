@@ -1,6 +1,15 @@
 package org.maxbot.miniapp.core;
 
-import org.maxbot.miniapp.handlers.*;
+import org.maxbot.miniapp.handlers.ArrayFilterHandler;
+import org.maxbot.miniapp.handlers.ArraySelectHandler;
+import org.maxbot.miniapp.handlers.BaseSelectHandler;
+import org.maxbot.miniapp.handlers.ClassifiersFilterHandler;
+import org.maxbot.miniapp.handlers.ClassifiersSelectHandler;
+import org.maxbot.miniapp.handlers.DateFilterHandler;
+import org.maxbot.miniapp.handlers.InitHandler;
+import org.maxbot.miniapp.handlers.SearchHandler;
+import org.maxbot.miniapp.handlers.SearchQueryWaitingHandler;
+import org.maxbot.miniapp.handlers.StepHandler;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +31,7 @@ public class HandlerRegistry {
             ClassifiersFilterHandler classifiersFilterHandler,
             ClassifiersSelectHandler classifiersSelectHandler,
             SearchQueryWaitingHandler searchQueryWaitingHandler
-            ) {
+    ) {
         // Старт
         map.put(BotStates.SELECT_BASE, init);
         // Выбор базы, показываем главное меню фильтров

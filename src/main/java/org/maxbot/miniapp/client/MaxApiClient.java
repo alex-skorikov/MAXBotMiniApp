@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.client;
 
 
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,14 +14,14 @@ import java.util.Map;
 @Component
 public class MaxApiClient {
 
-    private final String token;
     private final WebClient webClient;
     private static final Logger log = LoggerFactory.getLogger(MaxApiClient.class);
 
-    public MaxApiClient(@Value("${max.token}") String token, WebClient webClient) {
-        this.token = token;
+    public MaxApiClient(@Value("${max.token}") String token,
+                        @Value("${max.api.url}") String maxUrl,
+                        WebClient webClient) {
         this.webClient = webClient.mutate()
-                .baseUrl("https://platform-api2.max.ru")
+                .baseUrl(maxUrl)
                 .defaultHeader("Authorization", token)
                 .build();
     }

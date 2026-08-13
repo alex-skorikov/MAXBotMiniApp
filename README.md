@@ -1,5 +1,12 @@
 MAXBotMiniApp
 =============
+### Статус проекта
+
+![Coverage](jacoco-coverage-badge.svg) &nbsp; ![Checkstyle](checkstyle-badge.svg)
+
+=============
+
+
 ### [Документация-1](./documentation.md)
 
 --------

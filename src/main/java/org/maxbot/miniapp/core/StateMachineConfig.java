@@ -1,4 +1,4 @@
-package org.maxbot.miniapp.config;
+package org.maxbot.miniapp.core;
 
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
@@ -68,11 +68,21 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.USER_INPUT_DATE)
                 .and()
 
+                // Если введенная дата валидна
                 .withExternal()
                 .source(BotStates.FILTER_DATE)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECTED_DATE)
                 .guard(validDateGuard)
+                .and()
+
+                // Если введенная дата не валидна
+                .withExternal()
+                .source(BotStates.FILTER_DATE)
+                .target(BotStates.FILTER_DATE)
+                .event(BotEvents.USER_SELECTED_DATE)
+                .guard(validDateGuard.negate())
+                .action(stepAction)
                 .and()
 
                 // ПОДМЕНЮ: ПОИСКОВЫЕ МАССИВЫ
@@ -101,7 +111,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.USER_SELECT_CLASSIFIERS)
                 .and()
 
-                // КНОПКА "СТАРТ ПОИСКА" -> Стейк ожидания ввода текста (SELECT_DATE)
+                // КНОПКА "СТАРТ ПОИСКА" -> Стей ожидания ввода текста (SELECT_DATE)
                 .withExternal()
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_DATE)
@@ -125,6 +135,34 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 // Переход по кнопке «Сбросить» из экрана поиска в самое начало
                 .withExternal()
                 .source(BotStates.SEARCH)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.BACK_TO_START)
+                .and()
+
+                //Из меню ВЫБОР БАЗЫ -> ПОИСК
+                .withExternal()
+                .source(BotStates.SELECT_BASE)
+                .target(BotStates.SELECT_DATE)
+                .event(BotEvents.USER_PROCEED_TO_SEARCH)
+                .and()
+
+                //Из меню ВЫБОР БАЗЫ -> СБРОС
+                .withExternal()
+                .source(BotStates.SELECT_BASE)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.BACK_TO_START)
+                .and()
+
+                //Из меню ВЫБОР ФИЛЬТРОВ -> ПОИСК
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
+                .target(BotStates.SELECT_DATE)
+                .event(BotEvents.USER_PROCEED_TO_SEARCH)
+                .and()
+
+                //Из меню ВЫБОР ФИЛЬТРОВ -> СБРОС
+                .withExternal()
+                .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
                 .and()

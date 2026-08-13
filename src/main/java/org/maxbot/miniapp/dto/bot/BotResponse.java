@@ -11,15 +11,21 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class BotAnswerMessage {
+public class BotResponse {
 
     private final String text;
-    private List<Attachment> attachments;
+    private List<BotResponse.Attachment> attachments;
+    private String format;
+    private boolean notify;
 
-    public BotAnswerMessage(String text,
-                            List<Attachment> attachments) {
+    public BotResponse(String text,
+                       List<BotResponse.Attachment> attachments,
+                       String format,
+                       boolean notify) {
         this.text = text;
         this.attachments = attachments;
+        this.format = format;
+        this.notify = notify;
     }
 
     // ===== Attachment =====
@@ -29,9 +35,9 @@ public class BotAnswerMessage {
     @ToString
     public static class Attachment {
         private String type;
-        private InlineKeyboardPayload payload;
+        private BotResponse.InlineKeyboardPayload payload;
 
-        public Attachment(String type, InlineKeyboardPayload payload) {
+        public Attachment(String type, BotResponse.InlineKeyboardPayload payload) {
             this.type = type;
             this.payload = payload;
         }
@@ -44,9 +50,9 @@ public class BotAnswerMessage {
     @Setter
     @ToString
     public static class InlineKeyboardPayload {
-        private List<List<Button>> buttons;
+        private List<List<BotResponse.Button>> buttons;
 
-        public InlineKeyboardPayload(List<List<Button>> buttons) {
+        public InlineKeyboardPayload(List<List<BotResponse.Button>> buttons) {
             this.buttons = buttons;
         }
 
@@ -71,5 +77,4 @@ public class BotAnswerMessage {
         }
 
     }
-
 }

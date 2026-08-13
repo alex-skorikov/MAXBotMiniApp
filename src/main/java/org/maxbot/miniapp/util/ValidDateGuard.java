@@ -17,12 +17,18 @@ public class ValidDateGuard implements Guard<BotStates, BotEvents> {
             return false;
         }
         String text = event.getText();
-        // примитивная проверка формата YYYY-MM-DD
         return text.matches("\\d{4}-\\d{2}-\\d{2}");
     }
 
+    // Изменяем метод инверсии: создаем полноценный Guard
     public Guard<BotStates, BotEvents> negate() {
-        return ctx -> !evaluate(ctx);
+        return new Guard<BotStates, BotEvents>() {
+            @Override
+            public boolean evaluate(StateContext<BotStates, BotEvents> context) {
+                return !ValidDateGuard.this.evaluate(context);
+            }
+        };
     }
 }
+
 

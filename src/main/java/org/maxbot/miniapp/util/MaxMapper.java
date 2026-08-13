@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
@@ -123,7 +123,6 @@ public class MaxMapper {
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
         if (info == null) {
             if ("BACK_TO_START".equals(payload)) {
-                // ИСПРАВЛЕНО: Загружаем контекст и обнуляем бизнес-поля, не удаляя сам ключ из Redis
                 UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getChatId()));
                 if (freshCtx == null) {
                     freshCtx = userContext;
@@ -140,6 +139,7 @@ public class MaxMapper {
                 log.info("🔄 Все фильтры поиска успешно сброшены в Redis для чата {}", userContext.getChatId());
 
                 event.setType(BotEvents.BACK_TO_START);
+                event.setCallbackId(null);
                 event.setPayloadDescription("Сброс фильтров и возврат в начало");
                 return;
             }
@@ -192,7 +192,7 @@ public class MaxMapper {
                 contextRepository.save(userContext);
 
                 // 2. Инициализируем ивент для стейт-машины, чтобы она переключилась в SEARCH
-                event.setType(BotEvents.USER_SEARCH_PATENT); // Используем наш ивент
+                event.setType(BotEvents.USER_SEARCH_PATENT);
                 event.setPayloadDescription("Ввод поискового запроса: " + text);
             }
             case SEARCH -> {
@@ -201,18 +201,22 @@ public class MaxMapper {
                 event.setType(BotEvents.USER_SEARCH_PATENT);
                 event.setPayloadDescription("Ввод поискового запроса");
             }
-            default -> log.debug("Текстовое сообщение пропущено для стейта: {}", currentState);
+            default -> {
+                // На любое сообщение отправляем приветственное
+                event.setType(BotEvents.BACK_TO_START);
+                event.setCallbackId(null);
+            }
         }
     }
 
     // Метод асинхронного извлечения данных конкретного патента без изменения стейта (Шаги 53-59)
     private void sendSinglePatentCardAsync(int chatId, String docId) {
-        // Шаги 53-55: GET /docs/{id}
         patentSearchService.searchReactive("id", docId, 1, 0)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
+                                        .notify(false)
                                 .text("❌ Не удалось загрузить информацию по документу " + docId)
                                 .build());
                     }
@@ -223,13 +227,12 @@ public class MaxMapper {
                     String encodedId = java.net.URLEncoder.encode(hit.getId(), java.nio.charset.StandardCharsets.UTF_8);
                     String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + encodedId;
 
-                    // Шаг 56-58: Название, авторы, дата, МПК
-                    // Шаг 59: Прямая текстовая ссылка (Платформа гарантированно сделает её кликабельной без ошибок 400)
                     String formattedText = PatentCardService.formatPatentCard(hit) +
                             "\n\n🔗 Ссылка на оригинал патента:\n" + patentUrl + "\n" +
                             "— — — — — — — — — — — — — — —";
 
                     BotResponse cardResponse = BotResponse.builder()
+                            .notify(false)
                             .text(formattedText)
                             .build(); // Отправляем без блока инлайн-кнопок
 

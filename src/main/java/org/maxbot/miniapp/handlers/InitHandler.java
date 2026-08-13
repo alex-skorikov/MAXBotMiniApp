@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.handlers;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.util.BotAnswerUtil;
 import org.springframework.stereotype.Component;
@@ -20,6 +20,7 @@ public class InitHandler implements StepHandler {
                 "Полезные модели", "MODELS"));
 
         return BotResponse.builder()
+                .notify(false)
                 .text("Добро пожаловать! Выберите базу:")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")

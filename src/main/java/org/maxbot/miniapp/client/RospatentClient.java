@@ -28,11 +28,14 @@ public class RospatentClient {
     private final WebClient webClient;
     private final String token;
 
-    private static final String URL = "https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search";
+    private final String URL;
 
-    public RospatentClient(WebClient webClient, @Value("${rospatent.token}") String token) {
+    public RospatentClient(WebClient webClient,
+                           @Value("${rospatent.token}") String token,
+                           @Value("${rospatent.url}") String url) {
         this.webClient = webClient;
         this.token = token;
+        this.URL = url;
     }
 
     // -----------------------------
@@ -54,7 +57,8 @@ public class RospatentClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
+                })
                 .retryWhen(
                         Retry.backoff(1, Duration.ofSeconds(2))
                                 .filter(e -> !(e instanceof TimeoutException))
