@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.handlers;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +21,7 @@ public class ClassifiersFilterHandler implements StepHandler {
                 .build()));
 
         return BotResponse.builder()
+                .notify(false)
                 .text("\uD83D\uDCC5 Введите код МПК:")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")

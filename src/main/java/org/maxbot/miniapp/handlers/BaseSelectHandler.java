@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.handlers;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.util.BotAnswerUtil;
 import org.springframework.stereotype.Component;
@@ -43,7 +43,7 @@ public class BaseSelectHandler implements StepHandler {
         }
 
         if (classifiers != null && !classifiers.isBlank()) {
-            stringBuilder.append("Классификатор ").append(classifiers).append(" установлен");
+            stringBuilder.append("Классификатор: ").append(classifiers).append(" установлен");
         }
 
         if (selectDate != null && selectArrays != null && classifiers != null) {
@@ -55,6 +55,7 @@ public class BaseSelectHandler implements StepHandler {
         }
 
         return BotResponse.builder()
+                .notify(false)
                 .text(stringBuilder.toString())
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")

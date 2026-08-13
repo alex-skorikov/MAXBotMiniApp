@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.handlers;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +22,7 @@ public class SearchQueryWaitingHandler implements StepHandler {
                 .build()));
 
         return BotResponse.builder()
+                .notify(false)
                 .text("📝 **Ввод поискового запроса**")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")

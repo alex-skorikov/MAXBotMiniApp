@@ -1,4 +1,4 @@
-package org.maxbot.miniapp.core;
+package org.maxbot.miniapp.dto.bot;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -13,17 +13,19 @@ import java.util.List;
 @ToString
 public class BotResponse {
 
-
     private final String text;
     private List<BotResponse.Attachment> attachments;
     private String format;
+    private boolean notify;
 
     public BotResponse(String text,
                        List<BotResponse.Attachment> attachments,
-                       String format) {
+                       String format,
+                       boolean notify) {
         this.text = text;
         this.attachments = attachments;
         this.format = format;
+        this.notify = notify;
     }
 
     // ===== Attachment =====

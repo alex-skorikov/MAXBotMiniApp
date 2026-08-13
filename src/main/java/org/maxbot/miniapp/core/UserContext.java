@@ -1,6 +1,9 @@
 package org.maxbot.miniapp.core;
 
-import lombok.*;
+import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
