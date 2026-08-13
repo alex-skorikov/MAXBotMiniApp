@@ -1,10 +1,12 @@
 package org.maxbot.miniapp.repository;
 
 import org.maxbot.miniapp.core.UserContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@Profile("!test")
 public class RedisContextRepository implements ContextRepository {
 
     private final RedisTemplate<String, UserContext> redis;

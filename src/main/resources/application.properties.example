@@ -12,7 +12,7 @@ logging.level.org.springframework.web.reactive.function.client=INFO
 logging.level.reactor.netty=INFO
 
 rospatent.token=${ROSPATENT_TOKEN}
-ropatent.url=https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search
+rospatent.url=https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search
 
 spring.mvc.async.request-timeout=30000
 

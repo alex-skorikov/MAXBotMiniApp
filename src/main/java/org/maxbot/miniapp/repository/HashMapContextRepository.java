@@ -1,11 +1,13 @@
 package org.maxbot.miniapp.repository;
 
 import org.maxbot.miniapp.core.UserContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Profile("test")
 public class HashMapContextRepository implements ContextRepository {
 
     private final Map<String, UserContext> storage = new ConcurrentHashMap<>();
