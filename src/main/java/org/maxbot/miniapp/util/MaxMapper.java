@@ -139,6 +139,7 @@ public class MaxMapper {
                 log.info("🔄 Все фильтры поиска успешно сброшены в Redis для чата {}", userContext.getChatId());
 
                 event.setType(BotEvents.BACK_TO_START);
+                event.setCallbackId(null);
                 event.setPayloadDescription("Сброс фильтров и возврат в начало");
                 return;
             }
