@@ -6,7 +6,7 @@ on:
       - develop  # Запуск только при пуше в develop
 
 jobs:
-  build-and-deploy:
+  build-test-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,12 +18,37 @@ jobs:
         with:
           distribution: 'liberica'
           java-version: '17'
+          cache: 'maven' # Кэширование ускорит сборку в разы
 
-      # 1. Собираем свежий JAR в облаке GitHub (пропуская тесты для скорости)
-      - name: Build JAR with Maven
-        run: mvn -B -DskipTests clean package
+      # 1. Запуск тестов, проверки Checkstyle и сборки JaCoCo отчетов
+      - name: Run tests, checkstyle and generate reports
+        run: mvn -B clean verify
 
-      # 2. Очищаем целевую папку target на сервере перед копированием, чтобы не копить старые архивы
+      # 2. Генерируем бейдж покрытия JaCoCo под именем jacoco-coverage-badge.svg
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          jacoco-xml-file: target/site/jacoco/jacoco.xml
+          badges-directory: .
+          coverage-badge-filename: jacoco-coverage-badge.svg
+
+      # 3. Генерируем бейдж для Checkstyle под именем checkstyle-badge.svg
+      - name: Generate Checkstyle Badge
+        run: |
+          echo '<svg xmlns="http://w3.org" width="146" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="146" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="0 0h69v20H0z"/><path fill="#4c1" d="69 0h77v20H69z"/><path fill="url(#b)" d="0 0h146v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="34.5" y="15" fill="#010101" fill-opacity=".3">checkstyle</text><text x="34.5" y="14">checkstyle</text><text x="106.5" y="15" fill="#010101" fill-opacity=".3">0 errors</text><text x="106.5" y="14">0 errors</text></g></svg>' > checkstyle-badge.svg
+
+      # 4. Сразу фиксируем бейджи в Git. Тэг [skip ci] защищает от бесконечного цикла сборки
+      - name: Commit badges if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: auto-update project status badges [skip ci]"
+          file_pattern: "jacoco-coverage-badge.svg checkstyle-badge.svg"
+
+      # ========================================================================
+      # ДЕПЛОЙ НА СЕРВЕР (Выполняется только если этапы выше прошли успешно)
+      # ========================================================================
+
+      # 5. Очищаем целевую папку target на сервере перед копированием
       - name: Prepare server directories
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -34,7 +59,7 @@ jobs:
             mkdir -p /home/alex/MAXBotMiniApp/target
             rm -f /home/alex/MAXBotMiniApp/target/*.jar
 
-      # 3. копируем JAR-файл напрямую в папку target/ на сервере
+      # 6. Копируем JAR-файл напрямую в папку target/ на сервере
       - name: Copy JAR to server target directory
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -43,9 +68,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "target/*.jar"
           target: "/home/alex/MAXBotMiniApp/target/"
-          strip_components: 1  # Важно! Убирает создание лишней вложенной папки target внутри target
+          strip_components: 1
 
-      # 4. Копируем конфигурационные файлы, если они изменились в Git
+      # 7. Копируем конфигурационные файлы Docker
       - name: Copy Docker configuration files to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -55,7 +80,7 @@ jobs:
           source: "docker-compose.yml,Dockerfile,logback.xml"
           target: "/home/alex/MAXBotMiniApp/"
 
-      # 5. Жесткий перезапуск контейнеров с полной пересборкой без кэша
+      # 8. Перезапуск контейнеров с принудительной пересборкой без кэша
       - name: SSH Remote Commands (Rebuild & Restart)
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -67,27 +92,3 @@ jobs:
             docker compose down
             docker compose build --no-cache
             docker compose up -d --force-recreate
-      #
-      - name: Run tests and generate reports
-        run: mvn -B verify
-
-      # 6. Генерируем бейдж покрытия и явно называем его coverage.svg
-      - name: Generate JaCoCo Badge
-        uses: cicirello/jacoco-badge-generator@v2
-        with:
-          jacoco-xml-file: target/site/jacoco/jacoco.xml
-          badges-directory: .
-          coverage-badge-filename: coverage.svg
-
-      # 7. Генерируем статический бейдж для Checkstyle
-      # Так как у вас включен failsOnError=true, если этот шаг дошел до выполнения, значит ошибок 0
-      - name: Generate Checkstyle Badge
-        run: |
-          echo '<svg xmlns="http://w3.org" width="146" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="146" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="0 0h69v20H0z"/><path fill="#4c1" d="69 0h77v20H69z"/><path fill="url(#b)" d="0 0h146v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="34.5" y="15" fill="#010101" fill-opacity=".3">checkstyle</text><text x="34.5" y="14">checkstyle</text><text x="106.5" y="15" fill="#010101" fill-opacity=".3">0 errors</text><text x="106.5" y="14">0 errors</text></g></svg>' > checkstyle.svg
-
-      # 8. Коммитим ОБА созданных бейджа обратно в ветку
-      - name: Commit badges if changed
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: auto-update project status badges [skip ci]"
-          file_pattern: "coverage.svg checkstyle.svg"
