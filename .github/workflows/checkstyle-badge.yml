@@ -1,0 +1,54 @@
+name: CI Checkstyle
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  checkstyle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Checkstyle
+        run: mvn -B verify
+
+      - name: Parse Checkstyle result
+        id: cs
+        run: |
+          ERRORS=$(grep -oP 'severity="error"' target/checkstyle-result.xml | wc -l)
+          WARNINGS=$(grep -oP 'severity="warning"' target/checkstyle-result.xml | wc -l)
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+          echo "warnings=$WARNINGS" >> $GITHUB_OUTPUT
+
+      - name: Generate badge
+        run: |
+          ERRORS=${{ steps.cs.outputs.errors }}
+          WARNINGS=${{ steps.cs.outputs.warnings }}
+
+          STATUS="passing"
+          COLOR="brightgreen"
+
+          if [ $ERRORS -gt 0 ]; then STATUS="errors"; COLOR="red"; fi
+          if [ $WARNINGS -gt 0 ] && [ $ERRORS -eq 0 ]; then STATUS="warnings"; COLOR="yellow"; fi
+
+          echo "<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'>
+            <rect width='80' height='20' fill='#555'/>
+            <rect x='80' width='70' height='20' fill='$COLOR'/>
+            <text x='40' y='14' fill='#fff' font-family='Verdana' font-size='11'>checkstyle</text>
+            <text x='115' y='14' fill='#fff' font-family='Verdana' font-size='11'>$STATUS</text>
+          </svg>" > checkstyle-badge.svg
+
+      - name: Commit badge if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-update Checkstyle badge"
+          file_pattern: checkstyle-badge.svg
