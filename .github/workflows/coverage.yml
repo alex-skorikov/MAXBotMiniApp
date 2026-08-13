@@ -15,18 +15,18 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: 'maven' # или 'gradle'
+          cache: 'maven'
 
       - name: Run tests and generate JaCoCo report
-        run: mvn test # или ./gradlew test jacocoTestReport
+        run: mvn -B verify
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
         with:
-          badges-directory: .github/badges
+          badges-directory: .
 
       - name: Commit badge if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Auto-update coverage badge"
-          file_pattern: .github/badges/*.svg
+          file_pattern: jacoco-coverage-badge.svg

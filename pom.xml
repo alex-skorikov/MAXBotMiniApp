@@ -160,6 +160,13 @@
                             <goal>check</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
