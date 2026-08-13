@@ -11,9 +11,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.statemachine.guard.Guard;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +27,8 @@ class StateMachineConfigTest {
     @MockBean
     private StepAction stepAction;
 
-    @MockBean
+    // 🔥 Заменяем @MockBean на @SpyBean для ValidDateGuard, чтобы метод negate() не возвращал null
+    @SpyBean
     private ValidDateGuard validDateGuard;
 
     private StateMachine<BotStates, BotEvents> stateMachine;
@@ -47,7 +48,6 @@ class StateMachineConfigTest {
 
         stateMachine.sendEvent(BotEvents.USER_SELECT_BASE);
         assertEquals(BotStates.BASE_SELECTED, stateMachine.getState().getId());
-
     }
 
     @Test
@@ -57,18 +57,13 @@ class StateMachineConfigTest {
         stateMachine.sendEvent(BotEvents.USER_INPUT_DATE);
         assertEquals(BotStates.FILTER_DATE, stateMachine.getState().getId());
 
-// Явно переопределяем вычисление базового Guard
-        Mockito.when(validDateGuard.evaluate(any())).thenReturn(true);
-
-// Переопределяем метод инверсии: для успешного прохода ветка циклической ошибки (negate) должна вернуть false
-        Guard<BotStates, BotEvents> mockNegateGuard = ctx -> false;
-        Mockito.when(validDateGuard.negate()).thenReturn(mockNegateGuard);
+        // Для Spy-объекта используем конструкцию doReturn
+        Mockito.doReturn(true).when(validDateGuard).evaluate(any());
 
         stateMachine.sendEvent(BotEvents.USER_SELECTED_DATE);
 
-// Теперь машина гарантированно выберет верхний переход
+        // Теперь машина гарантированно выберет верхний успешный переход
         assertEquals(BotStates.BASE_SELECTED, stateMachine.getState().getId());
-
     }
 
     @Test
@@ -78,18 +73,13 @@ class StateMachineConfigTest {
         stateMachine.sendEvent(BotEvents.USER_INPUT_DATE);
         assertEquals(BotStates.FILTER_DATE, stateMachine.getState().getId());
 
-// Переопределяем вычисление базового Guard на отказ
-        Mockito.when(validDateGuard.evaluate(any())).thenReturn(false);
-
-// Для сценария провала инвертированный Guard (negate) должен вернуть true, чтобы пустить в циклическую транзицию ошибки
-        Guard<BotStates, BotEvents> mockNegateGuard = ctx -> true;
-        Mockito.when(validDateGuard.negate()).thenReturn(mockNegateGuard);
+        // Симулируем невалидный ввод
+        Mockito.doReturn(false).when(validDateGuard).evaluate(any());
 
         stateMachine.sendEvent(BotEvents.USER_SELECTED_DATE);
 
-// Машина отклонит переход дальше и останется в FILTER_DATE
+        // Машина отклонит переход дальше и останется в FILTER_DATE
         assertEquals(BotStates.FILTER_DATE, stateMachine.getState().getId());
-
     }
 
     @Test
@@ -107,7 +97,6 @@ class StateMachineConfigTest {
 
         stateMachine.sendEvent(BotEvents.BACK_TO_START);
         assertEquals(BotStates.SELECT_BASE, stateMachine.getState().getId());
-
     }
 
     @Test
@@ -120,6 +109,5 @@ class StateMachineConfigTest {
 
         stateMachine.sendEvent(BotEvents.BACK);
         assertEquals(BotStates.BASE_SELECTED, stateMachine.getState().getId());
-
     }
 }
