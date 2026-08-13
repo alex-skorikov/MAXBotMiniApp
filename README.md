@@ -1,12 +1,8 @@
 MAXBotMiniApp
 =============
-# 🤖 MAX Bot Mini App
-
-![Java Version](https://shields.io)
-![Spring Boot](https://shields.io)
-![JaCoCo Coverage](https://shields.io)
-![Code Style](https://shields.io)
-
+### Статус проекта
+![Coverage](coverage.svg)
+![Checkstyle](checkstyle.svg)
 
 =============
 
