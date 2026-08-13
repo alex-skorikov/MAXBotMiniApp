@@ -1,6 +1,6 @@
 package org.maxbot.miniapp.util;
 
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,22 +2,19 @@ package org.maxbot.miniapp.repository;
 
 import org.maxbot.miniapp.core.UserContext;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-@Profile("!test")
-public class RedisContextRepository implements ContextRepository {
+@Profile("test")
+public class HashMapContextRepository implements ContextRepository {
 
-    private final RedisTemplate<String, UserContext> redis;
-
-    public RedisContextRepository(RedisTemplate<String, UserContext> redis) {
-        this.redis = redis;
-    }
+    private final Map<String, UserContext> storage = new ConcurrentHashMap<>();
 
     @Override
     public UserContext load(String chatId) {
-        UserContext ctx = redis.opsForValue().get(chatId);
+        UserContext ctx = storage.get(chatId);
         if (ctx == null) {
             ctx = new UserContext();
             ctx.setUserId(Integer.parseInt(chatId));
@@ -27,12 +24,16 @@ public class RedisContextRepository implements ContextRepository {
 
     @Override
     public void save(UserContext ctx) {
-        redis.opsForValue().set(String.valueOf(ctx.getUserId()), ctx);
+        storage.put(String.valueOf(ctx.getUserId()), ctx);
     }
 
     @Override
     public void delete(String chatId) {
-        redis.delete(chatId);
+        storage.remove(chatId);
+    }
+
+    // для очистки хранилища между тестами
+    public void clear() {
+        storage.clear();
     }
 }
-

@@ -1,9 +1,7 @@
-package org.maxbot.miniapp.config;
+package org.maxbot.miniapp.statemachine;
 
-import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.core.UserContext;
-import org.maxbot.miniapp.statemachine.BotEvents;
-import org.maxbot.miniapp.statemachine.BotStates;
+import org.maxbot.miniapp.repository.ContextRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.statemachine.StateMachine;
@@ -27,9 +25,6 @@ public class StateMachinePersister {
         this.contextRepository = contextRepository;
     }
 
-    /**
-     * Восстанавливает состояние автомата из Redis через реактивный сброс регионов
-     */
     public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String chatId) {
         return Mono.defer(() -> {
             // 1. Загружаем контекст из Redis
@@ -57,9 +52,6 @@ public class StateMachinePersister {
         });
     }
 
-    /**
-     * Синхронный метод сохранения (возвращает void, работает стабильно)
-     */
     public void persist(StateMachine<BotStates, BotEvents> stateMachine,
                         String userId,
                         String chatId,

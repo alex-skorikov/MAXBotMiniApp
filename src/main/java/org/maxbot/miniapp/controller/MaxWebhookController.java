@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.controller;
 
 import org.maxbot.miniapp.client.MaxApiClient;
-import org.maxbot.miniapp.config.StateMachineDispatcher;
+import org.maxbot.miniapp.statemachine.StateMachineDispatcher;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.util.MaxMapper;

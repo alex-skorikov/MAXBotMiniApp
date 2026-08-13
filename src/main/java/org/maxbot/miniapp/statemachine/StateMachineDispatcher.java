@@ -1,10 +1,8 @@
-package org.maxbot.miniapp.config;
+package org.maxbot.miniapp.statemachine;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
-import org.maxbot.miniapp.statemachine.BotEvents;
-import org.maxbot.miniapp.statemachine.BotStates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
@@ -52,7 +50,7 @@ public class StateMachineDispatcher {
                         log.info("==> [ДИСПЕТЧЕР] Чат: {}, Входящий ивент: {}, Текущий стейт из базы: {}",
                                 chatId, event.getType(), machine.getState() != null ? machine.getState().getId() : "NULL");
 
-                        Mono<Void> ensureStarted = Mono.defer(() -> machine.startReactively());
+                        Mono<Void> ensureStarted = Mono.defer(machine::startReactively);
 
                         UserContext userContext = (UserContext) machine.getExtendedState()
                                 .getVariables()

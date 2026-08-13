@@ -1,7 +1,10 @@
 package org.maxbot.miniapp.util;
 
 import lombok.RequiredArgsConstructor;
-import org.maxbot.miniapp.core.*;
+import org.maxbot.miniapp.core.HandlerRegistry;
+import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.UserContext;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.handlers.StepHandler;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;

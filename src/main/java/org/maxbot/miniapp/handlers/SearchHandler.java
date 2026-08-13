@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.service.PatentSearchService;
 import org.springframework.stereotype.Component;
@@ -39,6 +39,7 @@ public class SearchHandler implements StepHandler {
                 .flatMap(searchResponse -> {
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
+                                        .notify(false)
                                 .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
                                 .build());
                     }
@@ -57,7 +58,7 @@ public class SearchHandler implements StepHandler {
                         buttons.add(List.of(BotResponse.Button.builder()
                                 .type("callback")
                                 .text("📄 " + docId)
-                                .payload("DOC_VIEW_" + docId) // Ловится динамически в MaxMapper
+                                .payload("DOC_VIEW_" + docId)
                                 .build()));
                     });
 
@@ -94,6 +95,7 @@ public class SearchHandler implements StepHandler {
                     ));
 
                     BotResponse resultsMenu = BotResponse.builder()
+                            .notify(false)
                             .text(textBuilder.toString())
                             .attachments(List.of(
                                     BotResponse.Attachment.builder()
@@ -114,7 +116,7 @@ public class SearchHandler implements StepHandler {
     }
 
     private void sendTextMessageAsync(int chatId, String text) {
-        maxApiClient.sendMessage(chatId, BotResponse.builder().text(text).build())
+        maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(text).build())
                 .subscribeOn(Schedulers.boundedElastic())
                 .subscribe();
     }

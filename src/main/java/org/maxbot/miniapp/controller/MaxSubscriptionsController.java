@@ -17,9 +17,10 @@ public class MaxSubscriptionsController {
 
     private final WebClient webClient;
 
-    public MaxSubscriptionsController(@Value("${max.token}") String token) {
+    public MaxSubscriptionsController(@Value("${max.token}") String token,
+                                      @Value("${max.api.url}") String maxUrl) {
         this.webClient = WebClient.builder()
-                .baseUrl("https://platform-api2.max.ru")
+                .baseUrl(maxUrl)
                 .defaultHeader("Authorization", token)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                 .build();

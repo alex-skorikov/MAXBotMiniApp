@@ -1,6 +1,8 @@
 server.port=${PORT:8080}
 
-max.token=f9LHodD0cOJTq0Il5FEwq5U6Z-Cyv1VS1ex35W0BXVbdTp3FxyfQGGB5wo1rejQ617ykC-jKR1UTOqfscbo2
+max.token=${MAX_TOKEN}
+max.api.url=https://platform-api2.max.ru
+
 management.endpoints.web.exposure.include=health,info
 management.endpoint.health.show-details=always
 
@@ -9,9 +11,10 @@ logging.level.reactor.netty.http.server=INFO
 logging.level.org.springframework.web.reactive.function.client=INFO
 logging.level.reactor.netty=INFO
 
-rospatent.token=a9c9088643b043cf8085cf3a1b7d9188
+rospatent.token=${ROSPATENT_TOKEN}
+rospatent.url=https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search
 
 spring.mvc.async.request-timeout=30000
 
-spring.data.redis.host=localhost
-spring.data.redis.port=6379
+spring.data.redis.host=${REDIS_HOST}
+spring.data.redis.port=${REDIS_PORT

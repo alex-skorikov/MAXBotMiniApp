@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.handlers;
 
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.BotResponse;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.repository.ContextRepository;
 import org.springframework.stereotype.Component;
@@ -23,6 +23,7 @@ public class ArraySelectHandler implements StepHandler {
 
         return BotResponse.builder()
                 .text("Поисковый массив выбран")
+                .notify(false)
                 .build();
     }
 }
