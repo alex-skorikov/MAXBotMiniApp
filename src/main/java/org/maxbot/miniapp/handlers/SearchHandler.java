@@ -113,11 +113,12 @@ public class SearchHandler implements StepHandler {
                                     navButtons.add(navigationRow);
                                 }
                                 String botUsername = "se13466890_bot";
+                                String dip = "https://max.ru/se13466890_bot?startapp";
                                 navButtons.add(List.of(
                                         BotResponse.Button.builder()
-                                                .type("callback")
+                                                .type("link")
                                                 .text("⚙️ Расширенный поиск")
-                                                .payload(String.format("max://bot?username=%s&app=меню&chat_id=%d", botUsername, chatId))
+                                                .payload(dip)
                                                 .build(),
                                         BotResponse.Button.builder()
                                                 .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
