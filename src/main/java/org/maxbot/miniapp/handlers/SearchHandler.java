@@ -1,7 +1,5 @@
 package org.maxbot.miniapp.handlers;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
@@ -13,6 +11,9 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -53,7 +54,8 @@ public class SearchHandler implements StepHandler {
                     String headerText = String.format("🔍 **Результаты поиска по запросу:** \"%s\"\n📊 **Найдено документов:** %d",
                             query, totalFound);
 
-                    return maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(headerText).build())
+                    return maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(headerText)
+                                    .build())
                             .then(Mono.defer(() -> {
                                 int[] counter = {offset + 1};
 
@@ -115,7 +117,8 @@ public class SearchHandler implements StepHandler {
 
                                 navButtons.add(List.of(
                                         BotResponse.Button.builder()
-                                                .type("web_app").text("⚙️ Расширенный поиск").payload("https://vercel.app").build(),
+                                                .type("link").text("⚙️ Расширенный поиск")
+                                                .payload("https://max-webapp-five.vercel.app").build(),
                                         BotResponse.Button.builder()
                                                 .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
                                 ));
