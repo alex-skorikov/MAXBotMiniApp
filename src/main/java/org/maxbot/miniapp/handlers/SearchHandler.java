@@ -51,13 +51,10 @@ public class SearchHandler implements StepHandler {
                     textBuilder.append("🔍 **Результаты поиска по запросу:** \"").append(query).append("\"\n");
                     textBuilder.append("📊 **Найдено документов:** ").append(totalFound);
 
-                    // Создаем единый список вложений для карточек патентов и кнопок навигации
                     List<BotResponse.Attachment> attachments = new ArrayList<>();
-
-                    // Счетчик для отображения порядкового номера (1., 2., 3.) как на изображении
                     int[] counter = {offset + 1};
 
-                    // 1. СБОРКА КАРТОЧЕК (ПЛИТОК) ДЛЯ КАЖДОГО ПАТЕНТА
+                    // 1. СБОРКА КАРТОЧЕК ПАТЕНТОВ ЧЕРЕЗ INLINE_KEYBOARD PAYLOAD TEXT
                     searchResponse.getHits().forEach(hit -> {
                         String publicationDate = hit.getCommon() != null
                                 ? hit.getCommon().getPublicationDate() : "Не указана";
@@ -69,11 +66,10 @@ public class SearchHandler implements StepHandler {
                             title = hit.getBiblio().getRu().getTitle();
                         }
 
-                        // Формируем структурированный текст плитки (заголовок жирным)
+                        // Текст внутри конкретной плитки-баббла
                         String cardText = String.format("%d. %s\n%s\nДата публикации: %s",
                                 counter[0]++, title, docId, publicationDate);
 
-                        // Кнопка, привязанная строго к низу текущего баббла
                         List<List<BotResponse.Button>> cardButtons = List.of(List.of(
                                 BotResponse.Button.builder()
                                         .type("callback")
@@ -82,61 +78,42 @@ public class SearchHandler implements StepHandler {
                                         .build()
                         ));
 
-                        // Добавляем независимый элемент с типом card
+                        // 🔥 Передаем тип inline_keyboard, но текст кладем внутрь payload
                         attachments.add(BotResponse.Attachment.builder()
-                                .type("card")
+                                .type("inline_keyboard")
                                 .payload(BotResponse.InlineKeyboardPayload.builder()
-                                        .text(cardText)
+                                        .text(cardText) // Текст привяжется к этой конкретной клавиатуре-плитке
                                         .buttons(cardButtons)
                                         .build())
                                 .build());
                     });
 
-                    // 2. СБОРКА СИСТЕМНОГО НИЖНЕГО МЕНЮ НАВИГАЦИИ (ПАГИНАЦИЯ)
+                    // 2. НИЖНЕЕ МЕНЮ НАВИГАЦИИ (ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ)
                     List<List<BotResponse.Button>> navButtons = new ArrayList<>();
                     List<BotResponse.Button> navigationRow = new ArrayList<>();
 
                     if (offset > 0) {
-                        navigationRow.add(BotResponse.Button.builder()
-                                .type("callback")
-                                .text("⬅️ Назад")
-                                .payload("SEARCH_PREV_PAGE")
-                                .build());
+                        navigationRow.add(BotResponse.Button.builder().type("callback").text("⬅️ Назад").payload("SEARCH_PREV_PAGE").build());
                     }
                     if (offset + limit < totalFound) {
-                        navigationRow.add(BotResponse.Button.builder()
-                                .type("callback")
-                                .text("Вперёд ➡️")
-                                .payload("SEARCH_NEXT_PAGE")
-                                .build());
+                        navigationRow.add(BotResponse.Button.builder().type("callback").text("Вперёд ➡️").payload("SEARCH_NEXT_PAGE").build());
                     }
                     if (!navigationRow.isEmpty()) {
                         navButtons.add(navigationRow);
                     }
 
-                    // Кнопки Mini App и полного сброса стейт-машины
                     navButtons.add(List.of(
-                            BotResponse.Button.builder()
-                                    .type("web_app")
-                                    .text("⚙️ Расширенный поиск")
-                                    .payload("https://max-webapp-five.vercel.app")
-                                    .build(),
-                            BotResponse.Button.builder()
-                                    .type("callback")
-                                    .text("🔄 Сбросить")
-                                    .payload("BACK_TO_START")
-                                    .build()
+                            BotResponse.Button.builder().type("web_app").text("⚙️ Расширенный поиск").payload("https://vercel.app").build(),
+                            BotResponse.Button.builder().type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
                     ));
 
-                    // Добавляем нижнюю клавиатуру управления
                     attachments.add(BotResponse.Attachment.builder()
                             .type("inline_keyboard")
                             .payload(BotResponse.InlineKeyboardPayload.builder()
-                                    .buttons(navButtons)
+                                    .buttons(navButtons) // Тут текста нет, уйдут только кнопки навигации
                                     .build())
                             .build());
 
-                    // Формируем и отправляем итоговый структурированный пакет
                     BotResponse resultsMenu = BotResponse.builder()
                             .notify(false)
                             .text(textBuilder.toString())
@@ -144,6 +121,8 @@ public class SearchHandler implements StepHandler {
                             .build();
 
                     return maxApiClient.sendMessage(chatId, resultsMenu);
+
+
                 })
                 .doOnError(e -> log.error("Ошибка генерации списка патентов", e))
                 .subscribe();
