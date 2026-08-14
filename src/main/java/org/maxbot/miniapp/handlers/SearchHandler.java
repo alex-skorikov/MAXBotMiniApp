@@ -117,7 +117,8 @@ public class SearchHandler implements StepHandler {
 
                                 navButtons.add(List.of(
                                         BotResponse.Button.builder()
-                                                .type("link").text("⚙️ Расширенный поиск")
+                                                .type("callback")
+                                                .text("⚙️ Расширенный поиск")
                                                 .payload("https://max-webapp-five.vercel.app").build(),
                                         BotResponse.Button.builder()
                                                 .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
