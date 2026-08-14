@@ -59,7 +59,7 @@ public class SearchHandler implements StepHandler {
                             .then(Mono.defer(() -> {
                                 // 2. 🔥 ПОШТУЧНАЯ ОТПРАВКА ПАТЕНТОВ ЧЕРЕЗ FLUX (Сохраняет строгий порядок сообщений)
                                 return Flux.fromIterable(searchResponse.getHits())
-                                        .flatMapSequential(hit -> {
+                                        .concatMap(hit -> {
                                             String publicationDate = hit.getCommon() != null
                                                     ? hit.getCommon().getPublicationDate() : "Не указана";
                                             String docId = hit.getId();
