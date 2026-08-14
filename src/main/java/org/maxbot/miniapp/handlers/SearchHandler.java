@@ -20,14 +20,19 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class SearchHandler implements StepHandler {
 
-    @Value("${max.bot.name}")
     private final String botName;
-
     private final PatentService patentService;
     private final MaxApiClient maxApiClient;
+
+    public SearchHandler(@Value("${max.bot.name}")String botName,
+                         PatentService patentService,
+                         MaxApiClient maxApiClient) {
+        this.botName = botName;
+        this.patentService = patentService;
+        this.maxApiClient = maxApiClient;
+    }
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
