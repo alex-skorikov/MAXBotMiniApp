@@ -2,6 +2,7 @@ server.port=${PORT:8080}
 
 max.token=${MAX_TOKEN}
 max.api.url=https://platform-api2.max.ru
+max.bot.name=bot_name
 
 management.endpoints.web.exposure.include=health,info
 management.endpoint.health.show-details=always
