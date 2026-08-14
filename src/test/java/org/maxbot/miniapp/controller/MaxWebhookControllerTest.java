@@ -46,7 +46,6 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookSuccessSendMessage() {
-        // Given
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(123);
 
@@ -62,7 +61,6 @@ class MaxWebhookControllerTest {
         Mockito.when(maxApiClient.sendMessage(123, mockResponse))
                 .thenReturn(Mono.empty());
 
-        // When & Then
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +77,6 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookSuccessSendAnswer() {
-        // Given
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(456);
 
@@ -95,7 +92,6 @@ class MaxWebhookControllerTest {
         Mockito.when(maxApiClient.sendAnswer("cb_789", mockResponse))
                 .thenReturn(Mono.empty());
 
-        // When & Then
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +108,6 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookChatIdFallbackExtraction() {
-        // Given
         // когда chatId равен 0, но лежит внутри получателя
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(0);
@@ -129,7 +124,6 @@ class MaxWebhookControllerTest {
         Mockito.when(dispatcher.dispatch(999, mockEvent))
                 .thenReturn(Mono.empty());
 
-        // When & Then
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -144,11 +138,9 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookZeroChatIdReturnsEmpty() {
-        // Given
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(0); // Нигде нет валидного chatId 
 
-        // When & Then
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -163,15 +155,12 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookNullEventReturnsEmpty() {
-        // Given
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(111);
 
-        // Маппер возвращает null (например, неизвестный боту тип апдейта)
         Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(111)))
                 .thenReturn(null);
 
-        // When & Then
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -186,7 +175,6 @@ class MaxWebhookControllerTest {
 
     @Test
     void webhookCriticalErrorCompletesGracefully() {
-        // Given
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(222);
 
@@ -194,8 +182,6 @@ class MaxWebhookControllerTest {
         Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(222)))
                 .thenThrow(new RuntimeException("Mapping exception"));
 
-        // When & Then
-        // Благодаря вашему .onErrorComplete() контроллер вернет 200 OK, погасив ошибку в стриме
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)

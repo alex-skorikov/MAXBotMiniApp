@@ -6,7 +6,7 @@ import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
-import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.PatentService;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Schedulers;
 
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SearchHandler implements StepHandler {
 
-    private final PatentSearchService patentSearchService;
+    private final PatentService patentService;
     private final MaxApiClient maxApiClient;
 
     @Override
@@ -34,30 +34,35 @@ public class SearchHandler implements StepHandler {
             return null;
         }
 
-        patentSearchService.searchReactive("q", query, limit, offset)
+        patentService.searchReactive("q", query, limit, offset)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
-                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
+                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits()
+                            .isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
-                                        .notify(false)
+                                .notify(false)
                                 .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
                                 .build());
                     }
 
-                    long totalFound = searchResponse.getTotal() != 0 ? searchResponse.getTotal() : searchResponse.getHits().size();
+                    long totalFound = searchResponse.getTotal() != 0 ? searchResponse.getTotal() : searchResponse.getHits()
+                            .size();
 
                     StringBuilder textBuilder = new StringBuilder();
-                    textBuilder.append("🔍 **Результаты поиска по запросу:** \"").append(query).append("\"\n");
-                    textBuilder.append("📊 **Найдено документов:** ").append(totalFound).append("\n\n");
+                    textBuilder.append("🔍 Результаты поиска по запросу:  \"").append(query).append("\"\n");
+                    textBuilder.append("📊 Найдено документов: ").append(totalFound).append("\n\n");
                     textBuilder.append("Выберите интересующий документ для просмотра подробной карточки:");
 
                     List<List<BotResponse.Button>> buttons = new ArrayList<>();
 
                     searchResponse.getHits().forEach(hit -> {
+                        String publicationDate = hit.getCommon().getPublicationDate();
                         String docId = hit.getId();
+                        String title = hit.getBiblio().getRu().getTitle();
+
                         buttons.add(List.of(BotResponse.Button.builder()
                                 .type("callback")
-                                .text("📄 " + docId)
+                                .text("📄 " + title + "\n" + docId + "\n" + publicationDate)
                                 .payload("DOC_VIEW_" + docId)
                                 .build()));
                     });
@@ -83,9 +88,9 @@ public class SearchHandler implements StepHandler {
 
                     buttons.add(List.of(
                             BotResponse.Button.builder()
-                                    .type("callback")
+                                    .type("web_app")
                                     .text("⚙️ Расширенный поиск")
-                                    .payload("ADVANCED_SEARCH")
+                                    .payload("https://max-webapp-five.vercel.app")
                                     .build(),
                             BotResponse.Button.builder()
                                     .type("callback")

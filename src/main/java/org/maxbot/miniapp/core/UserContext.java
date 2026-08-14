@@ -7,8 +7,6 @@ import lombok.ToString;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +17,6 @@ public class UserContext {
     private String chatId;
     private String selectedBase;
     private String date;
-    private Map<String, Object> filters = new HashMap<>();
     private String searchArrays;
     private String classifiers;
     private BotStates state;

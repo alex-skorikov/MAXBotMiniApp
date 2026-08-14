@@ -4,18 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.repository.ContextRepository;
-import org.maxbot.miniapp.service.PatentCardService;
-import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.PatentService;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.springframework.stereotype.Component;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.Map;
 import java.util.Optional;
@@ -29,9 +26,10 @@ public class MaxMapper {
 
     private record PayloadInfo(BotEvents eventType, String description) {
     }
+
     private final MaxApiClient maxApiClient;
     private final ContextRepository contextRepository;
-    private final PatentSearchService patentSearchService;
+    private final PatentService patentService;
 
     private static final Map<String, PayloadInfo> PAYLOAD_MAPPING = Map.ofEntries(
             entry("PATENTS", new PayloadInfo(BotEvents.USER_SELECT_BASE, "Патенты")),
@@ -102,7 +100,7 @@ public class MaxMapper {
             String docId = payload.substring("DOC_VIEW_".length());
             event.setType(null);
             event.setPayloadDescription("Просмотр документа " + docId);
-            sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId);
+            patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId);
             return;
         }
 
@@ -196,7 +194,7 @@ public class MaxMapper {
                 event.setPayloadDescription("Ввод поискового запроса: " + text);
             }
             case SEARCH -> {
-                userContext.getFilters().put("search_query", text);
+                userContext.setSearchQuery(text);
                 contextRepository.save(userContext);
                 event.setType(BotEvents.USER_SEARCH_PATENT);
                 event.setPayloadDescription("Ввод поискового запроса");
@@ -209,36 +207,4 @@ public class MaxMapper {
         }
     }
 
-    // Метод асинхронного извлечения данных конкретного патента без изменения стейта (Шаги 53-59)
-    private void sendSinglePatentCardAsync(int chatId, String docId) {
-        patentSearchService.searchReactive("id", docId, 1, 0)
-                .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(searchResponse -> {
-                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits().isEmpty()) {
-                        return maxApiClient.sendMessage(chatId, BotResponse.builder()
-                                        .notify(false)
-                                .text("❌ Не удалось загрузить информацию по документу " + docId)
-                                .build());
-                    }
-
-                    var hit = searchResponse.getHits().get(0);
-
-                    // Экранируем ID для сборки полностью валидного адреса
-                    String encodedId = java.net.URLEncoder.encode(hit.getId(), java.nio.charset.StandardCharsets.UTF_8);
-                    String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + encodedId;
-
-                    String formattedText = PatentCardService.formatPatentCard(hit) +
-                            "\n\n🔗 Ссылка на оригинал патента:\n" + patentUrl + "\n" +
-                            "— — — — — — — — — — — — — — —";
-
-                    BotResponse cardResponse = BotResponse.builder()
-                            .notify(false)
-                            .text(formattedText)
-                            .build(); // Отправляем без блока инлайн-кнопок
-
-                    return maxApiClient.sendMessage(chatId, cardResponse);
-                })
-                .doOnError(err -> log.error("Критическая ошибка при загрузке документа {}", docId, err))
-                .subscribe();
-    }
 }

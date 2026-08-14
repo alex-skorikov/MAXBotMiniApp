@@ -64,7 +64,7 @@ public class BaseSelectHandler implements StepHandler {
                 .build());
         navigationRow.add(BotResponse.Button.builder()
                 .type("callback")
-                .text("🔍 Поиск патентов")
+                .text("🔍 Поиск")
                 .payload("START_SEARCH") // payload для перехода к вводу строки
                 .build());
         navigationRow.add(BotResponse.Button.builder()
