@@ -51,7 +51,7 @@ public class SearchHandler implements StepHandler {
                             ? searchResponse.getTotal() : searchResponse.getHits().size();
 
                     // 1. Отправляем вводный заголовок результатов поиска
-                    String headerText = String.format("🔍 **Результаты поиска по запросу:** \"%s\"\n📊 **Найдено документов:** %d",
+                    String headerText = String.format("🔍 Результаты поиска по запросу: \"%s\"\n📊 Найдено документов: %d",
                             query, totalFound);
 
                     return maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(headerText)
@@ -118,7 +118,7 @@ public class SearchHandler implements StepHandler {
                                         BotResponse.Button.builder()
                                                 .type("link")
                                                 .text("⚙️ Расширенный поиск")
-                                                .payload(dip)
+                                                .url(dip)
                                                 .build(),
                                         BotResponse.Button.builder()
                                                 .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
