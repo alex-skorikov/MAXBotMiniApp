@@ -57,8 +57,6 @@ public class SearchHandler implements StepHandler {
                     return maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(headerText)
                                     .build())
                             .then(Mono.defer(() -> {
-                                int[] counter = {offset + 1};
-
                                 // 2. 🔥 ПОШТУЧНАЯ ОТПРАВКА ПАТЕНТОВ ЧЕРЕЗ FLUX (Сохраняет строгий порядок сообщений)
                                 return Flux.fromIterable(searchResponse.getHits())
                                         .flatMapSequential(hit -> {
@@ -73,7 +71,7 @@ public class SearchHandler implements StepHandler {
                                             }
 
                                             String cardText = String.format("%d. %s\n%s\nДата публикации: %s",
-                                                    counter[0]++, title, docId, publicationDate);
+                                                    title, docId, publicationDate);
 
                                             List<List<BotResponse.Button>> cardButtons = List.of(List.of(
                                                     BotResponse.Button.builder()
@@ -114,12 +112,13 @@ public class SearchHandler implements StepHandler {
                                 if (!navigationRow.isEmpty()) {
                                     navButtons.add(navigationRow);
                                 }
-
+                                String botUsername = "@se13466890_bot";
                                 navButtons.add(List.of(
                                         BotResponse.Button.builder()
                                                 .type("callback")
                                                 .text("⚙️ Расширенный поиск")
-                                                .payload("https://max-webapp-five.vercel.app").build(),
+                                                .payload(String.format("max://bot?username=%s&app=меню&chat_id=%d", botUsername, chatId))
+                                                .build(),
                                         BotResponse.Button.builder()
                                                 .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
                                 ));
