@@ -70,7 +70,7 @@ public class SearchHandler implements StepHandler {
                                                 title = hit.getBiblio().getRu().getTitle();
                                             }
 
-                                            String cardText = String.format("%d. %s\n%s\nДата публикации: %s",
+                                            String cardText = String.format("%s\n%s\nДата публикации: %s",
                                                     title, docId, publicationDate);
 
                                             List<List<BotResponse.Button>> cardButtons = List.of(List.of(
@@ -112,7 +112,7 @@ public class SearchHandler implements StepHandler {
                                 if (!navigationRow.isEmpty()) {
                                     navButtons.add(navigationRow);
                                 }
-                                String botUsername = "@se13466890_bot";
+                                String botUsername = "se13466890_bot";
                                 navButtons.add(List.of(
                                         BotResponse.Button.builder()
                                                 .type("callback")
