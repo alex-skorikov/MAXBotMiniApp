@@ -1,6 +1,5 @@
 package org.maxbot.miniapp.handlers;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
@@ -20,14 +19,19 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class SearchHandler implements StepHandler {
 
-    @Value("${max.bot.name}")
-    private String botName;
-
+    private final String botName;
     private final PatentService patentService;
     private final MaxApiClient maxApiClient;
+
+    public SearchHandler(@Value("${max.bot.name}")String botName,
+                         PatentService patentService,
+                         MaxApiClient maxApiClient) {
+        this.botName = botName;
+        this.patentService = patentService;
+        this.maxApiClient = maxApiClient;
+    }
 
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
@@ -35,7 +39,10 @@ public class SearchHandler implements StepHandler {
         int chatId = Integer.parseInt(ctx.getChatId());
 
         if (query == null || query.isBlank()) {
-            sendTextMessageAsync(chatId, "❌ Поисковый запрос пуст.");
+            maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text("❌ Поисковый запрос пуст.")
+                            .build())
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribe();
             return null;
         }
 
@@ -174,11 +181,5 @@ public class SearchHandler implements StepHandler {
                 .build();
 
         return maxApiClient.sendMessage(chatId, navigationMenu);
-    }
-
-    private void sendTextMessageAsync(int chatId, String text) {
-        maxApiClient.sendMessage(chatId, BotResponse.builder().notify(false).text(text).build())
-                .subscribeOn(Schedulers.boundedElastic())
-                .subscribe();
     }
 }
