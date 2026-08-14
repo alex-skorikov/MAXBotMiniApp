@@ -3,13 +3,12 @@ package org.maxbot.miniapp.controller;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.PatentService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
 
@@ -17,10 +16,10 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/patents")
 public class PatentSearchController {
 
-    private final PatentSearchService service;
+    private final PatentService service;
     private static final Logger log = LoggerFactory.getLogger(PatentSearchController.class);
 
-    public PatentSearchController(PatentSearchService service) {
+    public PatentSearchController(PatentService service) {
         this.service = service;
     }
 
@@ -50,13 +49,4 @@ public class PatentSearchController {
                 .map(resp -> getPatentSearchPagedResponse(req, resp));
     }
 
-    @GetMapping("/test")
-    public Mono<String> test() {
-        return service.searchReactive("q", "Запрос", 5, 1)
-                .map(resp -> "MaxBotService \t\t\t >>> OK\n" +
-                        "PatentSearchService \t >>> OK")
-                .onErrorResume(e -> Mono.just(
-                        "MaxBotService >>> Fail: " + e.getMessage()
-                ));
-    }
 }

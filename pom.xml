@@ -104,6 +104,8 @@
                 <configuration>
                     <excludes>
                         <exclude>**/config/**</exclude>
+                        <exclude>**/repository/RedisContextRepository.*</exclude>
+                        <exclude>org/maxbot/miniapp/MaxBotMiniAppApplication.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

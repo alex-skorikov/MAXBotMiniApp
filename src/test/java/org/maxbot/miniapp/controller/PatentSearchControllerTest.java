@@ -6,7 +6,7 @@ import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.service.PatentSearchService;
+import org.maxbot.miniapp.service.PatentService;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -21,22 +21,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PatentSearchControllerTest {
 
-    private PatentSearchService patentSearchService;
+    private PatentService patentSearchService;
     private WebTestClient webTestClient;
 
     @BeforeEach
     void setUp() {
-        this.patentSearchService = Mockito.mock(PatentSearchService.class);
+        this.patentSearchService = Mockito.mock(PatentService.class);
 
         PatentSearchController controller = new PatentSearchController(patentSearchService);
-
+        this.webTestClient = WebTestClient.bindToController(controller)
+                .configureClient()
+                .baseUrl("/api/patents")
+                .build();
         this.webTestClient = WebTestClient.bindToController(controller).build();
 
     }
 
     @Test
     void searchSuccessWithNextPage() {
-        // Given
         PatentSearchRequest request = new PatentSearchRequest();
         request.setQueryMode("qn");
         request.setQuery("Нейросети");
@@ -51,7 +53,6 @@ class PatentSearchControllerTest {
         Mockito.when(patentSearchService.searchReactive("qn", "Нейросети", 10, 0))
                 .thenReturn(Mono.just(mockResponse));
 
-        // When & Then
         webTestClient.post().uri("/api/patents/search").contentType(MediaType.APPLICATION_JSON).bodyValue(request)
                 .exchange().expectStatus().isOk().expectBody(PatentSearchPagedResponse.class).value(response -> {
                     assertNotNull(response);
@@ -83,7 +84,6 @@ class PatentSearchControllerTest {
         Mockito.when(patentSearchService.searchReactive("qn", "Протез", 10, 20))
                 .thenReturn(Mono.just(mockResponse));
 
-        // When & Then
         webTestClient.post().uri("/api/patents/search").contentType(MediaType.APPLICATION_JSON).bodyValue(request)
                 .exchange().expectStatus().isOk().expectBody(PatentSearchPagedResponse.class).value(response -> {
                     assertNotNull(response);
@@ -94,29 +94,4 @@ class PatentSearchControllerTest {
 
     }
 
-    @Test
-    void testEndpointSuccess() {
-        // Given
-        Mockito.when(patentSearchService.searchReactive("q", "Запрос", 5, 1))
-                .thenReturn(Mono.just(new PatentSearchResponse()));
-
-        // When & Then
-        webTestClient.get().uri("/api/patents/test").exchange().expectStatus().isOk().expectBody(String.class)
-                .value(response -> {
-                    assertTrue(response.contains("MaxBotService \t\t\t >>> OK"));
-                    assertTrue(response.contains("PatentSearchService \t >>> OK"));
-                });
-    }
-
-    @Test
-    void testEndpointFailFallback() {
-        // Given
-        Mockito.when(patentSearchService.searchReactive("q", "Запрос", 5, 1))
-                .thenReturn(Mono.error(new RuntimeException("Connection refused")));
-
-        // When & Then
-        webTestClient.get().uri("/api/patents/test").exchange().expectStatus()
-                .isOk() // Благодаря onErrorResume, HTTP статус останется 200 OK
-                .expectBody(String.class).isEqualTo("MaxBotService >>> Fail: Connection refused");
-    }
 }
