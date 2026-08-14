@@ -46,7 +46,7 @@ public class SearchHandler implements StepHandler {
                                 .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
                                 .build());
                     }
-
+                    int[] counter = {offset + 1};
                     long totalFound = searchResponse.getTotal() != 0
                             ? searchResponse.getTotal() : searchResponse.getHits().size();
 
@@ -69,9 +69,9 @@ public class SearchHandler implements StepHandler {
                                                     && hit.getBiblio().getRu().getTitle() != null) {
                                                 title = hit.getBiblio().getRu().getTitle();
                                             }
-
-                                            String cardText = String.format("%s\n%s\nДата публикации: %s",
-                                                    title, docId, publicationDate);
+                                            int currentNumber = counter[0]++;
+                                            String cardText = String.format("%d.%s\n%s\nДата публикации: %s",
+                                                    currentNumber, title, docId, publicationDate);
 
                                             List<List<BotResponse.Button>> cardButtons = List.of(List.of(
                                                     BotResponse.Button.builder()
