@@ -23,7 +23,7 @@ public class SearchQueryWaitingHandler implements StepHandler {
 
         return BotResponse.builder()
                 .notify(false)
-                .text("📝 **Ввод поискового запроса**")
+                .text("📝 Ввод поискового запроса")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()
