@@ -18,4 +18,4 @@ rospatent.url=https://searchplatform.rospatent.gov.ru/patsearch/v0.2/search
 spring.mvc.async.request-timeout=30000
 
 spring.data.redis.host=${REDIS_HOST}
-spring.data.redis.port=${REDIS_PORT
+spring.data.redis.port=${REDIS_PORT}
