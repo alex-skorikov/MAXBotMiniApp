@@ -1,17 +1,16 @@
 package org.maxbot.miniapp.handlers;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
+import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.service.PatentService;
 import org.springframework.stereotype.Component;
 import reactor.core.scheduler.Schedulers;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -37,37 +36,66 @@ public class SearchHandler implements StepHandler {
         patentService.searchReactive("q", query, limit, offset)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
-                    if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits()
-                            .isEmpty()) {
+                    if (searchResponse == null || searchResponse.getHits() == null
+                            || searchResponse.getHits().isEmpty()) {
                         return maxApiClient.sendMessage(chatId, BotResponse.builder()
                                 .notify(false)
                                 .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
                                 .build());
                     }
 
-                    long totalFound = searchResponse.getTotal() != 0 ? searchResponse.getTotal() : searchResponse.getHits()
-                            .size();
+                    long totalFound = searchResponse.getTotal() != 0
+                            ? searchResponse.getTotal() : searchResponse.getHits().size();
 
                     StringBuilder textBuilder = new StringBuilder();
-                    textBuilder.append("🔍 Результаты поиска по запросу:  \"").append(query).append("\"\n");
-                    textBuilder.append("📊 Найдено документов: ").append(totalFound).append("\n\n");
-                    textBuilder.append("Выберите интересующий документ для просмотра подробной карточки:");
+                    textBuilder.append("🔍 **Результаты поиска по запросу:** \"").append(query).append("\"\n");
+                    textBuilder.append("📊 **Найдено документов:** ").append(totalFound);
 
-                    List<List<BotResponse.Button>> buttons = new ArrayList<>();
+                    // Создаем единый список вложений для карточек патентов и кнопок навигации
+                    List<BotResponse.Attachment> attachments = new ArrayList<>();
 
+                    // Счетчик для отображения порядкового номера (1., 2., 3.) как на изображении
+                    int[] counter = {offset + 1};
+
+                    // 1. СБОРКА КАРТОЧЕК (ПЛИТОК) ДЛЯ КАЖДОГО ПАТЕНТА
                     searchResponse.getHits().forEach(hit -> {
-                        String publicationDate = hit.getCommon().getPublicationDate();
+                        String publicationDate = hit.getCommon() != null
+                                ? hit.getCommon().getPublicationDate() : "Не указана";
                         String docId = hit.getId();
-                        String title = hit.getBiblio().getRu().getTitle();
 
-                        buttons.add(List.of(BotResponse.Button.builder()
-                                .type("callback")
-                                .text("📄 " + title + "\n" + docId + "\n" + publicationDate)
-                                .payload("DOC_VIEW_" + docId)
-                                .build()));
+                        String title = "Без названия";
+                        if (hit.getBiblio() != null && hit.getBiblio().getRu() != null
+                                && hit.getBiblio().getRu().getTitle() != null) {
+                            title = hit.getBiblio().getRu().getTitle();
+                        }
+
+                        // Формируем структурированный текст плитки (заголовок жирным)
+                        String cardText = String.format("%d. %s\n%s\nДата публикации: %s",
+                                counter[0]++, title, docId, publicationDate);
+
+                        // Кнопка, привязанная строго к низу текущего баббла
+                        List<List<BotResponse.Button>> cardButtons = List.of(List.of(
+                                BotResponse.Button.builder()
+                                        .type("callback")
+                                        .text("Подробнее")
+                                        .payload("DOC_VIEW_" + docId)
+                                        .build()
+                        ));
+
+                        // Добавляем независимый элемент с типом card
+                        attachments.add(BotResponse.Attachment.builder()
+                                .type("card")
+                                .payload(BotResponse.InlineKeyboardPayload.builder()
+                                        .text(cardText)
+                                        .buttons(cardButtons)
+                                        .build())
+                                .build());
                     });
 
+                    // 2. СБОРКА СИСТЕМНОГО НИЖНЕГО МЕНЮ НАВИГАЦИИ (ПАГИНАЦИЯ)
+                    List<List<BotResponse.Button>> navButtons = new ArrayList<>();
                     List<BotResponse.Button> navigationRow = new ArrayList<>();
+
                     if (offset > 0) {
                         navigationRow.add(BotResponse.Button.builder()
                                 .type("callback")
@@ -83,10 +111,11 @@ public class SearchHandler implements StepHandler {
                                 .build());
                     }
                     if (!navigationRow.isEmpty()) {
-                        buttons.add(navigationRow);
+                        navButtons.add(navigationRow);
                     }
 
-                    buttons.add(List.of(
+                    // Кнопки Mini App и полного сброса стейт-машины
+                    navButtons.add(List.of(
                             BotResponse.Button.builder()
                                     .type("web_app")
                                     .text("⚙️ Расширенный поиск")
@@ -99,17 +128,19 @@ public class SearchHandler implements StepHandler {
                                     .build()
                     ));
 
+                    // Добавляем нижнюю клавиатуру управления
+                    attachments.add(BotResponse.Attachment.builder()
+                            .type("inline_keyboard")
+                            .payload(BotResponse.InlineKeyboardPayload.builder()
+                                    .buttons(navButtons)
+                                    .build())
+                            .build());
+
+                    // Формируем и отправляем итоговый структурированный пакет
                     BotResponse resultsMenu = BotResponse.builder()
                             .notify(false)
                             .text(textBuilder.toString())
-                            .attachments(List.of(
-                                    BotResponse.Attachment.builder()
-                                            .type("inline_keyboard")
-                                            .payload(BotResponse.InlineKeyboardPayload.builder()
-                                                    .buttons(buttons)
-                                                    .build())
-                                            .build()
-                            ))
+                            .attachments(attachments)
                             .build();
 
                     return maxApiClient.sendMessage(chatId, resultsMenu);
