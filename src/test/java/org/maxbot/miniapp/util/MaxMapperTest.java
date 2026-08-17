@@ -10,6 +10,7 @@ import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.SenderDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.repository.HashMapContextRepository;
 import org.maxbot.miniapp.service.PatentService;
@@ -139,7 +140,14 @@ class MaxMapperTest {
         PatentSearchResponse mockResponse = new PatentSearchResponse();
         mockResponse.setHits(List.of());
 
-        Mockito.when(patentService.searchReactive("id", "9999", 1, 0))
+        PatentSearchRequest searchRequest = PatentSearchRequest.builder()
+                .queryMode("id")
+                .query("9999")
+                .limit(1)
+                .offset(0)
+                .build();
+
+        Mockito.when(patentService.searchPatents(searchRequest))
                 .thenReturn(Mono.just(mockResponse));
         Mockito.when(maxApiClient.sendMessage(eq(123), any())).thenReturn(Mono.empty());
 

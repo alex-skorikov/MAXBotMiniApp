@@ -6,6 +6,7 @@ import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.service.PatentService;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +26,7 @@ public class SearchHandler implements StepHandler {
     private final PatentService patentService;
     private final MaxApiClient maxApiClient;
 
-    public SearchHandler(@Value("${max.bot.name}")String botName,
+    public SearchHandler(@Value("${max.bot.name}") String botName,
                          PatentService patentService,
                          MaxApiClient maxApiClient) {
         this.botName = botName;
@@ -49,7 +50,13 @@ public class SearchHandler implements StepHandler {
         int limit = (ctx.getSearchLimit() > 0) ? ctx.getSearchLimit() : 5;
         int offset = ctx.getSearchOffset();
 
-        patentService.searchReactive("q", query, limit, offset)
+        String date = ctx.getDate();
+        String searchArrays = ctx.getSearchArrays();
+        String classifiers = ctx.getClassifiers();
+
+        PatentSearchRequest searchRequest = createRequest(query, limit, offset, date, searchArrays, classifiers);
+
+        patentService.searchPatents(searchRequest)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
                     if (isResponseEmpty(searchResponse)) {
@@ -66,6 +73,30 @@ public class SearchHandler implements StepHandler {
                 .subscribe();
 
         return null;
+    }
+
+    private PatentSearchRequest createRequest(String query,
+                                              int limit,
+                                              int offset,
+                                              String date,
+                                              String searchArrays,
+                                              String classifiers) {
+        return PatentSearchRequest.builder()
+                .queryMode("qn")
+                .query(query)
+                .limit(limit)
+                .offset(offset)
+                .datasets(List.of(classifiers))
+                .filter(PatentSearchRequest.Filter.builder()
+                        .classification(PatentSearchRequest.Classification.builder()
+                                .values(List.of(searchArrays))
+                                .build())
+                        .datePublished(PatentSearchRequest.DatePublished.builder()
+                                .range(PatentSearchRequest.Range.builder()
+                                        .gt(date).build())
+                                .build())
+                        .build())
+                .build();
     }
 
     // --- Проверки и расчеты ---
