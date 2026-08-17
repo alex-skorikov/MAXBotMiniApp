@@ -3,6 +3,7 @@ package org.maxbot.miniapp.service;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.client.RospatentClient;
 import org.maxbot.miniapp.dto.bot.BotResponse;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +27,21 @@ public class PatentService {
         this.client = client;
     }
 
-    public Mono<PatentSearchResponse> searchReactive(String queryMode,
-                                                     String query,
-                                                     Integer limit,
-                                                     Integer offset) {
-        return client.searchReactive(queryMode, query, limit, offset);
+    public Mono<PatentSearchResponse> searchPatents(PatentSearchRequest request) {
+        return client.searchReactive(request);
     }
 
     // Метод асинхронного извлечения данных конкретного патента без изменения стейта
     public void sendSinglePatentCardAsync(int chatId, String docId) {
-        searchReactive("id", docId, 1, 0)
+
+        PatentSearchRequest request = PatentSearchRequest.builder()
+                .queryMode("id")
+                .query(docId)
+                .limit(1)
+                .offset(0)
+                .build();
+
+        searchPatents(request)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(searchResponse -> {
                     if (searchResponse == null || searchResponse.getHits() == null || searchResponse.getHits()

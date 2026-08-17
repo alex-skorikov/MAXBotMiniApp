@@ -7,6 +7,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -58,7 +59,14 @@ class RospatentClientTest {
                 .setHeader("Content-Type", "application/json")
                 .setBody(objectMapper.writeValueAsString(mockJsonResponse)));
 
-        Mono<PatentSearchResponse> result = rospatentClient.searchReactive("qn", "Искусственный интеллект", 10, 0);
+        PatentSearchRequest request = PatentSearchRequest.builder()
+                .queryMode("qn")
+                .query("Искусственный интеллект")
+                .limit(10)
+                .offset(0)
+                .build();
+
+        Mono<PatentSearchResponse> result = rospatentClient.searchReactive(request);
 
         StepVerifier.create(result)
                 .assertNext(response -> {
@@ -93,7 +101,14 @@ class RospatentClientTest {
                 .setHeader("Connection", "close")
                 .setBody(""));
 
-        Mono<PatentSearchResponse> result = rospatentClient.searchReactive("qn", "error query", 5, 0);
+        PatentSearchRequest request = PatentSearchRequest.builder()
+                .queryMode("qn")
+                .query("error query")
+                .limit(5)
+                .offset(0)
+                .build();
+
+        Mono<PatentSearchResponse> result = rospatentClient.searchReactive(request);
 
         StepVerifier.create(result)
                 .assertNext(response -> {

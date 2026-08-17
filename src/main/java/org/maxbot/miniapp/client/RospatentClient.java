@@ -3,7 +3,9 @@ package org.maxbot.miniapp.client;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.maxbot.miniapp.dto.patent.PatentHit;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.util.PatentsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +45,13 @@ public class RospatentClient {
     // -----------------------------
 
     // --- Async ---
-    public Mono<PatentSearchResponse> searchReactive(String queryMode, String query, Integer limit, Integer offset) {
+    public Mono<PatentSearchResponse> searchReactiveOld(String queryMode, String query, Integer limit, Integer offset) {
         Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
+        return executeReactive(body);
+    }
+
+    public Mono<PatentSearchResponse> searchReactive(PatentSearchRequest request) {
+        Map<String, Object> body = PatentsUtil.patentRequestToMap(request);
         return executeReactive(body);
     }
 

@@ -14,12 +14,12 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/patents")
-public class PatentSearchController {
+public class WebAppController {
 
     private final PatentService service;
-    private static final Logger log = LoggerFactory.getLogger(PatentSearchController.class);
+    private static final Logger log = LoggerFactory.getLogger(WebAppController.class);
 
-    public PatentSearchController(PatentService service) {
+    public WebAppController(PatentService service) {
         this.service = service;
     }
 
@@ -45,7 +45,7 @@ public class PatentSearchController {
 
     @PostMapping("/search")
     public Mono<PatentSearchPagedResponse> search(@RequestBody PatentSearchRequest req) {
-        return service.searchReactive(req.getQueryMode(), req.getQuery(), req.getLimit(), req.getOffset())
+        return service.searchPatents(req)
                 .map(resp -> getPatentSearchPagedResponse(req, resp));
     }
 

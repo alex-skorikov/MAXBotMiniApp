@@ -20,12 +20,6 @@ public class BaseSelectHandler implements StepHandler {
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
 
-//        buttons.add(List.of(BotResponse.Button.builder()
-//                .type("callback")
-//                .text("🔙 Назад к выбору базы")
-//                .payload("BACK")
-//                .build()));
-
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
         String selectDate = ctx.getDate();
@@ -46,14 +40,6 @@ public class BaseSelectHandler implements StepHandler {
         if (classifiers != null && !classifiers.isBlank()) {
             stringBuilder.append("Классификатор: ").append(classifiers).append(" установлен");
         }
-
-//        if (selectDate != null && selectArrays != null && classifiers != null) {
-//        buttons.add(0, List.of(BotResponse.Button.builder()
-//                .type("callback")
-//                .text("🔍 Поиск патентов")
-//                .payload("START_SEARCH") // payload для перехода к вводу строки
-//                .build()));
-//        }
 
         // Кнопки переходов
         List<BotResponse.Button> navigationRow = new ArrayList<>();

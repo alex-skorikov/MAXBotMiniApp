@@ -32,6 +32,11 @@ public class HashMapContextRepository implements ContextRepository {
         storage.remove(chatId);
     }
 
+    public UserContext storageGetDirectly(String chatId) {
+        return storage.get(chatId);
+    }
+
+
     // для очистки хранилища между тестами
     public void clear() {
         storage.clear();
