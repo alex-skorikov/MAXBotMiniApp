@@ -12,13 +12,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # скачиваем всю историю для бесконфликтного пуша
 
       - name: Set up JDK 17 (Liberica)
         uses: actions/setup-java@v4
         with:
           distribution: 'liberica'
           java-version: '17'
-          cache: 'maven' # Кэширование ускорит сборку в разы
+          cache: 'maven'
 
       # 1. Запуск тестов, проверки Checkstyle и сборки JaCoCo отчетов
       - name: Run tests, checkstyle and generate reports
@@ -56,12 +58,14 @@ jobs:
           </svg>
           EOF
 
-      # 4. Сразу фиксируем бейджи в Git. Тэг [skip ci] защищает от бесконечного цикла сборки
+      # 4. Сразу фиксируем бейджи в Git
       - name: Commit badges if changed
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto-update project status badges [skip ci]"
           file_pattern: "jacoco-coverage-badge.svg checkstyle-badge.svg"
+          branch: ${{ github.ref_name }} # <-- ДОБАВЛЕНО: явное указание текущей ветки
+          push_options: '--force'       # <-- ИСПРАВЛЕНО: форсируем пуш бейджей без конфликтов
 
       # ========================================================================
       # ДЕПЛОЙ НА СЕРВЕР (Выполняется только если этапы выше прошли успешно)
