@@ -81,23 +81,49 @@ public class SearchHandler implements StepHandler {
                                               String date,
                                               String searchArrays,
                                               String classifiers) {
-        return PatentSearchRequest.builder()
+
+        // 1. Инициализируем базовый билдер запроса
+        var requestBuilder = PatentSearchRequest.builder()
                 .queryMode("qn")
                 .query(query)
                 .limit(limit)
-                .offset(offset)
-                .datasets(List.of(classifiers))
-                .filter(PatentSearchRequest.Filter.builder()
-                        .classification(PatentSearchRequest.Classification.builder()
-                                .values(List.of(searchArrays))
-                                .build())
-                        .datePublished(PatentSearchRequest.DatePublished.builder()
-                                .range(PatentSearchRequest.Range.builder()
-                                        .gt(date).build())
-                                .build())
-                        .build())
-                .build();
+                .offset(offset);
+
+        // 2. Добавляем классификаторы (datasets), только если они заданы
+        if (classifiers != null && !classifiers.isBlank()) {
+            requestBuilder.datasets(List.of(classifiers));
+        }
+
+        // 3. Динамически собираем фильтры
+        var filterBuilder = PatentSearchRequest.Filter.builder();
+        boolean hasFilters = false;
+
+        // Проверяем поисковые массивы (classification)
+        if (searchArrays != null && !searchArrays.isBlank()) {
+            filterBuilder.classification(PatentSearchRequest.Classification.builder()
+                    .values(List.of(searchArrays))
+                    .build());
+            hasFilters = true;
+        }
+
+        // Проверяем дату публикации
+        if (date != null && !date.isBlank()) {
+            filterBuilder.datePublished(PatentSearchRequest.DatePublished.builder()
+                    .range(PatentSearchRequest.Range.builder()
+                            .gt(date)
+                            .build())
+                    .build());
+            hasFilters = true;
+        }
+
+        // Добавляем блок фильтров в запрос, только если заполнился хотя бы один критерий
+        if (hasFilters) {
+            requestBuilder.filter(filterBuilder.build());
+        }
+
+        return requestBuilder.build();
     }
+
 
     // --- Проверки и расчеты ---
 
