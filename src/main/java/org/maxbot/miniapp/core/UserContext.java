@@ -7,6 +7,8 @@ import lombok.ToString;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
+import java.util.List;
+
 
 @Data
 @AllArgsConstructor
@@ -17,7 +19,8 @@ public class UserContext {
     private String chatId;
     private String selectedBase;
     private String date;
-    private String searchArrays;
+    private String searchArrayName;
+    private List<String> searchArrays;
     private String classifiers;
     private BotStates state;
     private BotEvents botEvent;

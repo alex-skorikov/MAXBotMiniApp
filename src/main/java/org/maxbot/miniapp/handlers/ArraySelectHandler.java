@@ -18,7 +18,7 @@ public class ArraySelectHandler implements StepHandler {
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
 
-        ctx.setSearchArrays(event.getPayloadDescription());
+        ctx.setSearchArrayName(event.getPayloadDescription());
         contextRepository.save(ctx);
 
         return BotResponse.builder()

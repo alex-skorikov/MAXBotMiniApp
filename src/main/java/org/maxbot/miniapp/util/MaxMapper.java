@@ -2,7 +2,6 @@ package org.maxbot.miniapp.util;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
@@ -14,6 +13,7 @@ import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,7 +27,6 @@ public class MaxMapper {
     private record PayloadInfo(BotEvents eventType, String description) {
     }
 
-    private final MaxApiClient maxApiClient;
     private final ContextRepository contextRepository;
     private final PatentService patentService;
 
@@ -154,7 +153,10 @@ public class MaxMapper {
             freshContext.setSearchOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-            freshContext.setSearchArrays(info.description());
+
+            List<String> arrays = patentService.getSearchArrayByDescription(info.description());
+
+            freshContext.setSearchArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
         }
 

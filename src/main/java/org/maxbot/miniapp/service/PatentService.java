@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PatentService {
@@ -20,11 +21,69 @@ public class PatentService {
 
     private final MaxApiClient maxApiClient;
     private final RospatentClient client;
+    private static final Map<String, List<String>> SEARCH_ARRAYS = Map.ofEntries(
+            Map.entry("Россия и страны СНГ", List.of("ru_till_1994", "ru_since_1994", "cis", "dsgn_ru")),
+            Map.entry("Минимум РСТ", List.of("ap", "cn", "ch", "au", "gb", "ki", "ca", "at", "jp", "ep", "de", "fr", "ap", "us")),
+            Map.entry("Промышленные образцы", List.of("dsgn_kr", "dsgn_cn", "dsgn_jp")),
+            Map.entry("Страны с малым ПФ", List.of("others"))
+    );
+
 
     public PatentService(MaxApiClient maxApiClient,
                          RospatentClient client) {
         this.maxApiClient = maxApiClient;
         this.client = client;
+    }
+
+    public static PatentSearchRequest createRequest(
+            String queryMode,
+            String query,
+            int limit,
+            int offset,
+            String date,
+            List<String> searchArrays,
+            String classifiers) {
+
+        // 1. Инициализируем базовый билдер запроса
+        var requestBuilder = PatentSearchRequest.builder()
+                .queryMode(queryMode)
+                .query(query)
+                .limit(limit)
+                .offset(offset);
+
+        // 2. Добавляем классификаторы (datasets), только если они заданы
+        if (classifiers != null && !classifiers.isBlank()) {
+            requestBuilder.datasets(List.of(classifiers));
+        }
+
+        // 3. Динамически собираем фильтры
+        var filterBuilder = PatentSearchRequest.Filter.builder();
+        boolean hasFilters = false;
+
+        // Проверяем поисковые массивы (classification)
+        if (searchArrays != null && !searchArrays.isEmpty()) {
+            filterBuilder.classification(PatentSearchRequest.Classification.builder()
+                    .values(searchArrays)
+                    .build());
+            hasFilters = true;
+        }
+
+        // Проверяем дату публикации
+        if (date != null && !date.isBlank()) {
+            filterBuilder.datePublished(PatentSearchRequest.DatePublished.builder()
+                    .range(PatentSearchRequest.Range.builder()
+                            .gt(date)
+                            .build())
+                    .build());
+            hasFilters = true;
+        }
+
+        // Добавляем блок фильтров в запрос, только если заполнился хотя бы один критерий
+        if (hasFilters) {
+            requestBuilder.filter(filterBuilder.build());
+        }
+
+        return requestBuilder.build();
     }
 
     public Mono<PatentSearchResponse> searchPatents(PatentSearchRequest request) {
@@ -82,5 +141,9 @@ public class PatentService {
                 })
                 .doOnError(err -> log.error("Критическая ошибка при загрузке документа {}", docId, err))
                 .subscribe();
+    }
+
+    public List<String> getSearchArrayByDescription(String searchArrayName) {
+        return SEARCH_ARRAYS.get(searchArrayName);
     }
 }

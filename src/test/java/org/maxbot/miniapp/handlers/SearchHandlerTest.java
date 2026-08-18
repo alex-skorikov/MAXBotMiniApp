@@ -185,7 +185,7 @@ class SearchHandlerTest {
         ctx.setSearchLimit(5);
         ctx.setSearchOffset(0);
         ctx.setDate("20260101");
-        ctx.setSearchArrays("cis");
+        ctx.setSearchArrays(List.of("cis"));
         ctx.setClassifiers("F02K9/00");
         return ctx;
     }
