@@ -22,7 +22,7 @@ public class ArraySelectHandler implements StepHandler {
     @Override
     public BotResponse handle(UserContext ctx, BotEvent event) {
 
-        ctx.setSearchArrayName(patentService.getSearchArrayName(event.getPayloadDescription()));
+        ctx.setSearchArrayName(patentService.getSearchArrayName(event.getPayload()));
         contextRepository.save(ctx);
 
         return BotResponse.builder()
