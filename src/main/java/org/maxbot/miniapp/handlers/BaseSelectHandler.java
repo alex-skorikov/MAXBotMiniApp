@@ -24,7 +24,7 @@ public class BaseSelectHandler implements StepHandler {
         String selectBase = ctx.getSelectedBase();
         String selectDate = ctx.getDate();
         String classifiers = ctx.getClassifiers();
-        String selectArrays = ctx.getSearchArrays();
+        String selectArrays = ctx.getSearchArrayName();
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Выбрана база: ").append(selectBase != null ? selectBase : "Не выбрана").append("\n");

@@ -51,10 +51,12 @@ public class SearchHandler implements StepHandler {
         int offset = ctx.getSearchOffset();
 
         String date = ctx.getDate();
-        String searchArrays = ctx.getSearchArrays();
+        List<String> searchArrays = ctx.getSearchArrays();
         String classifiers = ctx.getClassifiers();
 
-        PatentSearchRequest searchRequest = createRequest(query, limit, offset, date, searchArrays, classifiers);
+        PatentSearchRequest searchRequest = PatentService.createRequest(
+                "qn", query, limit, offset, date, searchArrays, classifiers
+        );
 
         patentService.searchPatents(searchRequest)
                 .subscribeOn(Schedulers.boundedElastic())
@@ -75,56 +77,6 @@ public class SearchHandler implements StepHandler {
         return null;
     }
 
-    private PatentSearchRequest createRequest(String query,
-                                              int limit,
-                                              int offset,
-                                              String date,
-                                              String searchArrays,
-                                              String classifiers) {
-
-        // 1. Инициализируем базовый билдер запроса
-        var requestBuilder = PatentSearchRequest.builder()
-                .queryMode("qn")
-                .query(query)
-                .limit(limit)
-                .offset(offset);
-
-        // 2. Добавляем классификаторы (datasets), только если они заданы
-        if (classifiers != null && !classifiers.isBlank()) {
-            requestBuilder.datasets(List.of(classifiers));
-        }
-
-        // 3. Динамически собираем фильтры
-        var filterBuilder = PatentSearchRequest.Filter.builder();
-        boolean hasFilters = false;
-
-        // Проверяем поисковые массивы (classification)
-        if (searchArrays != null && !searchArrays.isBlank()) {
-            filterBuilder.classification(PatentSearchRequest.Classification.builder()
-                    .values(List.of(searchArrays))
-                    .build());
-            hasFilters = true;
-        }
-
-        // Проверяем дату публикации
-        if (date != null && !date.isBlank()) {
-            filterBuilder.datePublished(PatentSearchRequest.DatePublished.builder()
-                    .range(PatentSearchRequest.Range.builder()
-                            .gt(date)
-                            .build())
-                    .build());
-            hasFilters = true;
-        }
-
-        // Добавляем блок фильтров в запрос, только если заполнился хотя бы один критерий
-        if (hasFilters) {
-            requestBuilder.filter(filterBuilder.build());
-        }
-
-        return requestBuilder.build();
-    }
-
-
     // --- Проверки и расчеты ---
 
     private boolean isResponseEmpty(PatentSearchResponse response) {
@@ -138,10 +90,33 @@ public class SearchHandler implements StepHandler {
     // --- Отправка сообщений и сборка UI ---
 
     private Mono<Void> sendEmptyResultMessage(int chatId, String query) {
+//        BotResponse response = BotResponse.builder()
+//                .notify(false)
+//                .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
+//                .build();
+//        return maxApiClient.sendMessage(chatId, response).then();
+
+        // Кнопки переходов
+        List<BotResponse.Button> navigationRow = new ArrayList<>();
+        navigationRow.add(BotResponse.Button.builder()
+                .type("callback")
+                .text("🔄 Сбросить")
+                .payload("BACK_TO_START")
+                .build());
+        List<List<BotResponse.Button>> buttons = new ArrayList<>();
+
+        buttons.add(navigationRow);
+
         BotResponse response = BotResponse.builder()
                 .notify(false)
                 .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
-                .build();
+                .attachments(List.of(BotResponse.Attachment.builder()
+                        .type("inline_keyboard")
+                        .payload(BotResponse.InlineKeyboardPayload.builder()
+                                .buttons(buttons)
+                                .build())
+                        .build()
+                )).build();
         return maxApiClient.sendMessage(chatId, response).then();
     }
 
