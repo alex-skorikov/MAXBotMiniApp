@@ -156,6 +156,7 @@ public class MaxMapper {
 
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
 
+            freshContext.setSearchArrayName(info.description);
             freshContext.setSearchArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
         }
