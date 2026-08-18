@@ -246,30 +246,5 @@ class MaxMapperTest {
         assertEquals(0, savedCtx.getSearchOffset());
     }
 
-//    @Test
-//    void handleMessageCallbackSelectArrayStoresDataCorrectly() {
-//        int chatId = 67890;
-//        UpdateDto update = new UpdateDto();
-//        update.setUpdateType("message_callback");
-//
-//        CallbackDto callback = new CallbackDto();
-//        callback.setPayload("COUNTRY_INPUT");
-//        update.setCallback(callback);
-//
-//        UserContext initialCtx = repository.load(String.valueOf(chatId));
-//        initialCtx.setUserId(chatId);
-//
-//        initialCtx.setChatId(String.valueOf(chatId)); // Если тип int
-//
-//        repository.save(initialCtx);
-//
-//        BotEvent event = maxMapper.toEvent(update, chatId);
-//
-//        assertNotNull(event);
-//        assertEquals(BotEvents.USER_SELECT_ARRAY, event.getType());
-//
-//        UserContext savedCtx = repository.load(String.valueOf(chatId));
-//        assertEquals("Россия и страны СНГ", savedCtx.getSearchArrays());
-//    }
 
 }

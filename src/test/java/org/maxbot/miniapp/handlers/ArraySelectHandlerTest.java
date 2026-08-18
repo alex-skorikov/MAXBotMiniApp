@@ -2,17 +2,19 @@ package org.maxbot.miniapp.handlers; // Укажите ваш точный па�
 
 import org.junit.jupiter.api.BeforeEach;
 import org.maxbot.miniapp.repository.HashMapContextRepository;
+import org.maxbot.miniapp.service.PatentService;
 
 class ArraySelectHandlerTest {
 
     private HashMapContextRepository contextRepository;
     private ArraySelectHandler handler;
+    private PatentService patentService;
 
     @BeforeEach
     void setUp() {
         contextRepository = new HashMapContextRepository();
         contextRepository.clear();
-        handler = new ArraySelectHandler(contextRepository);
+        handler = new ArraySelectHandler(contextRepository, patentService);
     }
 
 //    @Test
