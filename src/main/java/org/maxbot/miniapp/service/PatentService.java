@@ -28,6 +28,13 @@ public class PatentService {
             Map.entry("Страны с малым ПФ", List.of("others"))
     );
 
+    private static final Map<String, String> SEARCH_ARRAYS_NAMES = Map.ofEntries(
+            Map.entry("COUNTRY_INPUT", "Россия и страны СНГ"),
+            Map.entry("RST_INPUT", "Минимум РСТ"),
+            Map.entry("INDUSTRIAL_INPUT", "Промышленные образцы"),
+            Map.entry("SMALL_PF_INPUT", "Страны с малым ПФ")
+    );
+
 
     public PatentService(MaxApiClient maxApiClient,
                          RospatentClient client) {
@@ -145,5 +152,9 @@ public class PatentService {
 
     public List<String> getSearchArrayByDescription(String searchArrayName) {
         return SEARCH_ARRAYS.get(searchArrayName);
+    }
+
+    public String getSearchArrayName(String payloadDescription) {
+        return SEARCH_ARRAYS_NAMES.get(payloadDescription);
     }
 }
