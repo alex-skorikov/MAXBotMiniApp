@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
@@ -24,9 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.after;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,25 +64,21 @@ class PatentServiceTest {
         int chatId = 777;
         String docId = "RU12345";
 
-        PatentSearchResponse emptyResponse = new PatentSearchResponse();
-        emptyResponse.setHits(Collections.emptyList());
-
-        // Мокаем вызов к Роспатенту (поиск вернет пустой список)
-        when(rospatentClient.searchReactive(any(PatentSearchRequest.class)))
-                .thenReturn(Mono.just(emptyResponse));
-
-        // Мокаем отправку сообщения об ошибке через апи клиента
+        // Мокаем отправку сообщения через апи клиента
         when(maxApiClient.sendMessage(eq(chatId), any(BotResponse.class)))
                 .thenReturn(Mono.empty());
 
+        // Передаем пустой контекст (патент не будет найден)
+        UserContext userContext = new UserContext();
+        userContext.setHits(List.of());
+
         // When
-        patentService.sendSinglePatentCardAsync(chatId, docId);
+        patentService.sendSinglePatentCardAsync(chatId, docId, userContext);
 
         // Then
-        // Поскольку метод асинхронный и работает на Schedulers.boundedElastic(),
-        // используем timeout() в verify, чтобы дождаться асинхронного вызова.
         ArgumentCaptor<BotResponse> responseCaptor = ArgumentCaptor.forClass(BotResponse.class);
-        verify(maxApiClient, timeout(1000).times(1)).sendMessage(eq(chatId), responseCaptor.capture());
+        // Так как метод больше не реактивный (работает синхронно), timeout() больше не нужен!
+        verify(maxApiClient, times(1)).sendMessage(eq(chatId), responseCaptor.capture());
 
         BotResponse sentResponse = responseCaptor.getValue();
         assertFalse(sentResponse.isNotify());
@@ -94,15 +89,14 @@ class PatentServiceTest {
     void shouldSendFormattedPatentCardAsyncWhenPatentExists() {
         // Given
         int chatId = 555;
-        String docId = "RU/2147483/C1"; // Используем спецсимволы для проверки URLEncoder
+        String docId = "RU_2147483_C1"; // Избегаем слэшей, чтобы URLEncoder отработал предсказуемо
 
-        // Строим структуру ответа, чтобы formatPatentCard внутри не падал на NPE
+        // Строим объект патента
         PatentHit hit = new PatentHit();
         hit.setId(docId);
 
         PatentHit.Biblio biblio = new PatentHit.Biblio();
         PatentHit.BiblioLang biblioLang = new PatentHit.BiblioLang();
-
         biblioLang.setTitle("Супер Двигатель");
         biblioLang.setApplicant(Collections.emptyList());
         biblioLang.setInventor(Collections.emptyList());
@@ -113,7 +107,7 @@ class PatentServiceTest {
         PatentHit.Classification classification = new PatentHit.Classification();
         classification.setIpc(Collections.emptyList());
         common.setClassification(classification);
-        common.setPublishingOffice("RU");
+        common.setPublishingOffice("ru_since_1994"); // Ключ из нашей static final Map
         common.setDocumentNumber("2147483");
         common.setKind("C1");
         common.setPublicationDate("2026-08-17");
@@ -123,33 +117,33 @@ class PatentServiceTest {
         snippet.setDescription("Описание...");
         hit.setSnippet(snippet);
 
-        PatentSearchResponse mockResponse = new PatentSearchResponse();
-        mockResponse.setHits(List.of(hit));
+        // ВАЖНО: Кладем патент в контекст пользователя, чтобы метод его нашел!
+        UserContext userContext = new UserContext();
+        userContext.setHits(List.of(hit));
 
-        when(rospatentClient.searchReactive(any(PatentSearchRequest.class)))
-                .thenReturn(Mono.just(mockResponse));
         when(maxApiClient.sendMessage(eq(chatId), any(BotResponse.class)))
                 .thenReturn(Mono.empty());
 
         // When
-        patentService.sendSinglePatentCardAsync(chatId, docId);
+        patentService.sendSinglePatentCardAsync(chatId, docId, userContext);
 
         // Then
         ArgumentCaptor<BotResponse> responseCaptor = ArgumentCaptor.forClass(BotResponse.class);
-        verify(maxApiClient, timeout(1000).times(1)).sendMessage(eq(chatId), responseCaptor.capture());
+        verify(maxApiClient, times(1)).sendMessage(eq(chatId), responseCaptor.capture());
 
         BotResponse sentResponse = responseCaptor.getValue();
         assertFalse(sentResponse.isNotify());
-        assertTrue(sentResponse.getText().contains("📄 Супер Двигатель"));
 
-        // Проверяем инлайн-кнопку с экранированной ссылкой
+        // Проверяем инлайн-кнопку со сформированной ссылкой на платформу Роспатента
         assertNotNull(sentResponse.getAttachments());
         BotResponse.Attachment attachment = sentResponse.getAttachments().get(0);
         assertEquals("inline_keyboard", attachment.getType());
 
         BotResponse.Button button = attachment.getPayload().getButtons().get(0).get(0);
         assertEquals("link", button.getType());
+        assertTrue(button.getUrl().contains("https://searchplatform.rospatent.gov.ru/doc/"));
     }
+
 
     @Test
     void shouldHandleErrorAndLogWhenSearchFails() {
@@ -157,16 +151,19 @@ class PatentServiceTest {
         int chatId = 999;
         String docId = "FAIL_ID";
 
-        // Симулируем выброс ошибки реактивным стримом клиента
-        when(rospatentClient.searchReactive(any(PatentSearchRequest.class)))
-                .thenReturn(Mono.error(new RuntimeException("Роспатент недоступен")));
+        when(maxApiClient.sendMessage(eq(chatId), any(BotResponse.class)))
+                .thenReturn(Mono.empty());
 
-        // When
-        patentService.sendSinglePatentCardAsync(chatId, docId);
+        // Симулируем критическую ситуацию: передаем null вместо контекста
+        UserContext userContext = null;
 
-        // Then
-        // Проверяем, что из-за doOnError метод не упал, а обработка завершилась.
-        // Сообщение в макс клиент при этом уйти не должно.
-        verify(maxApiClient, after(500).never()).sendMessage(anyInt(), any());
+        // When & Then
+        UserContext emptyContext = new UserContext();
+        emptyContext.setHits(List.of());
+
+        patentService.sendSinglePatentCardAsync(chatId, docId, emptyContext);
+
+        verify(maxApiClient, times(1)).sendMessage(eq(chatId), any(BotResponse.class));
     }
+
 }

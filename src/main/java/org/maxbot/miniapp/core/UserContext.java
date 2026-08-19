@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
@@ -25,6 +26,7 @@ public class UserContext {
     private BotStates state;
     private BotEvents botEvent;
     private String searchQuery;
+    private List<PatentHit> hits;
     private int searchOffset = 0;
     private int searchLimit = 5;
 }

@@ -99,7 +99,8 @@ public class MaxMapper {
             String docId = payload.substring("DOC_VIEW_".length());
             event.setType(null);
             event.setPayloadDescription("Просмотр документа " + docId);
-            patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId);
+
+            patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId, userContext);
             return;
         }
 
@@ -127,6 +128,8 @@ public class MaxMapper {
 
                 freshCtx.setSelectedBase(null);
                 freshCtx.setSearchArrays(null);
+                freshCtx.setSearchArrayName(null);
+                freshCtx.setHits(null);
                 freshCtx.setDate(null);
                 freshCtx.setClassifiers(null);
                 freshCtx.setSearchQuery(null);

@@ -8,6 +8,7 @@ import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.service.PatentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -25,13 +26,16 @@ public class SearchHandler implements StepHandler {
     private final String botName;
     private final PatentService patentService;
     private final MaxApiClient maxApiClient;
+    private final ContextRepository contextRepository;
 
     public SearchHandler(@Value("${max.bot.name}") String botName,
                          PatentService patentService,
-                         MaxApiClient maxApiClient) {
+                         MaxApiClient maxApiClient,
+                         ContextRepository contextRepository) {
         this.botName = botName;
         this.patentService = patentService;
         this.maxApiClient = maxApiClient;
+        this.contextRepository = contextRepository;
     }
 
     @Override
@@ -65,6 +69,11 @@ public class SearchHandler implements StepHandler {
                         return sendEmptyResultMessage(chatId, query);
                     }
 
+                    // Сохраняем результат поиска для отображения "Подробнее"
+                    List<PatentHit> hits = searchResponse.getHits();
+                    ctx.setHits(hits);
+                    contextRepository.save(ctx);
+
                     long totalFound = calculateTotalFound(searchResponse);
 
                     return sendSearchHeader(chatId, query, totalFound)
@@ -90,12 +99,6 @@ public class SearchHandler implements StepHandler {
     // --- Отправка сообщений и сборка UI ---
 
     private Mono<Void> sendEmptyResultMessage(int chatId, String query) {
-//        BotResponse response = BotResponse.builder()
-//                .notify(false)
-//                .text("🔍 По запросу \"" + query + "\" ничего не найдено.")
-//                .build();
-//        return maxApiClient.sendMessage(chatId, response).then();
-
         // Кнопки переходов
         List<BotResponse.Button> navigationRow = new ArrayList<>();
         navigationRow.add(BotResponse.Button.builder()

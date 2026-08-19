@@ -2,9 +2,12 @@ package org.maxbot.miniapp.service;
 
 import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
+import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.repository.ContextRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,11 +16,13 @@ import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PatentService {
 
     private static final Logger log = LoggerFactory.getLogger(PatentService.class);
+    private final ContextRepository contextRepository;
 
     private final MaxApiClient maxApiClient;
     private final RospatentClient client;
@@ -28,16 +33,10 @@ public class PatentService {
             Map.entry("Страны с малым ПФ", List.of("others"))
     );
 
-//    private static final Map<String, String> SEARCH_ARRAYS_NAMES = Map.ofEntries(
-//            Map.entry("COUNTRY_INPUT", "Россия и страны СНГ"),
-//            Map.entry("RST_INPUT", "Минимум РСТ"),
-//            Map.entry("INDUSTRIAL_INPUT", "Промышленные образцы"),
-//            Map.entry("SMALL_PF_INPUT", "Страны с малым ПФ")
-//    );
-
-
-    public PatentService(MaxApiClient maxApiClient,
+    public PatentService(ContextRepository contextRepository,
+                         MaxApiClient maxApiClient,
                          RospatentClient client) {
+        this.contextRepository = contextRepository;
         this.maxApiClient = maxApiClient;
         this.client = client;
     }
@@ -97,8 +96,8 @@ public class PatentService {
         return client.searchReactive(request);
     }
 
-    // Метод асинхронного извлечения данных конкретного патента без изменения стейта
-    public void sendSinglePatentCardAsync(int chatId, String docId) {
+    // Метод извлечения данных конкретного патента без изменения стейта
+    public void sendSinglePatentCardAsyncOld(int chatId, String docId) {
 
         PatentSearchRequest request = PatentSearchRequest.builder()
                 .queryMode("id")
@@ -150,11 +149,48 @@ public class PatentService {
                 .subscribe();
     }
 
+    // Метод извлечения данных конкретного патента без изменения стейта
+    public void sendSinglePatentCardAsync(int chatId, String docId, UserContext userContext) {
+
+        List<PatentHit> hits = userContext.getHits();
+        Optional<PatentHit> hit = hits.stream().filter(h -> h.getId().equals(docId)).findFirst();
+        if (hit.isPresent()) {
+            // Экранируем ID для сборки полностью валидного адреса
+            String encodedId = java.net.URLEncoder.encode(hit.get().getId(), java.nio.charset.StandardCharsets.UTF_8);
+            String patentUrl = "https://searchplatform.rospatent.gov.ru/doc/" + encodedId;
+
+            List<List<BotResponse.Button>> buttons = new java.util.ArrayList<>();
+
+            buttons.add(List.of(BotResponse.Button.builder()
+                    .type("link")
+                    .text("🔗 Ссылка на оригинал патента")
+                    .url(patentUrl)
+                    .build()));
+
+            BotResponse cardResponse = BotResponse.builder()
+                    .notify(false)
+                    .text(PatentCardService.formatPatentCard(hit.get()))
+                    .attachments(List.of(BotResponse.Attachment.builder()
+                            .type("inline_keyboard")
+                            .payload(BotResponse.InlineKeyboardPayload.builder()
+                                    .buttons(buttons)
+                                    .build())
+                            .build()
+                    ))
+                    .build(); // Отправляем без блока инлайн-кнопок
+
+            maxApiClient.sendMessage(chatId, cardResponse);
+        } else {
+            BotResponse errorResponse = BotResponse.builder()
+                    .notify(false)
+                    .text("❌ Не удалось загрузить информацию по документу " + docId)
+                    .build();
+
+            maxApiClient.sendMessage(chatId, errorResponse);
+        }
+    }
+
     public List<String> getSearchArrayByDescription(String searchArrayName) {
         return SEARCH_ARRAYS.get(searchArrayName);
     }
-
-//    public String getSearchArrayName(String payloadDescription) {
-//        return SEARCH_ARRAYS_NAMES.get(payloadDescription);
-//    }
 }

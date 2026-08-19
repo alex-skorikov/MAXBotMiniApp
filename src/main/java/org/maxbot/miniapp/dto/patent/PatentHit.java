@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ToString
 public class PatentHit {
 
     private Common common = new Common();       // общие данные (номер, дата, классификация)
@@ -29,6 +31,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Biblio {
         private BiblioLang ru = new BiblioLang();
         private BiblioLang en = new BiblioLang();
@@ -38,6 +41,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class BiblioLang {
         private String title = "";                                       // название изобретения
         private List<NameWrapper> inventor = Collections.emptyList();    // изобретатели
@@ -53,6 +57,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class NameWrapper {
         private String name = "";
     }
@@ -61,6 +66,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class CitationParsed {
         private String text = "";        // текст цитаты
         private CitationDoc doc = new CitationDoc();    // структурированные данные документа
@@ -69,6 +75,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class CitationDoc {
         @JsonProperty("document_number")
         private String documentNumber = "";
@@ -85,6 +92,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Drawing {
         private String url = "";
         private String width = "";
@@ -95,6 +103,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Common {
         @JsonProperty("publishing_office")
         private String publishingOffice = "";                           // офис публикации (RU, UA, EA)
@@ -114,6 +123,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Priority {
         private String number = "";         // номер приоритета
         private String country = "";        // страна
@@ -125,6 +135,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Application {
         private String number = "";                 // номер заявки
         @JsonProperty("filing_date")
@@ -137,6 +148,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Classification {
         private List<IpcItem> ipc = Collections.emptyList();     // список IPC-классов
     }
@@ -145,6 +157,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class IpcItem {
         @JsonProperty("main_group")
         private String mainGroup = "";
@@ -162,6 +175,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Meta {
         private Source source = new Source();
     }
@@ -170,6 +184,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Source {
         private String path = "";    // путь к XML
         private String file = "";    // имя файла
@@ -181,6 +196,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class Snippet {
         private String title = "";
         private String description = "";
@@ -195,6 +211,7 @@ public class PatentHit {
     @Getter
     @Setter
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @ToString
     public static class SnippetClassification {
         private String ipc = "";
     }
