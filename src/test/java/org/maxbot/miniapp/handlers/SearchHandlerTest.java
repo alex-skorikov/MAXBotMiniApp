@@ -10,6 +10,7 @@ import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
+import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.service.PatentService;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -37,13 +38,15 @@ class SearchHandlerTest {
 
     @Mock
     private MaxApiClient maxApiClient;
+ @Mock
+    private ContextRepository contextRepository;
 
     private SearchHandler handler;
     private final String botName = "test_bot";
 
     @BeforeEach
     void setUp() {
-        handler = new SearchHandler(botName, patentService, maxApiClient);
+        handler = new SearchHandler(botName, patentService, maxApiClient, contextRepository);
     }
 
     @Test
