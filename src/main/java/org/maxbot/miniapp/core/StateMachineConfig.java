@@ -138,6 +138,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SEARCH)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
                 .and()
 
                 //Из меню ВЫБОР БАЗЫ -> ПОИСК
@@ -171,8 +172,9 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 // Из результатов поиска -> Сбросить
                 .withExternal()
                 .source(BotStates.SELECT_DATE)
-                .target(BotStates.INIT)
+                .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
                 .and()
 
                 .withInternal()
