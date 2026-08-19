@@ -1,0 +1,50 @@
+package org.maxbot.miniapp.handlers; // Укажите ваш точный пакет для хендлеров
+
+import org.junit.jupiter.api.BeforeEach;
+import org.maxbot.miniapp.repository.HashMapContextRepository;
+import org.maxbot.miniapp.service.PatentService;
+
+class ArraySelectHandlerTest {
+
+    private HashMapContextRepository contextRepository;
+    private ArraySelectHandler handler;
+    private PatentService patentService;
+
+    @BeforeEach
+    void setUp() {
+        contextRepository = new HashMapContextRepository();
+        contextRepository.clear();
+        handler = new ArraySelectHandler(contextRepository, patentService);
+    }
+
+//    @Test
+//    void shouldSaveSearchArraysAndReturnSuccessResponse() {
+//        // Given
+//        int chatId = 12345;
+//        UserContext ctx = new UserContext();
+//        ctx.setUserId(chatId);
+//        ctx.setChatId(String.valueOf(chatId));
+//
+//        BotEvent event = new BotEvent();
+//        // Передаем список массивов (например, "cis", "ru_pat")
+//        String expectedArrays = "Россия и страны СНГ";
+//        event.setPayloadDescription(expectedArrays);
+//
+//        // When
+//        BotResponse response = handler.handle(ctx, event);
+//
+//        // Then
+//        // 1. Проверяем возвращаемый ответ бота
+//        assertNotNull(response);
+//        assertEquals("Поисковый массив выбран", response.getText());
+//        assertFalse(response.isNotify());
+//
+//        // 2. Проверяем, что состояние контекста изменилось прямо в памяти
+//        assertEquals(expectedArrays, ctx.getSearchArrayName());
+//
+//        // 3. Проверяем, что контекст успешно сохранился в репозиторий (Redis / HashMap)
+//        UserContext savedCtx = contextRepository.load(String.valueOf(chatId));
+//        assertNotNull(savedCtx);
+//        assertEquals(expectedArrays, savedCtx.getSearchArrays());
+//    }
+}

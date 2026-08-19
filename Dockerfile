@@ -31,4 +31,4 @@ RUN mkdir -p /app && chmod 777 /app
 # ❗ Копируем JAR из target/
 COPY target/*.jar /app/app.jar
 
-CMD ["java", "-jar", "/app/app.jar"]
+CMD ["java", "-Dspring.config.location=file:/app/", "-jar", "/app/app.jar"]

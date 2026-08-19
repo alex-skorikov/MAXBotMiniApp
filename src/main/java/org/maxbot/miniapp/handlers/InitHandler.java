@@ -19,9 +19,16 @@ public class InitHandler implements StepHandler {
                 "Промобразцы", "PROM_SAMPLE",
                 "Полезные модели", "MODELS"));
 
+        String text = """
+                Добро пожаловать!
+                Это помошник по поиску патентов
+                и других объектов интеллектуальной собственности.
+                Выберите базу для поиска:
+                """;
+
         return BotResponse.builder()
                 .notify(false)
-                .text("Добро пожаловать! Выберите базу:")
+                .text(text)
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()

@@ -32,6 +32,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         states
                 .withStates()
                 .initial(BotStates.INIT)
+                .state(BotStates.INIT, stepAction)
                 .state(BotStates.SELECT_BASE, stepAction)
                 .state(BotStates.BASE_SELECTED, stepAction)
                 .state(BotStates.FILTER_DATE, stepAction)
@@ -137,6 +138,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SEARCH)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
                 .and()
 
                 //Из меню ВЫБОР БАЗЫ -> ПОИСК
@@ -165,6 +167,19 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .and()
+
+                // Из результатов поиска -> Сбросить
+                .withExternal()
+                .source(BotStates.SELECT_DATE)
+                .target(BotStates.SELECT_BASE)
+                .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
+                .and()
+
+                .withInternal()
+                .source(BotStates.SEARCH)
+                .event(BotEvents.USER_VIEW_DOC_DETAILS)
                 .and()
 
                 // ==========================================

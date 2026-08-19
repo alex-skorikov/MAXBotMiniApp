@@ -51,9 +51,12 @@ public class BotResponse {
     @ToString
     public static class InlineKeyboardPayload {
         private List<List<BotResponse.Button>> buttons;
+        private String text;
 
-        public InlineKeyboardPayload(List<List<BotResponse.Button>> buttons) {
+        public InlineKeyboardPayload(List<List<BotResponse.Button>> buttons,
+                                     String text) {
             this.buttons = buttons;
+            this.text = text;
         }
 
     }

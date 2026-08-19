@@ -4,11 +4,12 @@ import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+
 
 @Data
 @AllArgsConstructor
@@ -19,12 +20,13 @@ public class UserContext {
     private String chatId;
     private String selectedBase;
     private String date;
-    private Map<String, Object> filters = new HashMap<>();
-    private String searchArrays;
+    private String searchArrayName;
+    private List<String> searchArrays;
     private String classifiers;
     private BotStates state;
     private BotEvents botEvent;
     private String searchQuery;
+    private List<PatentHit> hits;
     private int searchOffset = 0;
     private int searchLimit = 5;
 }

@@ -20,17 +20,11 @@ public class BaseSelectHandler implements StepHandler {
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
 
-//        buttons.add(List.of(BotResponse.Button.builder()
-//                .type("callback")
-//                .text("🔙 Назад к выбору базы")
-//                .payload("BACK")
-//                .build()));
-
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
         String selectDate = ctx.getDate();
         String classifiers = ctx.getClassifiers();
-        String selectArrays = ctx.getSearchArrays();
+        String selectArrays = ctx.getSearchArrayName();
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Выбрана база: ").append(selectBase != null ? selectBase : "Не выбрана").append("\n");
@@ -47,14 +41,6 @@ public class BaseSelectHandler implements StepHandler {
             stringBuilder.append("Классификатор: ").append(classifiers).append(" установлен");
         }
 
-//        if (selectDate != null && selectArrays != null && classifiers != null) {
-//        buttons.add(0, List.of(BotResponse.Button.builder()
-//                .type("callback")
-//                .text("🔍 Поиск патентов")
-//                .payload("START_SEARCH") // payload для перехода к вводу строки
-//                .build()));
-//        }
-
         // Кнопки переходов
         List<BotResponse.Button> navigationRow = new ArrayList<>();
         navigationRow.add(BotResponse.Button.builder()
@@ -64,7 +50,7 @@ public class BaseSelectHandler implements StepHandler {
                 .build());
         navigationRow.add(BotResponse.Button.builder()
                 .type("callback")
-                .text("🔍 Поиск патентов")
+                .text("🔍 Поиск")
                 .payload("START_SEARCH") // payload для перехода к вводу строки
                 .build());
         navigationRow.add(BotResponse.Button.builder()
