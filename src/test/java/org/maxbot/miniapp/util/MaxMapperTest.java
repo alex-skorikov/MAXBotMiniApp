@@ -137,7 +137,7 @@ class MaxMapperTest {
 
         // Then
         assertNotNull(event);
-        assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType()); // Успешно проверяет, что тип сброшен в null (или ваш кастомный тип)
+        assertEquals(BotEvents.USER_VIEW_DOC_DETAILS, event.getType());
         assertEquals("Просмотр документа 9999", event.getPayloadDescription());
 
         Mockito.verify(patentService, Mockito.times(1))
