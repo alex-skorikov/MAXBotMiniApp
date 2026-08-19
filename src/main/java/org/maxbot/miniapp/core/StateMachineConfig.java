@@ -32,6 +32,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         states
                 .withStates()
                 .initial(BotStates.INIT)
+                .state(BotStates.INIT, stepAction)
                 .state(BotStates.SELECT_BASE, stepAction)
                 .state(BotStates.BASE_SELECTED, stepAction)
                 .state(BotStates.FILTER_DATE, stepAction)
