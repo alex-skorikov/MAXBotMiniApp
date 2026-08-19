@@ -7,7 +7,6 @@ import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
-import org.maxbot.miniapp.repository.ContextRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import java.util.Optional;
 public class PatentService {
 
     private static final Logger log = LoggerFactory.getLogger(PatentService.class);
-    private final ContextRepository contextRepository;
 
     private final MaxApiClient maxApiClient;
     private final RospatentClient client;
@@ -33,10 +31,8 @@ public class PatentService {
             Map.entry("Страны с малым ПФ", List.of("others"))
     );
 
-    public PatentService(ContextRepository contextRepository,
-                         MaxApiClient maxApiClient,
+    public PatentService(MaxApiClient maxApiClient,
                          RospatentClient client) {
-        this.contextRepository = contextRepository;
         this.maxApiClient = maxApiClient;
         this.client = client;
     }
@@ -150,7 +146,7 @@ public class PatentService {
     }
 
     // Метод извлечения данных конкретного патента без изменения стейта
-    public void sendSinglePatentCardAsync(int chatId, String docId, UserContext userContext) {
+    public Mono<Void> sendSinglePatentCardAsync(int chatId, String docId, UserContext userContext) {
 
         List<PatentHit> hits = userContext.getHits();
         Optional<PatentHit> hit = hits.stream().filter(h -> h.getId().equals(docId)).findFirst();
@@ -179,14 +175,14 @@ public class PatentService {
                     ))
                     .build(); // Отправляем без блока инлайн-кнопок
 
-            maxApiClient.sendMessage(chatId, cardResponse);
+            return maxApiClient.sendMessage(chatId, cardResponse);
         } else {
             BotResponse errorResponse = BotResponse.builder()
                     .notify(false)
                     .text("❌ Не удалось загрузить информацию по документу " + docId)
                     .build();
 
-            maxApiClient.sendMessage(chatId, errorResponse);
+            return maxApiClient.sendMessage(chatId, errorResponse);
         }
     }
 

@@ -68,7 +68,6 @@ public class SearchHandler implements StepHandler {
                     if (isResponseEmpty(searchResponse)) {
                         return sendEmptyResultMessage(chatId, query);
                     }
-
                     // Сохраняем результат поиска для отображения "Подробнее"
                     List<PatentHit> hits = searchResponse.getHits();
                     ctx.setHits(hits);
