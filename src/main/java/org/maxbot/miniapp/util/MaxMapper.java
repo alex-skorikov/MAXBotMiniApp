@@ -97,10 +97,10 @@ public class MaxMapper {
         // Динамические обработчики (пагинация и просмотр)
         if (payload != null && payload.startsWith("DOC_VIEW_")) {
             String docId = payload.substring("DOC_VIEW_".length());
-            event.setType(null);
+            event.setType(BotEvents.USER_SEARCH_PATENT);
             event.setPayloadDescription("Просмотр документа " + docId);
 
-            patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId, userContext);
+            patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId, userContext).subscribe();
             return;
         }
 
