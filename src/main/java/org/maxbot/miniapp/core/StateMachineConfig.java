@@ -167,6 +167,13 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.BACK_TO_START)
                 .and()
 
+                // Из результатов поиска -> Сбросить
+                .withExternal()
+                .source(BotStates.SELECT_DATE)
+                .target(BotStates.INIT)
+                .event(BotEvents.BACK_TO_START)
+                .and()
+
                 // ==========================================
                 // КНОПКИ «НАЗАД»
                 // ==========================================
