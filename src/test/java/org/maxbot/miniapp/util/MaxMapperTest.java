@@ -9,16 +9,12 @@ import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.SenderDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
-import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
-import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.repository.HashMapContextRepository;
 import org.maxbot.miniapp.service.PatentService;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -125,6 +121,7 @@ class MaxMapperTest {
 
     @Test
     void handleMessageCallbackWithDocView() {
+        // Given
         UpdateDto update = new UpdateDto();
         update.setUpdateType("message_callback");
 
@@ -132,26 +129,21 @@ class MaxMapperTest {
         callback.setPayload("DOC_VIEW_9999");
         update.setCallback(callback);
 
-        PatentSearchResponse mockResponse = new PatentSearchResponse();
-        mockResponse.setHits(List.of());
+        Mockito.when(patentService.sendSinglePatentCardAsync(Mockito.anyInt(), Mockito.anyString(), Mockito.any()))
+                .thenReturn(Mono.empty());
 
-        PatentSearchRequest searchRequest = PatentSearchRequest.builder()
-                .queryMode("id")
-                .query("9999")
-                .limit(1)
-                .offset(0)
-                .build();
-
-        Mockito.when(patentService.searchPatents(searchRequest))
-                .thenReturn(Mono.just(mockResponse));
-
+        // When
         BotEvent event = maxMapper.toEvent(update, 123);
 
+        // Then
         assertNotNull(event);
-        assertNull(event.getType());
+        assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType()); // Успешно проверяет, что тип сброшен в null (или ваш кастомный тип)
         assertEquals("Просмотр документа 9999", event.getPayloadDescription());
 
+        Mockito.verify(patentService, Mockito.times(1))
+                .sendSinglePatentCardAsync(Mockito.eq(123), Mockito.eq("9999"), Mockito.any());
     }
+
 
     @Test
     void handleMessageCreatedFilterDateState() {
