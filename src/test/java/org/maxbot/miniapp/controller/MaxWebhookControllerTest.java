@@ -55,7 +55,7 @@ class MaxWebhookControllerTest {
 
         BotResponse mockResponse = BotResponse.builder().notify(false).build();
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt()))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt(), anyInt()))
                 .thenReturn(mockEvent);
 
         Mockito.when(dispatcher.dispatch(anyInt(), any(BotEvent.class)))
@@ -90,7 +90,7 @@ class MaxWebhookControllerTest {
 
         BotResponse mockResponse = BotResponse.builder().build();
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt()))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt(), anyInt()))
                 .thenReturn(mockEvent);
 
         Mockito.when(dispatcher.dispatch(anyInt(), any(BotEvent.class)))
@@ -128,10 +128,12 @@ class MaxWebhookControllerTest {
 
         BotEvent mockEvent = Mockito.mock(BotEvent.class);
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(23454)))
+        // Настраиваем маппер: первый ID — chatId (999), второй — userId (23454)
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(999), eq(23454)))
                 .thenReturn(mockEvent);
 
-        Mockito.when(dispatcher.dispatch(eq(23454), any(BotEvent.class)))
+        // Настраиваем диспетчер: он должен получить правильный chatId (999)
+        Mockito.when(dispatcher.dispatch(eq(999), any(BotEvent.class)))
                 .thenReturn(Mono.empty());
 
         webTestClient.post()
@@ -141,9 +143,9 @@ class MaxWebhookControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        // Проверяем то, что фактически вызывается в контроллере
+        // Проверяем точный вызов с верными аргументами
         Mockito.verify(maxMapper, Mockito.times(1))
-                .toEvent(any(UpdateDto.class), eq(23454));
+                .toEvent(any(UpdateDto.class), eq(999), eq(23454));
     }
 
 
@@ -160,7 +162,7 @@ class MaxWebhookControllerTest {
                 .expectStatus().isOk();
 
         Mockito.verify(maxMapper, Mockito.never())
-                .toEvent(any(), anyInt());
+                .toEvent(any(), anyInt(), anyInt());
 
     }
 
@@ -169,7 +171,7 @@ class MaxWebhookControllerTest {
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(111);
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(111)))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(111), anyInt()))
                 .thenReturn(null);
 
         webTestClient.post()
@@ -190,7 +192,7 @@ class MaxWebhookControllerTest {
         updateDto.setChatId(222);
 
         // Симулируем падение маппера с ошибкой (например, во время десериализации)
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(222)))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(222), anyInt()))
                 .thenThrow(new RuntimeException("Mapping exception"));
 
         webTestClient.post()

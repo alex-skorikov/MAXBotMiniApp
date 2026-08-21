@@ -36,10 +36,10 @@ class MaxMapperTest {
 
     @Test
     void toEventReturnsNullWhenUpdateOrTypeIsNull() {
-        assertNull(maxMapper.toEvent(null, 123));
+        assertNull(maxMapper.toEvent(null, 123, 1));
 
         UpdateDto emptyUpdate = new UpdateDto();
-        assertNull(maxMapper.toEvent(emptyUpdate, 123));
+        assertNull(maxMapper.toEvent(emptyUpdate, 123, 1));
     }
 
     @Test
@@ -48,9 +48,9 @@ class MaxMapperTest {
         update.setUpdateType("bot_started");
         update.setUserId(777);
         update.setChatId(123);
-        BotEvent event = maxMapper.toEvent(update, 555);
+        BotEvent event = maxMapper.toEvent(update, 123, 777);
         assertNotNull(event);
-        assertEquals("555", event.getUserId());
+        assertEquals("777", event.getUserId());
         assertEquals("123", event.getChatId());
         assertEquals(BotEvents.USER_OPEN_CHAT, event.getType());
         assertEquals("Старт бота", event.getPayloadDescription());
@@ -63,7 +63,7 @@ class MaxMapperTest {
         update.setUpdateType("bot_stopped");
         UserContext ctx = repository.load("123");
         repository.save(ctx);
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
         assertNotNull(event);
         UserContext deletedCtx = repository.load("123");
         assertNull(deletedCtx.getSelectedBase());
@@ -86,7 +86,7 @@ class MaxMapperTest {
         userContext.setSearchOffset(10);
         userContext.setSearchLimit(5);
         repository.save(userContext);
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
         assertNotNull(event);
         assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType());
 
@@ -109,7 +109,7 @@ class MaxMapperTest {
         userContext.setUserId(123); // 🔥 Устанавливаем id, чтобы репозиторий корректно сохранил
         userContext.setSelectedBase("Патенты");
         repository.save(userContext);
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
 
         assertNotNull(event);
         assertEquals(BotEvents.BACK_TO_START, event.getType());
@@ -139,7 +139,7 @@ class MaxMapperTest {
         Mockito.when(patentService.sendSinglePatentCardAsync(Mockito.anyInt(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(Mono.empty());
 
-        BotEvent event = maxMapper.toEvent(update, 23454);
+        BotEvent event = maxMapper.toEvent(update, 23454, 123);
 
         // Then
         assertNotNull(event);
@@ -148,7 +148,7 @@ class MaxMapperTest {
 
         // Верифицируем вызов сервиса с chatId = 123
         Mockito.verify(patentService, Mockito.times(1))
-                .sendSinglePatentCardAsync(Mockito.eq(123), Mockito.eq("9999"), Mockito.any());
+                .sendSinglePatentCardAsync(Mockito.eq(23454), Mockito.eq("9999"), Mockito.any());
     }
 
     @Test
@@ -165,7 +165,7 @@ class MaxMapperTest {
         UserContext userContext = repository.load("123");
         userContext.setState(BotStates.FILTER_DATE);
         repository.save(userContext);
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
 
         assertNotNull(event);
         assertEquals(BotEvents.USER_SELECTED_DATE, event.getType());
@@ -190,7 +190,7 @@ class MaxMapperTest {
         userContext.setState(BotStates.SELECT_DATE);
         repository.save(userContext);
 
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 1232, 123);
 
         assertNotNull(event);
         assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType());
@@ -209,7 +209,7 @@ class MaxMapperTest {
         userContext.setState(BotStates.INIT);
         repository.save(userContext);
 
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
 
         assertNotNull(event);
         assertEquals(BotEvents.BACK_TO_START, event.getType());
@@ -234,12 +234,12 @@ class MaxMapperTest {
 
         initialCtx.setSearchOffset(50);
         repository.save(initialCtx);
-        BotEvent event = maxMapper.toEvent(update, chatId);
+        BotEvent event = maxMapper.toEvent(update, chatId, 123);
 
         assertNotNull(event);
         assertEquals(BotEvents.USER_SELECT_BASE, event.getType());
 
-        UserContext savedCtx = repository.load(String.valueOf(chatId));
+        UserContext savedCtx = repository.load(String.valueOf(123));
         assertEquals("Патенты", savedCtx.getSelectedBase());
         assertEquals(0, savedCtx.getSearchOffset());
     }
