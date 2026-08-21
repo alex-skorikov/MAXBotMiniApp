@@ -30,7 +30,7 @@ public class StateMachineDispatcher {
     public Mono<BotResponse> dispatch(int chatId, BotEvent event) {
         String machineId = String.valueOf(chatId);
         String userId = event.getUserId();
-        String chatId1 = event.getChatId();
+//        String chatId = event.getChatId();
 
         if (event.getType() == null) {
             log.info("⚠️ [ДИСПЕТЧЕР] Получено необрабатываемое системное событие (null). Пропускаем.");
@@ -81,7 +81,7 @@ public class StateMachineDispatcher {
                                     return Mono.empty();
                                 })
                                 // 6. Сохраняем стейт в Redis только после успешного завершения транзишена
-                                .doOnSuccess(res -> persister.persist(machine, userId, chatId1, event.getType()))
+                                .doOnSuccess(res -> persister.persist(machine, userId, String.valueOf(chatId), event.getType()))
                                 .doFinally(signalType -> machine.stopReactively().subscribeOn(Schedulers.boundedElastic()).subscribe());
                     }));
         });

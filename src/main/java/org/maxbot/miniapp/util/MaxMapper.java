@@ -145,13 +145,11 @@ public class MaxMapper {
 //        }
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
-            userContext.setSelectedBase(info.description());
+            userContext.setSelectedBase(info.description);
             userContext.setSearchOffset(0);
             contextRepository.save(userContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
-
             userContext.setSearchArrayName(info.description);
             userContext.setSearchArrays(arrays);
             contextRepository.save(userContext); // Пишем ТОЛЬКО массив
