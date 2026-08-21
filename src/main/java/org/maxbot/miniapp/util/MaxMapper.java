@@ -139,22 +139,22 @@ public class MaxMapper {
             return;
         }
 
-        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getUserId()));
-        if (freshContext == null) {
-            freshContext = userContext;
-        }
+//        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getUserId()));
+//        if (freshContext == null) {
+//            freshContext = userContext;
+//        }
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
-            freshContext.setSelectedBase(info.description());
-            freshContext.setSearchOffset(0);
-            contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
+            userContext.setSelectedBase(info.description());
+            userContext.setSearchOffset(0);
+            contextRepository.save(userContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
 
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
 
-            freshContext.setSearchArrayName(info.description);
-            freshContext.setSearchArrays(arrays);
-            contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
+            userContext.setSearchArrayName(info.description);
+            userContext.setSearchArrays(arrays);
+            contextRepository.save(userContext); // Пишем ТОЛЬКО массив
         }
 
         event.setType(info.eventType());
