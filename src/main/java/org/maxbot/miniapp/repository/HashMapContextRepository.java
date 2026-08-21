@@ -13,11 +13,11 @@ public class HashMapContextRepository implements ContextRepository {
     private final Map<String, UserContext> storage = new ConcurrentHashMap<>();
 
     @Override
-    public UserContext load(String chatId) {
-        UserContext ctx = storage.get(chatId);
+    public UserContext load(String userId) {
+        UserContext ctx = storage.get(userId);
         if (ctx == null) {
             ctx = new UserContext();
-            ctx.setUserId(Integer.parseInt(chatId));
+            ctx.setUserId(Integer.parseInt(userId));
         }
         return ctx;
     }
@@ -28,14 +28,13 @@ public class HashMapContextRepository implements ContextRepository {
     }
 
     @Override
-    public void delete(String chatId) {
-        storage.remove(chatId);
+    public void delete(String userId) {
+        storage.remove(userId);
     }
 
-    public UserContext storageGetDirectly(String chatId) {
-        return storage.get(chatId);
+    public UserContext storageGetDirectly(String userId) {
+        return storage.get(userId);
     }
-
 
     // для очистки хранилища между тестами
     public void clear() {

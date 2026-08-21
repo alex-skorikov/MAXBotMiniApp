@@ -47,15 +47,15 @@ public class MaxMapper {
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
     );
 
-    public BotEvent toEvent(UpdateDto upd, int chatId) {
+    public BotEvent toEvent(UpdateDto upd, int userId) {
         if (upd == null || upd.getUpdateType() == null) return null;
 
-        UserContext userContext = contextRepository.load(String.valueOf(chatId));
-        BotEvent event = initBasicEvent(upd, chatId);
+        UserContext userContext = contextRepository.load(String.valueOf(userId));
+        BotEvent event = initBasicEvent(upd, userId);
 
         switch (upd.getUpdateType()) {
             case "bot_started" -> handleBotStarted(event);
-            case "bot_stopped" -> handleBotStopped(chatId);
+            case "bot_stopped" -> handleBotStopped(userId);
             case "message_callback" -> handleMessageCallback(upd, event, userContext);
             case "message_created" -> handleMessageCreated(upd, event, userContext);
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
@@ -65,16 +65,16 @@ public class MaxMapper {
         return event;
     }
 
-    private BotEvent initBasicEvent(UpdateDto upd, int chatId) {
+    private BotEvent initBasicEvent(UpdateDto upd, int userId) {
         BotEvent event = new BotEvent();
-        int validUserId = upd.getUserId() != 0 ? upd.getUserId() :
-                Optional.ofNullable(upd.getCallback())
-                        .map(CallbackDto::getUser)
-                        .map(org.maxbot.miniapp.dto.bot.SenderDto::getUserId)
-                        .orElse(0);
+//        int validUserId = upd.getUserId() != 0 ? upd.getUserId() :
+//                Optional.ofNullable(upd.getCallback())
+//                        .map(CallbackDto::getUser)
+//                        .map(org.maxbot.miniapp.dto.bot.SenderDto::getUserId)
+//                        .orElse(0);
 
-        event.setUserId(String.valueOf(validUserId));
-        event.setChatId(String.valueOf(chatId));
+        event.setUserId(String.valueOf(userId));
+        event.setChatId(String.valueOf(upd.getChatId()));
         event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
         return event;
     }
@@ -84,8 +84,8 @@ public class MaxMapper {
         event.setPayloadDescription("Старт бота");
     }
 
-    private void handleBotStopped(int chatId) {
-        contextRepository.delete(String.valueOf(chatId));
+    private void handleBotStopped(int userId) {
+        contextRepository.delete(String.valueOf(userId));
     }
 
     private void handleMessageCallback(UpdateDto upd, BotEvent event, UserContext userContext) {
@@ -121,7 +121,7 @@ public class MaxMapper {
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
         if (info == null) {
             if ("BACK_TO_START".equals(payload)) {
-                UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getChatId()));
+                UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getUserId()));
                 if (freshCtx == null) {
                     freshCtx = userContext;
                 }
@@ -146,7 +146,7 @@ public class MaxMapper {
             return;
         }
 
-        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getChatId()));
+        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getUserId()));
         if (freshContext == null) {
             freshContext = userContext;
         }

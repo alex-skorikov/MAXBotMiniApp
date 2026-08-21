@@ -10,7 +10,6 @@ import org.maxbot.miniapp.statemachine.BotStates;
 
 import java.util.List;
 
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,6 +25,7 @@ public class UserContext {
     private BotStates state;
     private BotEvents botEvent;
     private String searchQuery;
+    @ToString.Exclude
     private List<PatentHit> hits;
     private int searchOffset = 0;
     private int searchLimit = 5;

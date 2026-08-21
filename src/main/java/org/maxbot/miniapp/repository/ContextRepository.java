@@ -4,8 +4,8 @@ import org.maxbot.miniapp.core.UserContext;
 
 public interface ContextRepository {
 
-    UserContext load(String chatId);
+    UserContext load(String userId);
     void save(UserContext ctx);
-    void delete(String chatId);
+    void delete(String userId);
 }
 
