@@ -47,11 +47,18 @@ public class MaxMapper {
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
     );
 
-    public BotEvent toEvent(UpdateDto upd, int userId) {
+    // Меняем сигнатуру главного метода
+    public BotEvent toEvent(UpdateDto upd, int chatId, int userId) {
         if (upd == null || upd.getUpdateType() == null) return null;
 
+        // Контекст всегда грузим по реальному userId
         UserContext userContext = contextRepository.load(String.valueOf(userId));
-        BotEvent event = initBasicEvent(upd, userId);
+
+        // Инициализируем событие, жестко прописывая правильные ID
+        BotEvent event = new BotEvent();
+        event.setUserId(String.valueOf(userId));
+        event.setChatId(String.valueOf(chatId));
+        event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
 
         switch (upd.getUpdateType()) {
             case "bot_started" -> handleBotStarted(event);
@@ -62,20 +69,6 @@ public class MaxMapper {
         }
 
         log.info(">>> MaxMapper обработал событие. Event: {}, UserContext: {}", event, userContext);
-        return event;
-    }
-
-    private BotEvent initBasicEvent(UpdateDto upd, int userId) {
-        BotEvent event = new BotEvent();
-//        int validUserId = upd.getUserId() != 0 ? upd.getUserId() :
-//                Optional.ofNullable(upd.getCallback())
-//                        .map(CallbackDto::getUser)
-//                        .map(org.maxbot.miniapp.dto.bot.SenderDto::getUserId)
-//                        .orElse(0);
-
-        event.setUserId(String.valueOf(userId));
-        event.setChatId(String.valueOf(upd.getChatId()));
-        event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
         return event;
     }
 

@@ -36,9 +36,8 @@ public class MaxWebhookController {
         return updateDto
                 .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
                 .flatMap(upd -> {
-                    // --- chatId ---
+                    // 1. Гарантированное извлечение chatId с фоллбэками
                     int chatId = upd.getChatId();
-
                     if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
                         chatId = upd.getMessage().getRecipient().getChatId();
                     }
@@ -47,29 +46,32 @@ public class MaxWebhookController {
                         return Mono.empty();
                     }
 
-                    // --- userId ---
+                    // 2. Гарантированное извлечение userId с фоллбэками (включая callback)
                     int userId = upd.getUserId();
                     if (userId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
                         userId = upd.getMessage().getRecipient().getUserId();
+                    }
+                    if (userId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
+                        userId = upd.getCallback().getUser().getUserId();
                     }
                     if (userId == 0) {
                         log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
                         return Mono.empty();
                     }
 
-                    // 2. Маппим DTO в событие для стейт-машины
-                    BotEvent event = maxMapper.toEvent(upd, userId);
+                    // Передаем в маппер ОБОИХ вычисленных ID (после Шага 2)
+                    BotEvent event = maxMapper.toEvent(upd, chatId, userId);
                     if (event == null) {
                         return Mono.empty();
                     }
 
                     int finalChatId = chatId;
 
-                    // 3. Диспетчеризация и отправка ответа
+                    // 3. Диспетчеризация
                     if (event.getCallbackId() == null) {
                         return dispatcher.dispatch(finalChatId, event)
                                 .flatMap(resp -> {
-                                    if (resp == null) return Mono.empty(); // Защита от пустых ответов
+                                    if (resp == null) return Mono.empty();
                                     return maxApiClient.sendMessage(finalChatId, resp);
                                 });
                     } else {
@@ -80,8 +82,9 @@ public class MaxWebhookController {
                                 });
                     }
                 })
-                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука патентов", error))
+                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука", error))
                 .onErrorComplete();
     }
+
 
 }
