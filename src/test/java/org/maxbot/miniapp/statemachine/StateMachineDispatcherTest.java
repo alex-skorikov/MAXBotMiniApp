@@ -120,7 +120,7 @@ class StateMachineDispatcherTest {
                 .verifyComplete();
 
         // Проверяем, что стейт сохранился в базу
-        verify(persister, times(1)).persist(machine, userId, chatIdStr, eventType);
+        verify(persister, times(1)).persist(machine, userId, machineId, eventType);
     }
 
     @Test
