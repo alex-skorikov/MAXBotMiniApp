@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.handlers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.core.UserContext;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class BaseSelectHandler implements StepHandler {
 
@@ -19,6 +21,8 @@ public class BaseSelectHandler implements StepHandler {
                 "Дата", "DATE_INPUT",
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
+
+        log.info(">>> BaseSelectHandler обрабатываем... Event: {}, UserContext: {}", event, ctx);
 
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();

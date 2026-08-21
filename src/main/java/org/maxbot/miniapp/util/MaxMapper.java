@@ -143,6 +143,7 @@ public class MaxMapper {
         if (freshContext == null) {
             freshContext = userContext;
         }
+        log.info("🔄 MaxMapper загружен freshContext для обновления {}", freshContext);
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
             freshContext.setSelectedBase(info.description);
