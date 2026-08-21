@@ -55,12 +55,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .event(BotEvents.USER_OPEN_CHAT)
                 .and()
 
-                .withExternal()
-                .source(BotStates.INIT)             // Если стейт-машина "застряла" в INIT
-                .target(BotStates.BASE_SELECTED)    // Всё равно переводим в меню фильтров
-                .event(BotEvents.USER_SELECT_BASE)
-                .and()
-
                 // ВЫБОР БАЗЫ -> ГЛАВНОЕ МЕНЮ ФИЛЬТРОВ
                 .withExternal()
                 .source(BotStates.SELECT_BASE)
