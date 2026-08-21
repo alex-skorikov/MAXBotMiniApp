@@ -28,7 +28,7 @@ public class StateMachineDispatcher {
     }
 
     public Mono<BotResponse> dispatch(int chatId, BotEvent event) {
-        String machineId = String.valueOf(chatId);
+        String machineId = String.valueOf(event.getUserId());
         String userId = event.getUserId();
         String eventChatId = event.getChatId();
 
