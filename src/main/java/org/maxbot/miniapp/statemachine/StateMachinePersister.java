@@ -25,10 +25,10 @@ public class StateMachinePersister {
         this.contextRepository = contextRepository;
     }
 
-    public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String chatId) {
+    public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String userId) {
         return Mono.defer(() -> {
             // 1. Загружаем контекст из Redis
-            UserContext userContext = contextRepository.load(chatId);
+            UserContext userContext = contextRepository.load(userId);
             BotStates savedState = userContext.getState() != null ? userContext.getState() : BotStates.INIT;
 
             // 2. Формируем переменные для StateMachine
@@ -60,7 +60,7 @@ public class StateMachinePersister {
             return;
         }
 
-        UserContext userContext = contextRepository.load(chatId);
+        UserContext userContext = contextRepository.load(userId);
 
         // Если в Redis контекста ещё нет (самый первый старт), тогда создаем новый
         if (userContext == null) {

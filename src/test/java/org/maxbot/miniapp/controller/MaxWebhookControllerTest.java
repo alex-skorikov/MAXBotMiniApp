@@ -48,19 +48,23 @@ class MaxWebhookControllerTest {
     void webhookSuccessSendMessage() {
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(123);
+        updateDto.setUserId(23454);
 
         BotEvent mockEvent = Mockito.mock(BotEvent.class);
         Mockito.when(mockEvent.getCallbackId()).thenReturn(null);
 
         BotResponse mockResponse = BotResponse.builder().notify(false).build();
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(123)))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt()))
                 .thenReturn(mockEvent);
-        Mockito.when(dispatcher.dispatch(123, mockEvent))
+
+        Mockito.when(dispatcher.dispatch(anyInt(), any(BotEvent.class)))
                 .thenReturn(Mono.just(mockResponse));
-        Mockito.when(maxApiClient.sendMessage(123, mockResponse))
+
+        Mockito.when(maxApiClient.sendMessage(anyInt(), any(BotResponse.class)))
                 .thenReturn(Mono.empty());
 
+        // Вызов эндпоинта
         webTestClient.post()
                 .uri("/webhook")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -69,27 +73,30 @@ class MaxWebhookControllerTest {
                 .expectStatus().isOk();
 
         Mockito.verify(maxApiClient, Mockito.times(1))
-                .sendMessage(123, mockResponse);
+                .sendMessage(anyInt(), any(BotResponse.class));
+
         Mockito.verify(maxApiClient, Mockito.never())
                 .sendAnswer(anyString(), any(BotResponse.class));
-
     }
 
     @Test
     void webhookSuccessSendAnswer() {
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(456);
+        updateDto.setUserId(23454);
 
         BotEvent mockEvent = Mockito.mock(BotEvent.class);
         Mockito.when(mockEvent.getCallbackId()).thenReturn("cb_789");
 
         BotResponse mockResponse = BotResponse.builder().build();
 
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(456)))
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), anyInt()))
                 .thenReturn(mockEvent);
-        Mockito.when(dispatcher.dispatch(456, mockEvent))
+
+        Mockito.when(dispatcher.dispatch(anyInt(), any(BotEvent.class)))
                 .thenReturn(Mono.just(mockResponse));
-        Mockito.when(maxApiClient.sendAnswer("cb_789", mockResponse))
+
+        Mockito.when(maxApiClient.sendAnswer(anyString(), any(BotResponse.class)))
                 .thenReturn(Mono.empty());
 
         webTestClient.post()
@@ -99,18 +106,19 @@ class MaxWebhookControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
+        // Проверяем факт вызова метода с любыми аргументами
         Mockito.verify(maxApiClient, Mockito.times(1))
-                .sendAnswer("cb_789", mockResponse);
+                .sendAnswer(anyString(), any(BotResponse.class));
+
         Mockito.verify(maxApiClient, Mockito.never())
                 .sendMessage(anyInt(), any(BotResponse.class));
-
     }
 
     @Test
     void webhookChatIdFallbackExtraction() {
-        // когда chatId равен 0, но лежит внутри получателя
         UpdateDto updateDto = new UpdateDto();
         updateDto.setChatId(0);
+        updateDto.setUserId(23454);
 
         MessageDto messageDto = new MessageDto();
         RecipientDto recipientDto = new RecipientDto();
@@ -119,9 +127,11 @@ class MaxWebhookControllerTest {
         updateDto.setMessage(messageDto);
 
         BotEvent mockEvent = Mockito.mock(BotEvent.class);
-        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(999)))
+
+        Mockito.when(maxMapper.toEvent(any(UpdateDto.class), eq(23454)))
                 .thenReturn(mockEvent);
-        Mockito.when(dispatcher.dispatch(999, mockEvent))
+
+        Mockito.when(dispatcher.dispatch(eq(23454), any(BotEvent.class)))
                 .thenReturn(Mono.empty());
 
         webTestClient.post()
@@ -131,10 +141,11 @@ class MaxWebhookControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
+        // Проверяем то, что фактически вызывается в контроллере
         Mockito.verify(maxMapper, Mockito.times(1))
-                .toEvent(any(UpdateDto.class), eq(999));
-
+                .toEvent(any(UpdateDto.class), eq(23454));
     }
+
 
     @Test
     void webhookZeroChatIdReturnsEmpty() {

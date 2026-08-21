@@ -45,11 +45,6 @@ public class RospatentClient {
     // -----------------------------
 
     // --- Async ---
-    public Mono<PatentSearchResponse> searchReactiveOld(String queryMode, String query, Integer limit, Integer offset) {
-        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
-        return executeReactive(body);
-    }
-
     public Mono<PatentSearchResponse> searchReactive(PatentSearchRequest request) {
         Map<String, Object> body = PatentsUtil.patentRequestToMap(request);
         return executeReactive(body);

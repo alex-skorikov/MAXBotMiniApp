@@ -47,9 +47,10 @@ class MaxMapperTest {
         UpdateDto update = new UpdateDto();
         update.setUpdateType("bot_started");
         update.setUserId(777);
-        BotEvent event = maxMapper.toEvent(update, 123);
+        update.setChatId(123);
+        BotEvent event = maxMapper.toEvent(update, 555);
         assertNotNull(event);
-        assertEquals("777", event.getUserId());
+        assertEquals("555", event.getUserId());
         assertEquals("123", event.getChatId());
         assertEquals(BotEvents.USER_OPEN_CHAT, event.getType());
         assertEquals("Старт бота", event.getPayloadDescription());
@@ -124,26 +125,31 @@ class MaxMapperTest {
         // Given
         UpdateDto update = new UpdateDto();
         update.setUpdateType("message_callback");
+        update.setChatId(123);
 
         CallbackDto callback = new CallbackDto();
         callback.setPayload("DOC_VIEW_9999");
         update.setCallback(callback);
 
+        UserContext userContext = repository.load("23454");
+        userContext.setUserId(23454);
+        userContext.setChatId("123");
+        repository.save(userContext);
+
         Mockito.when(patentService.sendSinglePatentCardAsync(Mockito.anyInt(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(Mono.empty());
 
-        // When
-        BotEvent event = maxMapper.toEvent(update, 123);
+        BotEvent event = maxMapper.toEvent(update, 23454);
 
         // Then
         assertNotNull(event);
         assertEquals(BotEvents.USER_VIEW_DOC_DETAILS, event.getType());
         assertEquals("Просмотр документа 9999", event.getPayloadDescription());
 
+        // Верифицируем вызов сервиса с chatId = 123
         Mockito.verify(patentService, Mockito.times(1))
                 .sendSinglePatentCardAsync(Mockito.eq(123), Mockito.eq("9999"), Mockito.any());
     }
-
 
     @Test
     void handleMessageCreatedFilterDateState() {

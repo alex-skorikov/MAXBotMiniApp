@@ -36,21 +36,29 @@ public class MaxWebhookController {
         return updateDto
                 .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
                 .flatMap(upd -> {
-                    // 1. БЕЗОПАСНО извлекаем chatId без риска получить NullPointerException
+                    // --- chatId ---
                     int chatId = upd.getChatId();
 
                     if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
                         chatId = upd.getMessage().getRecipient().getChatId();
                     }
-
-                    // Защита: если chatId не определен, не пускаем обработку дальше
                     if (chatId == 0) {
                         log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
                         return Mono.empty();
                     }
 
+                    // --- userId ---
+                    int userId = upd.getUserId();
+                    if (userId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+                        userId = upd.getMessage().getRecipient().getUserId();
+                    }
+                    if (userId == 0) {
+                        log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
+                        return Mono.empty();
+                    }
+
                     // 2. Маппим DTO в событие для стейт-машины
-                    BotEvent event = maxMapper.toEvent(upd, chatId);
+                    BotEvent event = maxMapper.toEvent(upd, userId);
                     if (event == null) {
                         return Mono.empty();
                     }
