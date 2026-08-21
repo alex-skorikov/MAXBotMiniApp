@@ -7,6 +7,7 @@ import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
@@ -90,22 +91,20 @@ class StateMachineDispatcherTest {
 
         BotResponse expectedResponse = BotResponse.builder().build();
 
-        // Инициализация структуры стейт-машины
         when(factory.getStateMachine(machineId)).thenReturn(machine);
         when(machine.getExtendedState()).thenReturn(extendedState);
         when(extendedState.getVariables()).thenReturn(variables);
         when(machine.getState()).thenReturn(state);
-        when(state.getId()).thenReturn(BotStates.INIT); // Используем ваш реальный BotStates.INIT
+        when(state.getId()).thenReturn(BotStates.INIT);
 
-        // Мокаем реактивный жизненный цикл и реактивное восстановление
         when(persister.restore(machine, machineId)).thenReturn(Mono.empty());
         when(machine.startReactively()).thenReturn(Mono.empty());
-        when(machine.stopReactively()).thenReturn(Mono.empty());
 
-        // Настраиваем возврат ACCEPTED
+        // Защищаем тест от строгого правила Unnecessary Stubbing
+        Mockito.lenient().when(machine.stopReactively()).thenReturn(Mono.empty());
+
         when(eventResult.getResultType()).thenReturn(StateMachineEventResult.ResultType.ACCEPTED);
 
-        // Имитируем поведение бизнес-логики стейт-машины: во время sendEvent хендлер записывает ответ
         doAnswer(invocation -> {
             variables.put("response", expectedResponse);
             return Flux.just(eventResult);
@@ -119,9 +118,10 @@ class StateMachineDispatcherTest {
                 .expectNext(expectedResponse)
                 .verifyComplete();
 
-        // Проверяем, что стейт сохранился в базу
+        // Проверяем сохранение по вычисленному chatId диспетчера ("123")
         verify(persister, times(1)).persist(machine, userId, machineId, eventType);
     }
+
 
     @Test
     void shouldReturnEmptyWhenEventIsDenied() {
