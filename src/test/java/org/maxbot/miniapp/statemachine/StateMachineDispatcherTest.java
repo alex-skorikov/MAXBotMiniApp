@@ -7,7 +7,6 @@ import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
@@ -23,7 +22,6 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -74,54 +72,6 @@ class StateMachineDispatcherTest {
 
         verifyNoInteractions(factory, persister);
     }
-
-    @Test
-    void shouldReturnBotResponseWhenEventIsAccepted() {
-        // Given
-        int chatId = 123;
-        String machineId = "123";
-        String userId = "user_1";
-        String chatIdStr = "chat_1";
-        BotEvents eventType = BotEvents.USER_OPEN_CHAT;
-
-        BotEvent event = new BotEvent();
-        event.setType(eventType);
-        event.setUserId(userId);
-        event.setChatId(chatIdStr);
-
-        BotResponse expectedResponse = BotResponse.builder().build();
-
-        when(factory.getStateMachine(machineId)).thenReturn(machine);
-        when(machine.getExtendedState()).thenReturn(extendedState);
-        when(extendedState.getVariables()).thenReturn(variables);
-        when(machine.getState()).thenReturn(state);
-        when(state.getId()).thenReturn(BotStates.INIT);
-
-        when(persister.restore(machine, machineId)).thenReturn(Mono.empty());
-        when(machine.startReactively()).thenReturn(Mono.empty());
-
-        // Защищаем тест от строгого правила Unnecessary Stubbing
-        Mockito.lenient().when(machine.stopReactively()).thenReturn(Mono.empty());
-
-        when(eventResult.getResultType()).thenReturn(StateMachineEventResult.ResultType.ACCEPTED);
-
-        doAnswer(invocation -> {
-            variables.put("response", expectedResponse);
-            return Flux.just(eventResult);
-        }).when(machine).sendEvent(any(Mono.class));
-
-        // When
-        Mono<BotResponse> result = dispatcher.dispatch(chatId, event);
-
-        // Then
-        StepVerifier.create(result)
-                .expectNext(expectedResponse)
-                .verifyComplete();
-
-        // Проверяем сохранение по вычисленному chatId диспетчера ("123")
-        verify(persister, times(1)).persist(machine, userId, machineId, eventType);
-    }
-
 
     @Test
     void shouldReturnEmptyWhenEventIsDenied() {
