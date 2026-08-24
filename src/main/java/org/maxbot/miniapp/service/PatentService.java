@@ -1,7 +1,7 @@
 package org.maxbot.miniapp.service;
 
 import org.maxbot.miniapp.client.MaxApiClient;
-import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.client.RosPatentClient;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
@@ -18,7 +18,7 @@ import java.util.Optional;
 public class PatentService {
 
     private final MaxApiClient maxApiClient;
-    private final RospatentClient client;
+    private final RosPatentClient client;
     private static final Map<String, List<String>> SEARCH_ARRAYS = Map.ofEntries(
             Map.entry("Россия и страны СНГ", List.of("ru_till_1994", "ru_since_1994", "cis", "dsgn_ru")),
             Map.entry("Минимум РСТ", List.of("ap", "cn", "ch", "au", "gb", "ki", "ca", "at", "jp", "ep", "de", "fr", "ap", "us")),
@@ -27,7 +27,7 @@ public class PatentService {
     );
 
     public PatentService(MaxApiClient maxApiClient,
-                         RospatentClient client) {
+                         RosPatentClient client) {
         this.maxApiClient = maxApiClient;
         this.client = client;
     }

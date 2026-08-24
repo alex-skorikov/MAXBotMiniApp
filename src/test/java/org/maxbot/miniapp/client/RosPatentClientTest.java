@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RospatentClientTest {
+class RosPatentClientTest {
 
     private MockWebServer mockWebServer;
-    private RospatentClient rospatentClient;
+    private RosPatentClient rospatentClient;
     private final String testToken = "rospatent-secret-token-123";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -36,7 +36,7 @@ class RospatentClientTest {
 
         String mockUrl = mockWebServer.url("/patsearch/v0.2/search").toString();
 
-        this.rospatentClient = new RospatentClient(webClient, testToken, mockUrl);
+        this.rospatentClient = new RosPatentClient(webClient, testToken, mockUrl);
     }
 
     @AfterEach
