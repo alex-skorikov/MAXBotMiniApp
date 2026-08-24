@@ -167,7 +167,13 @@ public class MaxMapper {
         event.setText(text);
 
         BotStates currentState = userContext.getState();
-        if (currentState == null) return;
+
+        if (currentState == null) {
+            log.warn("⚠️ [MAPPER] В UserContext отсутствует текущий стейт. Проверяем ветку по умолчанию.");
+            event.setType(BotEvents.BACK_TO_START);
+            event.setCallbackId(null);
+            return;
+        }
 
         switch (currentState) {
             case FILTER_DATE -> {
