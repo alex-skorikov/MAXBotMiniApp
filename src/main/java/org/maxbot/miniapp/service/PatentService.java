@@ -5,6 +5,7 @@ import org.maxbot.miniapp.client.RosPatentClient;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
+import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
@@ -130,5 +131,25 @@ public class PatentService {
 
     public List<String> getSearchArrayByDescription(String searchArrayName) {
         return SEARCH_ARRAYS.get(searchArrayName);
+    }
+
+    public static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,
+                                                                         PatentSearchResponse raw) {
+        PatentSearchPagedResponse response = new PatentSearchPagedResponse();
+        response.setItems(raw.getHits());
+
+        PatentSearchPagedResponse.Pagination pagination =
+                new PatentSearchPagedResponse.Pagination();
+
+        int pageSize = request.getLimit();
+        int page = (request.getOffset() / pageSize) + 1;
+
+        pagination.setPage(page);
+        pagination.setPageSize(pageSize);
+        pagination.setTotal(raw.getTotal());
+        pagination.setHasNext(request.getOffset() + pageSize < raw.getTotal());
+
+        response.setPagination(pagination);
+        return response;
     }
 }
