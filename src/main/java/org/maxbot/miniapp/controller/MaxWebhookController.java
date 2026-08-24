@@ -54,6 +54,11 @@ public class MaxWebhookController {
                     if (userId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
                         userId = upd.getCallback().getUser().getUserId();
                     }
+                    if (userId == 0 && upd.getMessage() != null
+                            && upd.getMessage().getSender() != null
+                            && upd.getMessage().getSender().getUserId() != 0) {
+                        userId = upd.getMessage().getSender().getUserId();
+                    }
                     if (userId == 0) {
                         log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
                         return Mono.empty();
