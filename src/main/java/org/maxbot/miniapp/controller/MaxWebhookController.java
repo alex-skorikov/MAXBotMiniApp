@@ -55,21 +55,21 @@ public class MaxWebhookController {
 
         // 2. Вычисляем гарантированно правильный userId человека
         int resolvedUserId = upd.getUserId();
-        if (resolvedUserId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
-            resolvedUserId = upd.getMessage().getRecipient().getUserId();
-        }
+
         if (resolvedUserId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
             resolvedUserId = upd.getCallback().getUser().getUserId();
         }
         if (resolvedUserId == 0 && upd.getMessage() != null
                 && upd.getMessage().getSender() != null
                 && upd.getMessage().getSender().getUserId() != 0) {
-            resolvedUserId = upd.getMessage().getSender().getUserId();
+            resolvedUserId = upd.getMessage().getSender().getUserId(); // Теперь здесь ЖЕЛЕЗНО запишется 329529068
         }
         if (resolvedUserId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
             resolvedUserId = upd.getUser().getUserId();
         }
-
+        if (resolvedUserId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+            resolvedUserId = upd.getMessage().getRecipient().getUserId();
+        }
         if (resolvedUserId == 0) {
             log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
             return Mono.empty();
