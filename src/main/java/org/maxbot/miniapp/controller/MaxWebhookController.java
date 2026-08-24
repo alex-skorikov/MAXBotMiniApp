@@ -41,10 +41,15 @@ public class MaxWebhookController {
                     if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
                         chatId = upd.getMessage().getRecipient().getChatId();
                     }
+                    if (chatId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+                        chatId = upd.getUser().getUserId();
+                    }
+
                     if (chatId == 0) {
                         log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
                         return Mono.empty();
                     }
+
 
                     // 2. Гарантированное извлечение userId с фоллбэками (включая callback)
                     int userId = upd.getUserId();
@@ -59,10 +64,15 @@ public class MaxWebhookController {
                             && upd.getMessage().getSender().getUserId() != 0) {
                         userId = upd.getMessage().getSender().getUserId();
                     }
+                    if (userId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+                        userId = upd.getUser().getUserId();
+                    }
+
                     if (userId == 0) {
                         log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
                         return Mono.empty();
                     }
+
 
                     // Передаем в маппер ОБОИХ вычисленных ID (после Шага 2)
                     BotEvent event = maxMapper.toEvent(upd, chatId, userId);
