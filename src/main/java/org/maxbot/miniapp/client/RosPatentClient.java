@@ -80,16 +80,20 @@ public class RosPatentClient {
                 )
                 .timeout(Duration.ofSeconds(30))
                 .onErrorResume(e -> {
+                    Throwable rootCause = e.getCause() != null ? e.getCause() : e;
                     if (e instanceof IllegalArgumentException || e.getCause() instanceof IllegalArgumentException) {
                         log.warn("⚠️ Запрос Роспатентом отклонен (Неверные параметры): {}", e.getMessage());
+                        return Mono.error(new RuntimeException("Ошибка параметров поиска: " + rootCause.getMessage()));
                     } else {
                         log.error("💥 Системная ошибка при обращении к RosPatent API: {}", e.getMessage());
+                        return Mono.error(new RuntimeException("Сервер Роспатента временно недоступен."));
                     }
-                    return Mono.just(Map.of(
-                            "total", 0,
-                            "available", 0,
-                            "hits", List.of()
-                    ));
+//                    return Mono.just(Map.of(
+//                            "total", 0,
+//                            "available", 0,
+//                            "hits", List.of()
+//                    )
+//                    );
                 })
                 .map(this::mapResponse)
                 .doOnNext(resp -> log.info(">>> RESPONSE RosPatentClient total: {}", resp.getTotal()));
