@@ -55,7 +55,7 @@ public class SearchHandler implements StepHandler {
         int offset = ctx.getSearchOffset();
 
         String date = ctx.getDate();
-        List<String> searchArrays = ctx.getSearchArrays();
+        List<String> searchArrays = ctx.getDatasetArrays();
         String classifiers = ctx.getClassifiers();
 
         PatentSearchRequest searchRequest = PatentService.createRequest(

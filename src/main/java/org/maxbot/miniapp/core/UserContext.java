@@ -1,5 +1,6 @@
 package org.maxbot.miniapp.core;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -14,13 +15,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Builder
 public class UserContext {
     private int userId;
     private String chatId;
     private String selectedBase;
     private String date;
-    private String searchArrayName;
-    private List<String> searchArrays;
+    private String datasetName;
+    private List<String> datasetArrays;
     private String classifiers;
     private BotStates state;
     private BotEvents botEvent;

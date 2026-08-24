@@ -123,8 +123,8 @@ public class MaxMapper {
                 }
 
                 freshCtx.setSelectedBase(null);
-                freshCtx.setSearchArrays(null);
-                freshCtx.setSearchArrayName(null);
+                freshCtx.setDatasetArrays(null);
+                freshCtx.setDatasetName(null);
                 freshCtx.setHits(null);
                 freshCtx.setDate(null);
                 freshCtx.setClassifiers(null);
@@ -154,8 +154,8 @@ public class MaxMapper {
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
-            freshContext.setSearchArrayName(info.description);
-            freshContext.setSearchArrays(arrays);
+            freshContext.setDatasetName(info.description);
+            freshContext.setDatasetArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
         }
 
