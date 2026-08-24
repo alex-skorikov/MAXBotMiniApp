@@ -47,15 +47,25 @@ public class MaxMapper {
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
     );
 
-    public BotEvent toEvent(UpdateDto upd, int chatId) {
+    public BotEvent toEvent(UpdateDto upd, int chatId, int userId) {
         if (upd == null || upd.getUpdateType() == null) return null;
 
-        UserContext userContext = contextRepository.load(String.valueOf(chatId));
-        BotEvent event = initBasicEvent(upd, chatId);
+        // Инициализируем событие, жестко прописывая правильные ID
+        BotEvent event = new BotEvent();
+        event.setUserId(String.valueOf(userId));
+        event.setChatId(String.valueOf(chatId));
+        event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
+
+        UserContext userContext = contextRepository.load(String.valueOf(userId));
+        if (userContext == null) {
+            userContext = new UserContext();
+            userContext.setUserId(userId);
+        }
+        userContext.setChatId(String.valueOf(chatId));
 
         switch (upd.getUpdateType()) {
             case "bot_started" -> handleBotStarted(event);
-            case "bot_stopped" -> handleBotStopped(chatId);
+            case "bot_stopped" -> handleBotStopped(userId);
             case "message_callback" -> handleMessageCallback(upd, event, userContext);
             case "message_created" -> handleMessageCreated(upd, event, userContext);
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
@@ -65,27 +75,13 @@ public class MaxMapper {
         return event;
     }
 
-    private BotEvent initBasicEvent(UpdateDto upd, int chatId) {
-        BotEvent event = new BotEvent();
-        int validUserId = upd.getUserId() != 0 ? upd.getUserId() :
-                Optional.ofNullable(upd.getCallback())
-                        .map(CallbackDto::getUser)
-                        .map(org.maxbot.miniapp.dto.bot.SenderDto::getUserId)
-                        .orElse(0);
-
-        event.setUserId(String.valueOf(validUserId));
-        event.setChatId(String.valueOf(chatId));
-        event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
-        return event;
-    }
-
     private void handleBotStarted(BotEvent event) {
         event.setType(BotEvents.USER_OPEN_CHAT);
         event.setPayloadDescription("Старт бота");
     }
 
-    private void handleBotStopped(int chatId) {
-        contextRepository.delete(String.valueOf(chatId));
+    private void handleBotStopped(int userId) {
+        contextRepository.delete(String.valueOf(userId));
     }
 
     private void handleMessageCallback(UpdateDto upd, BotEvent event, UserContext userContext) {
@@ -121,7 +117,7 @@ public class MaxMapper {
         PayloadInfo info = PAYLOAD_MAPPING.get(payload);
         if (info == null) {
             if ("BACK_TO_START".equals(payload)) {
-                UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getChatId()));
+                UserContext freshCtx = contextRepository.load(String.valueOf(userContext.getUserId()));
                 if (freshCtx == null) {
                     freshCtx = userContext;
                 }
@@ -146,19 +142,18 @@ public class MaxMapper {
             return;
         }
 
-        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getChatId()));
+        UserContext freshContext = contextRepository.load(String.valueOf(userContext.getUserId()));
         if (freshContext == null) {
             freshContext = userContext;
         }
+        log.info("🔄 MaxMapper загружен freshContext для обновления {}", freshContext);
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
-            freshContext.setSelectedBase(info.description());
+            freshContext.setSelectedBase(info.description);
             freshContext.setSearchOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
-
             freshContext.setSearchArrayName(info.description);
             freshContext.setSearchArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
@@ -175,7 +170,13 @@ public class MaxMapper {
         event.setText(text);
 
         BotStates currentState = userContext.getState();
-        if (currentState == null) return;
+
+        if (currentState == null) {
+            log.warn("⚠️ [MAPPER] В UserContext отсутствует текущий стейт. Проверяем ветку по умолчанию.");
+            event.setType(BotEvents.BACK_TO_START);
+            event.setCallbackId(null);
+            return;
+        }
 
         switch (currentState) {
             case FILTER_DATE -> {

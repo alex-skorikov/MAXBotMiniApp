@@ -3,7 +3,7 @@ package org.maxbot.miniapp.service;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.maxbot.miniapp.client.MaxApiClient;
-import org.maxbot.miniapp.client.RospatentClient;
+import org.maxbot.miniapp.client.RosPatentClient;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
@@ -36,7 +36,7 @@ class PatentServiceTest {
     private MaxApiClient maxApiClient;
 
     @Mock
-    private RospatentClient rospatentClient;
+    private RosPatentClient rospatentClient;
 
     @InjectMocks
     private PatentService patentService;

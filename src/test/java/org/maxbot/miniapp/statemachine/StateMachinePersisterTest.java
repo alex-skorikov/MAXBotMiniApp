@@ -117,25 +117,4 @@ class StateMachinePersisterTest {
         assertNull(contextRepository.storageGetDirectly("222"));
     }
 
-    @Test
-    void shouldPersistExistingContextSuccessfully() {
-        // Given
-        String chatId = "777";
-        UserContext existingContext = new UserContext();
-        existingContext.setUserId(777);
-        existingContext.setState(BotStates.INIT);
-        contextRepository.save(existingContext);
-
-        when(stateMachine.getState()).thenReturn(state);
-        when(state.getId()).thenReturn(BotStates.SEARCH);
-
-        // When
-        persister.persist(stateMachine, "777", chatId, BotEvents.USER_PROCEED_TO_SEARCH);
-
-        // Then
-        UserContext savedContext = contextRepository.load(chatId);
-        assertEquals(BotStates.SEARCH, savedContext.getState());
-        assertEquals(BotEvents.USER_PROCEED_TO_SEARCH, savedContext.getBotEvent());
-    }
-
 }

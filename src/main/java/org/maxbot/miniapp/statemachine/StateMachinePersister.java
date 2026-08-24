@@ -25,10 +25,10 @@ public class StateMachinePersister {
         this.contextRepository = contextRepository;
     }
 
-    public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String chatId) {
+    public Mono<Void> restore(StateMachine<BotStates, BotEvents> stateMachine, String userId) {
         return Mono.defer(() -> {
             // 1. Загружаем контекст из Redis
-            UserContext userContext = contextRepository.load(chatId);
+            UserContext userContext = contextRepository.load(userId);
             BotStates savedState = userContext.getState() != null ? userContext.getState() : BotStates.INIT;
 
             // 2. Формируем переменные для StateMachine
@@ -60,9 +60,17 @@ public class StateMachinePersister {
             return;
         }
 
-        UserContext userContext = contextRepository.load(chatId);
+        // 1. ИЗВЛЕКАЕМ АКТУАЛЬНЫЙ КОНТЕКСТ ИЗ ПАМЯТИ СТЕЙТ-МАШИНЫ
+        UserContext userContext = (UserContext) stateMachine.getExtendedState()
+                .getVariables()
+                .get("userContext");
 
-        // Если в Redis контекста ещё нет (самый первый старт), тогда создаем новый
+        // Если вдруг в машине контекста не оказалось (fallback-защита), только тогда берем из БД
+        if (userContext == null) {
+            userContext = contextRepository.load(userId);
+        }
+
+        // Если и в БД нет (первый старт)
         if (userContext == null) {
             userContext = new UserContext();
             try {
@@ -70,18 +78,18 @@ public class StateMachinePersister {
             } catch (NumberFormatException e) {
                 log.warn("Не удалось распарсить userId: {}", userId);
             }
-            userContext.setChatId(chatId);
         }
 
-        // 2. Синхронизируем текущий стейт машины с полем внутри актуального UserContext
+        // 2. Синхронизируем стейт и метаданные
         BotStates currentState = stateMachine.getState().getId();
         userContext.setState(currentState);
         userContext.setBotEvent(botEvent);
         userContext.setChatId(chatId);
 
-        // 3. Сохраняем обновленный контекст обратно в Redis
+        // 3. Сохраняем итоговый объект со всеми мутациями обратно в Redis
         contextRepository.save(userContext);
-        log.info("💾 Стейт [{}] успешно синхронизирован и сохранен в Redis для чата {}", currentState, chatId);
+        log.info("💾 Стейт [{}] и контекст пользователя успешно сохранены в Redis для чата {}", currentState, chatId);
     }
+
 
 }

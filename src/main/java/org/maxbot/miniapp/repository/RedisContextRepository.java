@@ -16,11 +16,11 @@ public class RedisContextRepository implements ContextRepository {
     }
 
     @Override
-    public UserContext load(String chatId) {
-        UserContext ctx = redis.opsForValue().get(chatId);
+    public UserContext load(String userId) {
+        UserContext ctx = redis.opsForValue().get(userId);
         if (ctx == null) {
             ctx = new UserContext();
-            ctx.setUserId(Integer.parseInt(chatId));
+            ctx.setUserId(Integer.parseInt(userId));
         }
         return ctx;
     }
@@ -31,8 +31,8 @@ public class RedisContextRepository implements ContextRepository {
     }
 
     @Override
-    public void delete(String chatId) {
-        redis.delete(chatId);
+    public void delete(String userId) {
+        redis.delete(userId);
     }
 }
 

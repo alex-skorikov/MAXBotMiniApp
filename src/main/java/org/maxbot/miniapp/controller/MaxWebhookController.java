@@ -32,36 +32,65 @@ public class MaxWebhookController {
     }
 
     @PostMapping("/webhook")
-    public Mono<Void> webhook(@RequestBody Mono<UpdateDto> updateDto) {
-        return updateDto
-                .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
-                .flatMap(upd -> {
-                    // 1. БЕЗОПАСНО извлекаем chatId без риска получить NullPointerException
-                    int chatId = upd.getChatId();
+    public Mono<Void> webhook(@RequestBody UpdateDto upd) {
+        if (upd == null) {
+            return Mono.empty();
+        }
 
-                    if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
-                        chatId = upd.getMessage().getRecipient().getChatId();
-                    }
+        log.info(">>> Incoming webhook: {}", upd);
 
-                    // Защита: если chatId не определен, не пускаем обработку дальше
-                    if (chatId == 0) {
-                        log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
+        // 1. Вычисляем гарантированно правильный chatId
+        int resolvedChatId = upd.getChatId();
+        if (resolvedChatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+            resolvedChatId = upd.getMessage().getRecipient().getChatId();
+        }
+        if (resolvedChatId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+            resolvedChatId = upd.getUser().getUserId();
+        }
+
+        if (resolvedChatId == 0) {
+            log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
+            return Mono.empty();
+        }
+
+        // 2. Вычисляем гарантированно правильный userId человека
+        int resolvedUserId = upd.getUserId();
+
+        if (resolvedUserId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
+            resolvedUserId = upd.getCallback().getUser().getUserId();
+        }
+        if (resolvedUserId == 0 && upd.getMessage() != null
+                && upd.getMessage().getSender() != null
+                && upd.getMessage().getSender().getUserId() != 0) {
+            resolvedUserId = upd.getMessage().getSender().getUserId(); // Теперь здесь ЖЕЛЕЗНО запишется 329529068
+        }
+        if (resolvedUserId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+            resolvedUserId = upd.getUser().getUserId();
+        }
+        if (resolvedUserId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+            resolvedUserId = upd.getMessage().getRecipient().getUserId();
+        }
+        if (resolvedUserId == 0) {
+            log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
+            return Mono.empty();
+        }
+
+        // Фиксируем ID как константы для изоляции в реактивном потоке
+        final int finalChatId = resolvedChatId;
+        final int finalUserId = resolvedUserId;
+
+        return Mono.defer(() -> {
+                    // Передаем строго вычисленный finalUserId
+                    BotEvent event = maxMapper.toEvent(upd, finalChatId, finalUserId);
+
+                    if (event == null || event.getType() == null) {
                         return Mono.empty();
                     }
 
-                    // 2. Маппим DTO в событие для стейт-машины
-                    BotEvent event = maxMapper.toEvent(upd, chatId);
-                    if (event == null) {
-                        return Mono.empty();
-                    }
-
-                    int finalChatId = chatId;
-
-                    // 3. Диспетчеризация и отправка ответа
                     if (event.getCallbackId() == null) {
                         return dispatcher.dispatch(finalChatId, event)
                                 .flatMap(resp -> {
-                                    if (resp == null) return Mono.empty(); // Защита от пустых ответов
+                                    if (resp == null) return Mono.empty();
                                     return maxApiClient.sendMessage(finalChatId, resp);
                                 });
                     } else {
@@ -72,7 +101,7 @@ public class MaxWebhookController {
                                 });
                     }
                 })
-                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука патентов", error))
+                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука", error))
                 .onErrorComplete();
     }
 

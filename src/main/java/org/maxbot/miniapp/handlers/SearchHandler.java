@@ -79,7 +79,33 @@ public class SearchHandler implements StepHandler {
                             .then(Mono.defer(() -> sendPatentCards(chatId, searchResponse.getHits(), offset)))
                             .then(Mono.defer(() -> sendNavigationMenu(chatId, offset, limit, totalFound)));
                 })
-                .doOnError(e -> log.error("Ошибка генерации списка патентов", e))
+                .onErrorResume(e -> {
+                    log.error("❌ [SEARCH HANDLER] Ошибка при поиске патентов", e);
+
+                    // Извлекаем чистое сообщение об ошибке
+                    String reason = e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка платформы";
+
+                    // Формируем красивую карточку ошибки для пользователя
+                    BotResponse errorUi = BotResponse.builder()
+                            .notify(false)
+                            .text("⚠️ *Ошибка обращения к Роспатенту!*\n\n" +
+                                    "Платформа поиска отклонила запрос по причине:\n" +
+                                    "`" + reason + "`\n\n")
+                            .attachments(List.of(BotResponse.Attachment.builder()
+                                    .type("inline_keyboard")
+                                    .payload(BotResponse.InlineKeyboardPayload.builder()
+                                            .buttons(List.of(List.of(
+                                                    BotResponse.Button.builder()
+                                                            .type("callback")
+                                                            .text("◀️ Вернуться к фильтрам")
+                                                            .payload("BACK_TO_START")
+                                                            .build()
+                                            )))
+                                            .build())
+                                    .build()))
+                            .build();
+                    return maxApiClient.sendMessage(chatId, errorUi).then();
+                })
                 .subscribe();
 
         return null;
@@ -205,7 +231,7 @@ public class SearchHandler implements StepHandler {
 
         BotResponse navigationMenu = BotResponse.builder()
                 .notify(false)
-                .text("🎛️ Управление поиском:")
+                .text("🎛️ Управление поиском:                             ")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -23,16 +24,16 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 @Component
-public class RospatentClient {
+public class RosPatentClient {
 
-    private static final Logger log = LoggerFactory.getLogger(RospatentClient.class);
+    private static final Logger log = LoggerFactory.getLogger(RosPatentClient.class);
 
     private final WebClient webClient;
     private final String token;
 
     private final String URL;
 
-    public RospatentClient(WebClient webClient,
+    public RosPatentClient(WebClient webClient,
                            @Value("${rospatent.token}") String token,
                            @Value("${rospatent.url}") String url) {
         this.webClient = webClient;
@@ -45,18 +46,13 @@ public class RospatentClient {
     // -----------------------------
 
     // --- Async ---
-    public Mono<PatentSearchResponse> searchReactiveOld(String queryMode, String query, Integer limit, Integer offset) {
-        Map<String, Object> body = Map.of(queryMode, query, "limit", limit, "offset", offset);
-        return executeReactive(body);
-    }
-
     public Mono<PatentSearchResponse> searchReactive(PatentSearchRequest request) {
         Map<String, Object> body = PatentsUtil.patentRequestToMap(request);
         return executeReactive(body);
     }
 
     private Mono<PatentSearchResponse> executeReactive(Map<String, Object> body) {
-        log.info(">>> REQUEST RospatentClient : {}", body);
+        log.info(">>> REQUEST RosPatentClient : {}", body);
 
         return webClient.post()
                 .uri(URL)
@@ -64,23 +60,43 @@ public class RospatentClient {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .flatMap(errorBody -> {
+                                    log.error("❌ [Роспатент] Ошибка синтаксиса запроса (4xx). Ответ сервера: {}", errorBody);
+                                    return Mono.error(new IllegalArgumentException(errorBody));
+                                })
+                )
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {
                 })
                 .retryWhen(
                         Retry.backoff(1, Duration.ofSeconds(2))
-                                .filter(e -> !(e instanceof TimeoutException))
+                                // Повторяем запрос ТОЛЬКО если это НЕ ошибка 400
+                                .filter(e -> !(e instanceof TimeoutException) && !(e instanceof IllegalArgumentException))
+                                .onRetryExhaustedThrow((spec, signal) -> {
+                                    log.error("🚨 Все попытки запроса к Роспатенту исчерпаны из-за сбоя удаленного сервера.");
+                                    return signal.failure();
+                                })
                 )
                 .timeout(Duration.ofSeconds(30))
                 .onErrorResume(e -> {
-                    log.error("Rospatent API error", e);
-                    return Mono.just(Map.of(
-                            "total", 0,
-                            "available", 0,
-                            "hits", List.of()
-                    ));
+                    Throwable rootCause = e.getCause() != null ? e.getCause() : e;
+                    if (e instanceof IllegalArgumentException || e.getCause() instanceof IllegalArgumentException) {
+                        log.warn("⚠️ Запрос Роспатентом отклонен (Неверные параметры): {}", e.getMessage());
+                        return Mono.error(new RuntimeException("Ошибка параметров поиска: " + rootCause.getMessage()));
+                    } else {
+                        log.error("💥 Системная ошибка при обращении к RosPatent API: {}", e.getMessage());
+                        return Mono.error(new RuntimeException("Сервер Роспатента временно недоступен."));
+                    }
+//                    return Mono.just(Map.of(
+//                            "total", 0,
+//                            "available", 0,
+//                            "hits", List.of()
+//                    )
+//                    );
                 })
                 .map(this::mapResponse)
-                .doOnNext(resp -> log.info(">>> RESPONSE RospatentClient total: {}", resp.getTotal()));
+                .doOnNext(resp -> log.info(">>> RESPONSE RosPatentClient total: {}", resp.getTotal()));
     }
 
     // --- МАППИНГ ОТВЕТА В DTO ---
