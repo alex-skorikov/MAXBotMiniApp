@@ -47,7 +47,6 @@ public class MaxMapper {
             entry("BACK", new PayloadInfo(BotEvents.BACK, "Назад"))
     );
 
-    // Меняем сигнатуру главного метода
     public BotEvent toEvent(UpdateDto upd, int chatId, int userId) {
         if (upd == null || upd.getUpdateType() == null) return null;
 
