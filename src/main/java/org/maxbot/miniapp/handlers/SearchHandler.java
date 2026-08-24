@@ -198,7 +198,7 @@ public class SearchHandler implements StepHandler {
         String dip = "https://max.ru/" + botName + "?startapp";
         navButtons.add(List.of(
                 BotResponse.Button.builder()
-                        .type("link").text("⚙️ Расширенный поиск").url(dip).build(),
+                        .type("link").text("⚙️ Расширенный\nпоиск").url(dip).build(),
                 BotResponse.Button.builder()
                         .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
         ));
