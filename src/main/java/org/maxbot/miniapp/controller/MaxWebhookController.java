@@ -32,57 +32,61 @@ public class MaxWebhookController {
     }
 
     @PostMapping("/webhook")
-    public Mono<Void> webhook(@RequestBody Mono<UpdateDto> updateDto) {
-        return updateDto
-                .doOnNext(upd -> log.info(">>> Incoming webhook: {}", upd))
-                .flatMap(upd -> {
-                    // 1. Гарантированное извлечение chatId с фоллбэками
-                    int chatId = upd.getChatId();
-                    if (chatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
-                        chatId = upd.getMessage().getRecipient().getChatId();
-                    }
-                    if (chatId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
-                        chatId = upd.getUser().getUserId();
-                    }
+    public Mono<Void> webhook(@RequestBody UpdateDto upd) {
+        if (upd == null) {
+            return Mono.empty();
+        }
 
-                    if (chatId == 0) {
-                        log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
+        log.info(">>> Incoming webhook: {}", upd);
+
+        // 1. Вычисляем гарантированно правильный chatId
+        int resolvedChatId = upd.getChatId();
+        if (resolvedChatId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+            resolvedChatId = upd.getMessage().getRecipient().getChatId();
+        }
+        if (resolvedChatId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+            resolvedChatId = upd.getUser().getUserId();
+        }
+
+        if (resolvedChatId == 0) {
+            log.warn("⚠️ Не удалось извлечь chatId для апдейта: {}", upd.getUpdateType());
+            return Mono.empty();
+        }
+
+        // 2. Вычисляем гарантированно правильный userId человека
+        int resolvedUserId = upd.getUserId();
+        if (resolvedUserId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
+            resolvedUserId = upd.getMessage().getRecipient().getUserId();
+        }
+        if (resolvedUserId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
+            resolvedUserId = upd.getCallback().getUser().getUserId();
+        }
+        if (resolvedUserId == 0 && upd.getMessage() != null
+                && upd.getMessage().getSender() != null
+                && upd.getMessage().getSender().getUserId() != 0) {
+            resolvedUserId = upd.getMessage().getSender().getUserId();
+        }
+        if (resolvedUserId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
+            resolvedUserId = upd.getUser().getUserId();
+        }
+
+        if (resolvedUserId == 0) {
+            log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
+            return Mono.empty();
+        }
+
+        // Фиксируем ID как константы для изоляции в реактивном потоке
+        final int finalChatId = resolvedChatId;
+        final int finalUserId = resolvedUserId;
+
+        return Mono.defer(() -> {
+                    // Передаем строго вычисленный finalUserId
+                    BotEvent event = maxMapper.toEvent(upd, finalChatId, finalUserId);
+
+                    if (event == null || event.getType() == null) {
                         return Mono.empty();
                     }
 
-
-                    // 2. Гарантированное извлечение userId с фоллбэками (включая callback)
-                    int userId = upd.getUserId();
-                    if (userId == 0 && upd.getMessage() != null && upd.getMessage().getRecipient() != null) {
-                        userId = upd.getMessage().getRecipient().getUserId();
-                    }
-                    if (userId == 0 && upd.getCallback() != null && upd.getCallback().getUser() != null) {
-                        userId = upd.getCallback().getUser().getUserId();
-                    }
-                    if (userId == 0 && upd.getMessage() != null
-                            && upd.getMessage().getSender() != null
-                            && upd.getMessage().getSender().getUserId() != 0) {
-                        userId = upd.getMessage().getSender().getUserId();
-                    }
-                    if (userId == 0 && upd.getUser() != null && upd.getUser().getUserId() != 0) {
-                        userId = upd.getUser().getUserId();
-                    }
-
-                    if (userId == 0) {
-                        log.warn("⚠️ Не удалось извлечь userId для апдейта: {}", upd.getUpdateType());
-                        return Mono.empty();
-                    }
-
-
-                    // Передаем в маппер ОБОИХ вычисленных ID (после Шага 2)
-                    BotEvent event = maxMapper.toEvent(upd, chatId, userId);
-                    if (event == null) {
-                        return Mono.empty();
-                    }
-
-                    int finalChatId = chatId;
-
-                    // 3. Диспетчеризация
                     if (event.getCallbackId() == null) {
                         return dispatcher.dispatch(finalChatId, event)
                                 .flatMap(resp -> {
@@ -100,6 +104,5 @@ public class MaxWebhookController {
                 .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука", error))
                 .onErrorComplete();
     }
-
 
 }

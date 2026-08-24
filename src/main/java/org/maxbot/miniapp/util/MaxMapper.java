@@ -51,14 +51,18 @@ public class MaxMapper {
     public BotEvent toEvent(UpdateDto upd, int chatId, int userId) {
         if (upd == null || upd.getUpdateType() == null) return null;
 
-        // Контекст всегда грузим по реальному userId
-        UserContext userContext = contextRepository.load(String.valueOf(userId));
-
         // Инициализируем событие, жестко прописывая правильные ID
         BotEvent event = new BotEvent();
         event.setUserId(String.valueOf(userId));
         event.setChatId(String.valueOf(chatId));
         event.setCallbackId(Optional.ofNullable(upd.getCallback()).map(CallbackDto::getCallbackId).orElse(null));
+
+        UserContext userContext = contextRepository.load(String.valueOf(userId));
+        if (userContext == null) {
+            userContext = new UserContext();
+            userContext.setUserId(userId);
+        }
+        userContext.setChatId(String.valueOf(chatId));
 
         switch (upd.getUpdateType()) {
             case "bot_started" -> handleBotStarted(event);
