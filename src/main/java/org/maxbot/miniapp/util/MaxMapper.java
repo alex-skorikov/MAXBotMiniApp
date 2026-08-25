@@ -101,13 +101,13 @@ public class MaxMapper {
         }
 
         if ("SEARCH_NEXT_PAGE".equals(payload) || "SEARCH_PREV_PAGE".equals(payload)) {
-            int currentOffset = userContext.getSearchOffset();
-            int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
+            int currentOffset = userContext.getOffset();
+            int limit = (userContext.getLimit() > 0) ? userContext.getLimit() : 5;
 
             if ("SEARCH_NEXT_PAGE".equals(payload)) {
-                userContext.setSearchOffset(currentOffset + limit);
+                userContext.setOffset(currentOffset + limit);
             } else {
-                userContext.setSearchOffset(Math.max(0, currentOffset - limit));
+                userContext.setOffset(Math.max(0, currentOffset - limit));
             }
             contextRepository.save(userContext);
             event.setType(BotEvents.USER_SEARCH_PATENT);
@@ -129,7 +129,7 @@ public class MaxMapper {
                 freshCtx.setDate(null);
                 freshCtx.setClassifiers(null);
                 freshCtx.setSearchQuery(null);
-                freshCtx.setSearchOffset(0);
+                freshCtx.setOffset(0);
                 contextRepository.save(freshCtx);
 
                 log.info("🔄 Все фильтры поиска успешно сброшены в Redis для чата {}", userContext.getChatId());
@@ -150,7 +150,7 @@ public class MaxMapper {
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
             freshContext.setSelectedBase(info.description);
-            freshContext.setSearchOffset(0);
+            freshContext.setOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());

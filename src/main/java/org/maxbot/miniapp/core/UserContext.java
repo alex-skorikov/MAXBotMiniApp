@@ -29,8 +29,8 @@ public class UserContext {
     private String searchQuery;
     @ToString.Exclude
     private List<PatentHit> hits;
-    private int searchOffset = 0;
-    private int searchLimit = 5;
+    private int offset = 0;
+    private int limit = 5;
 }
 
 
