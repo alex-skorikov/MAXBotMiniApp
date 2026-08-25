@@ -83,15 +83,15 @@ class MaxMapperTest {
         update.setCallback(callback);
 
         UserContext userContext = repository.load("123");
-        userContext.setSearchOffset(10);
-        userContext.setSearchLimit(5);
+        userContext.setOffset(10);
+        userContext.setLimit(5);
         repository.save(userContext);
         BotEvent event = maxMapper.toEvent(update, 123, 123);
         assertNotNull(event);
         assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType());
 
         UserContext updatedCtx = repository.load("123");
-        assertEquals(15, updatedCtx.getSearchOffset());
+        assertEquals(15, updatedCtx.getOffset());
 
     }
 
@@ -116,7 +116,7 @@ class MaxMapperTest {
 
         UserContext updatedCtx = repository.load("123");
         assertNull(updatedCtx.getSelectedBase());
-        assertEquals(0, updatedCtx.getSearchOffset());
+        assertEquals(0, updatedCtx.getOffset());
 
     }
 
@@ -232,7 +232,7 @@ class MaxMapperTest {
 
         initialCtx.setChatId(String.valueOf(chatId)); // Если тип int
 
-        initialCtx.setSearchOffset(50);
+        initialCtx.setOffset(50);
         repository.save(initialCtx);
         BotEvent event = maxMapper.toEvent(update, chatId, 123);
 
@@ -241,7 +241,7 @@ class MaxMapperTest {
 
         UserContext savedCtx = repository.load(String.valueOf(123));
         assertEquals("Патенты", savedCtx.getSelectedBase());
-        assertEquals(0, savedCtx.getSearchOffset());
+        assertEquals(0, savedCtx.getOffset());
     }
 
 

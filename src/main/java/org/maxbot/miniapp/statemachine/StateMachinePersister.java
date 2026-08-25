@@ -90,6 +90,4 @@ public class StateMachinePersister {
         contextRepository.save(userContext);
         log.info("💾 Стейт [{}] и контекст пользователя успешно сохранены в Redis для чата {}", currentState, chatId);
     }
-
-
 }

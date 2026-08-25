@@ -55,8 +55,8 @@ public class WebAppController {
                 // Если контекст в базе не найден, возвращаем пустой объект, чтобы фронт не падал
                 .defaultIfEmpty(UserContext.builder()
                         .chatId(id)
-                        .searchLimit(5)
-                        .searchOffset(0)
+                        .limit(5)
+                        .offset(0)
                         .build());
     }
 
@@ -111,8 +111,8 @@ public class WebAppController {
         if (actualQuery != null && !actualQuery.isBlank()) {
             ctx.setSearchQuery(actualQuery);
         }
-        ctx.setSearchLimit(req.getLimit() > 0 ? req.getLimit() : 5);
-        ctx.setSearchOffset(req.getOffset());
+        ctx.setLimit(req.getLimit() > 0 ? req.getLimit() : 5);
+        ctx.setOffset(req.getOffset());
 
         if (req.getDatasets() != null && !req.getDatasets().isEmpty()) {
             ctx.setDatasetArrays(req.getDatasets());
