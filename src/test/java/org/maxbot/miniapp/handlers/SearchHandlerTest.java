@@ -123,10 +123,10 @@ class SearchHandlerTest {
         UserContext ctx = new UserContext();
         ctx.setChatId("123");
         ctx.setSearchQuery("Нейросети");
-        ctx.setSearchLimit(5);
-        ctx.setSearchOffset(0);
+        ctx.setLimit(5);
+        ctx.setOffset(0);
         ctx.setDate("20260101");
-        ctx.setSearchArrays(List.of("cis"));
+        ctx.setDatasetArrays(List.of("cis"));
         ctx.setClassifiers("F02K9/00");
         return ctx;
     }

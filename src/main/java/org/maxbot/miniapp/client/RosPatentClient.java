@@ -88,12 +88,6 @@ public class RosPatentClient {
                         log.error("💥 Системная ошибка при обращении к RosPatent API: {}", e.getMessage());
                         return Mono.error(new RuntimeException("Сервер Роспатента временно недоступен."));
                     }
-//                    return Mono.just(Map.of(
-//                            "total", 0,
-//                            "available", 0,
-//                            "hits", List.of()
-//                    )
-//                    );
                 })
                 .map(this::mapResponse)
                 .doOnNext(resp -> log.info(">>> RESPONSE RosPatentClient total: {}", resp.getTotal()));

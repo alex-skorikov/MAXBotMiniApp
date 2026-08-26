@@ -51,11 +51,11 @@ public class SearchHandler implements StepHandler {
             return null;
         }
 
-        int limit = (ctx.getSearchLimit() > 0) ? ctx.getSearchLimit() : 5;
-        int offset = ctx.getSearchOffset();
+        int limit = (ctx.getLimit() > 0) ? ctx.getLimit() : 5;
+        int offset = ctx.getOffset();
 
         String date = ctx.getDate();
-        List<String> searchArrays = ctx.getSearchArrays();
+        List<String> searchArrays = ctx.getDatasetArrays();
         String classifiers = ctx.getClassifiers();
 
         PatentSearchRequest searchRequest = PatentService.createRequest(

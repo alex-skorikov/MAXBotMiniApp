@@ -71,7 +71,7 @@ public class MaxMapper {
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
         }
 
-        log.info(">>> MaxMapper обработал событие. Event: {}, UserContext: {}", event, userContext);
+        log.info(">>> MaxMapper обработал событие: \n>>> Event: {}, \n>>> UserContext: {}", event, userContext);
         return event;
     }
 
@@ -101,13 +101,13 @@ public class MaxMapper {
         }
 
         if ("SEARCH_NEXT_PAGE".equals(payload) || "SEARCH_PREV_PAGE".equals(payload)) {
-            int currentOffset = userContext.getSearchOffset();
-            int limit = (userContext.getSearchLimit() > 0) ? userContext.getSearchLimit() : 5;
+            int currentOffset = userContext.getOffset();
+            int limit = (userContext.getLimit() > 0) ? userContext.getLimit() : 5;
 
             if ("SEARCH_NEXT_PAGE".equals(payload)) {
-                userContext.setSearchOffset(currentOffset + limit);
+                userContext.setOffset(currentOffset + limit);
             } else {
-                userContext.setSearchOffset(Math.max(0, currentOffset - limit));
+                userContext.setOffset(Math.max(0, currentOffset - limit));
             }
             contextRepository.save(userContext);
             event.setType(BotEvents.USER_SEARCH_PATENT);
@@ -123,13 +123,13 @@ public class MaxMapper {
                 }
 
                 freshCtx.setSelectedBase(null);
-                freshCtx.setSearchArrays(null);
-                freshCtx.setSearchArrayName(null);
+                freshCtx.setDatasetArrays(null);
+                freshCtx.setDatasetName(null);
                 freshCtx.setHits(null);
                 freshCtx.setDate(null);
                 freshCtx.setClassifiers(null);
                 freshCtx.setSearchQuery(null);
-                freshCtx.setSearchOffset(0);
+                freshCtx.setOffset(0);
                 contextRepository.save(freshCtx);
 
                 log.info("🔄 Все фильтры поиска успешно сброшены в Redis для чата {}", userContext.getChatId());
@@ -150,12 +150,12 @@ public class MaxMapper {
 
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
             freshContext.setSelectedBase(info.description);
-            freshContext.setSearchOffset(0);
+            freshContext.setOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
             List<String> arrays = patentService.getSearchArrayByDescription(info.description());
-            freshContext.setSearchArrayName(info.description);
-            freshContext.setSearchArrays(arrays);
+            freshContext.setDatasetName(info.description);
+            freshContext.setDatasetArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
         }
 
