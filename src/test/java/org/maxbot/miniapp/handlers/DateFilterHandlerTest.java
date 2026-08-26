@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
-import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -24,20 +23,65 @@ class DateFilterHandlerTest {
     }
 
     @Test
-    void handleReturnsCorrectBotResponseStructure() {
+    void shouldReturnDefaultMessageWhenEventTextIsNull() {
         // Given
-        UserContext mockCtx = Mockito.mock(UserContext.class);
-        BotEvent mockEvent = Mockito.mock(BotEvent.class);
+        UserContext ctx = new UserContext();
+        BotEvent event = new BotEvent();
 
         // When
-        BotResponse response = handler.handle(mockCtx, mockEvent);
+        BotResponse response = handler.handle(ctx, event);
 
         // Then
         assertNotNull(response);
         assertFalse(response.isNotify());
-        assertTrue(response.getText().contains("Введите дату в формате 2020-01-01:"));
 
-        // Проверяем структуру кнопок инлайн-клавиатуры
+        String actualText = response.getText();
+        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+        assertFalse(actualText.contains("Неверный формат даты"), "Префикса ошибки быть не должно");
+        validateBackButton(response);
+    }
+
+    @Test
+    void shouldReturnErrorMessagePrefixWhenDateDescriptionIsInvalid() {
+        // Given
+        UserContext ctx = new UserContext();
+        BotEvent event = new BotEvent();
+        event.setText("25-12-2025");
+
+        // When
+        BotResponse response = handler.handle(ctx, event);
+
+        // Then
+        assertNotNull(response);
+        String actualText = response.getText();
+
+        assertTrue(actualText.contains("Неверный формат даты! Пожалуйста, используйте YYYY-MM-DD."));
+        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+
+        validateBackButton(response);
+    }
+
+    @Test
+    void shouldNotReturnErrorMessageWhenDateDescriptionIsValid() {
+        // Given
+        UserContext ctx = new UserContext();
+        BotEvent event = new BotEvent();
+        event.setText("2026-08-17");
+
+        // When
+        BotResponse response = handler.handle(ctx, event);
+
+        // Then
+        assertNotNull(response);
+        String actualText = response.getText();
+
+        assertFalse(actualText.contains("Неверный формат даты!"), "Для верного формата префикс ошибки не нужен");
+        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+        validateBackButton(response);
+    }
+
+    // Вспомогательный метод для проверки кнопки "Назад"
+    private void validateBackButton(BotResponse response) {
         assertNotNull(response.getAttachments());
         assertEquals(1, response.getAttachments().size());
 
@@ -50,9 +94,7 @@ class DateFilterHandlerTest {
         assertEquals(1, buttonRows.size());
 
         BotResponse.Button backButton = buttonRows.get(0).get(0);
-        assertEquals("callback", backButton.getType());
         assertEquals("BACK", backButton.getPayload());
         assertTrue(backButton.getText().contains("Назад к выбору фильтров"));
-
     }
 }

@@ -1,4 +1,4 @@
-package org.maxbot.miniapp.handlers; // Укажите ваш точный пакет для хендлеров
+package org.maxbot.miniapp.handlers;
 
 import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.BotEvent;
