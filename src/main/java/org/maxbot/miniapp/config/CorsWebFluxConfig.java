@@ -21,7 +21,8 @@ public class CorsWebFluxConfig {
                 "https://webapp.max.ru",
                 "https://dev.max.ru",
                 "https://st.max.ru",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://search-platform-max-miniapp.vercel.app"
         ));
 
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
