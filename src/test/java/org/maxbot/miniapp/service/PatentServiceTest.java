@@ -7,6 +7,7 @@ import org.maxbot.miniapp.client.RosPatentClient;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.dto.patent.PatentHit;
+import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
 import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.mockito.ArgumentCaptor;
@@ -154,9 +155,6 @@ class PatentServiceTest {
         when(maxApiClient.sendMessage(eq(chatId), any(BotResponse.class)))
                 .thenReturn(Mono.empty());
 
-        // Симулируем критическую ситуацию: передаем null вместо контекста
-        UserContext userContext = null;
-
         // When & Then
         UserContext emptyContext = new UserContext();
         emptyContext.setHits(List.of());
@@ -166,4 +164,77 @@ class PatentServiceTest {
         verify(maxApiClient, times(1)).sendMessage(eq(chatId), any(BotResponse.class));
     }
 
+    @Test
+    void shouldMapFirstPageAndCalculateHasNextTrue() {
+        // Given
+        PatentSearchRequest request = new PatentSearchRequest();
+        request.setOffset(0);
+        request.setLimit(10); // pageSize = 10
+
+        PatentSearchResponse raw = new PatentSearchResponse();
+        raw.setHits(List.of(new PatentHit(), new PatentHit()));
+        raw.setTotal(25); // Всего 25 элементов, значит 10 + 0 < 25 -> hasNext должен быть true
+
+        // When
+        PatentSearchPagedResponse response = PatentService.getPatentSearchPagedResponse(request, raw);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(raw.getHits(), response.getItems());
+
+        assertNotNull(response.getPagination());
+        assertEquals(1, response.getPagination().getPage()); // (0 / 10) + 1 = 1
+        assertEquals(10, response.getPagination().getPageSize());
+        assertEquals(25, response.getPagination().getTotal());
+        assertTrue(response.getPagination().isHasNext());
+    }
+
+    @Test
+    void shouldMapSecondPageCorrectly() {
+        // Given
+        PatentSearchRequest request = new PatentSearchRequest();
+        request.setOffset(10);
+        request.setLimit(10);
+
+        PatentSearchResponse raw = new PatentSearchResponse();
+        raw.setHits(List.of(new PatentHit(), new PatentHit()));
+        raw.setTotal(25);
+
+        // When
+        PatentSearchPagedResponse response = PatentService.getPatentSearchPagedResponse(request, raw);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(2, response.getPagination().getPage());
+        assertTrue(response.getPagination().isHasNext());
+    }
+
+    @Test
+    void shouldCalculateHasNextFalseOnLastPage() {
+        // Given
+        PatentSearchRequest request = new PatentSearchRequest();
+        request.setOffset(20);
+        request.setLimit(10);
+
+        PatentSearchResponse raw = new PatentSearchResponse();
+        raw.setHits(List.of(new PatentHit(), new PatentHit()));
+        raw.setTotal(25);
+
+        // When
+        PatentSearchPagedResponse response = PatentService.getPatentSearchPagedResponse(request, raw);
+
+        // Then
+        assertNotNull(response);
+        assertEquals(3, response.getPagination().getPage());
+        assertFalse(response.getPagination().isHasNext());
+    }
+
+    @Test
+    void shouldReturnDataSetArrayByName() {
+        PatentService service = new PatentService(maxApiClient, rospatentClient);
+        assertEquals(List.of("ru_till_1994", "ru_since_1994", "cis", "dsgn_ru"), service.getDataSetArrayByDescription("Россия и страны СНГ"));
+        assertEquals(List.of("ap", "cn", "ch", "au", "gb", "ki", "ca", "at", "jp", "ep", "de", "fr", "ap", "us"), service.getDataSetArrayByDescription("Минимум РСТ"));
+        assertEquals(List.of("dsgn_kr", "dsgn_cn", "dsgn_jp"), service.getDataSetArrayByDescription("Промышленные образцы"));
+        assertEquals(List.of("others"), service.getDataSetArrayByDescription("Страны с малым ПФ"));
+    }
 }

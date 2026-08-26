@@ -86,37 +86,60 @@ class RosPatentClientTest {
         assertTrue(requestBody.contains("\"qn\":\"Искусственный интеллект\""));
         assertTrue(requestBody.contains("\"limit\":10"));
         assertTrue(requestBody.contains("\"offset\":0"));
-
     }
 
-/*    @Test
-    void searchReactiveOnErrorResumeFallback() {
+    @Test
+    void searchReactiveError4xxShouldNotRetryAndThrowException() {
+        // Given: Эмулируем ошибку 400
+        String errorJson = "{\"error\": \"Неверный формат запроса\"}";
         mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(500)
-                .setHeader("Connection", "close")
-                .setBody(""));
-
-        mockWebServer.enqueue(new MockResponse()
-                .setResponseCode(500)
-                .setHeader("Connection", "close")
-                .setBody(""));
+                .setResponseCode(400)
+                .setHeader("Content-Type", "application/json")
+                .setBody(errorJson));
 
         PatentSearchRequest request = PatentSearchRequest.builder()
                 .queryMode("qn")
-                .query("error query")
-                .limit(5)
+                .query("Невалидный запрос")
+                .limit(10)
                 .offset(0)
                 .build();
 
+        // When
         Mono<PatentSearchResponse> result = rospatentClient.searchReactive(request);
 
+        // Then
         StepVerifier.create(result)
-                .assertNext(response -> {
-                    assertNotNull(response);
-                    assertEquals(0, response.getTotal());
-                    assertEquals(0, response.getAvailable());
-                    assertTrue(response.getHits().isEmpty());
-                })
-                .verifyComplete();
-    }*/
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().contains("Ошибка параметров поиска:"))
+                .verify();
+
+        assertEquals(1, mockWebServer.getRequestCount());
+    }
+
+    @Test
+    void searchReactiveError5xxShouldRetryAndThenFail() {
+        // Given: Возвращаем 500 ошибку дважды
+        mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+        mockWebServer.enqueue(new MockResponse().setResponseCode(500));
+
+        PatentSearchRequest request = PatentSearchRequest.builder()
+                .queryMode("qn")
+                .query("Искусственный интеллект")
+                .limit(10)
+                .offset(0)
+                .build();
+
+        // When
+        Mono<PatentSearchResponse> result = rospatentClient.searchReactive(request);
+
+        // Then
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException
+                        && throwable.getMessage().contains("Сервер Роспатента временно недоступен."))
+                .verify();
+
+        // Проверяем, что сработал retry (всего выполнено 2 запроса)
+        assertEquals(2, mockWebServer.getRequestCount());
+    }
+
 }

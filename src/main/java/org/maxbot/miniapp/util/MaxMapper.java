@@ -153,7 +153,7 @@ public class MaxMapper {
             freshContext.setOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-            List<String> arrays = patentService.getSearchArrayByDescription(info.description());
+            List<String> arrays = patentService.getDataSetArrayByDescription(info.description());
             freshContext.setDatasetName(info.description);
             freshContext.setDatasetArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив
