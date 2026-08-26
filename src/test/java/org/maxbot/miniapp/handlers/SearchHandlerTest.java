@@ -43,10 +43,10 @@ class SearchHandlerTest {
     private ContextRepository contextRepository;
 
     private SearchHandler handler;
-    private final String botName = "test_bot";
 
     @BeforeEach
     void setUp() {
+        String botName = "test_bot";
         handler = new SearchHandler(botName, patentService, maxApiClient, contextRepository);
     }
 
