@@ -139,7 +139,7 @@ class StateMachineDispatcherTest {
 
         Mockito.lenient().when(persister.restore(any(), any())).thenReturn(Mono.empty());
 
-        when(stateMachine.startReactively()).thenReturn(Mono.empty());
+//        when(stateMachine.startReactively()).thenReturn(Mono.empty());
         when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
         // Симулируем отклонение ивента стейт-машиной (DENIED)
