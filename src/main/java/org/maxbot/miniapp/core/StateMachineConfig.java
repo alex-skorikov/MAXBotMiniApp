@@ -2,7 +2,6 @@ package org.maxbot.miniapp.core;
 
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
-import org.maxbot.miniapp.util.StepAction;
 import org.maxbot.miniapp.util.ValidDateGuard;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -32,7 +31,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         states
                 .withStates()
                 .initial(BotStates.INIT)
-                .state(BotStates.INIT, stepAction)
+//                .state(BotStates.INIT)
                 .state(BotStates.SELECT_BASE)
                 .state(BotStates.BASE_SELECTED)
                 .state(BotStates.FILTER_DATE)
@@ -53,6 +52,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.INIT)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.USER_OPEN_CHAT)
+                .action(stepAction)
                 .and()
 
                 // ВЫБОР БАЗЫ -> ГЛАВНОЕ МЕНЮ ФИЛЬТРОВ
