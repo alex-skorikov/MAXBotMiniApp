@@ -20,30 +20,6 @@ public class StepAction implements Action<BotStates, BotEvents> {
 
     private final HandlerRegistry handlerRegistry;
 
-/*    @Override
-    public void execute(StateContext<BotStates, BotEvents> context) {
-
-        if (context.getTarget() == null) {
-            return;
-        }
-        BotStates targetState = context.getTarget().getId();
-
-        BotEvent event = (BotEvent) context.getMessageHeader("event");
-        UserContext userContext = (UserContext) context.getMessageHeader("userContext");
-
-        StepHandler handler = handlerRegistry.getHandler(targetState);
-
-        if (handler == null) {
-            return;
-        }
-
-        BotResponse response = handler.handle(userContext, event);
-
-        if (response != null) {
-            context.getExtendedState().getVariables().put("response", response);
-        }
-    }*/
-
     @Override
     public void execute(StateContext<BotStates, BotEvents> context) {
         // 1. ОПРЕДЕЛЕНИЕ ЦЕЛЕВОГО СТЕЙТА (куда переходит машина)
