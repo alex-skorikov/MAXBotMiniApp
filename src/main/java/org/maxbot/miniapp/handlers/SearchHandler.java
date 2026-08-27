@@ -84,13 +84,14 @@ public class SearchHandler implements StepHandler {
 
                     // Извлекаем чистое сообщение об ошибке
                     String reason = e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка платформы";
+                    String errorText = "⚠️ *Ошибка обращения к Роспатенту!*\n\n" +
+                            "Платформа поиска отклонила запрос по причине:\n" +
+                            reason;
 
                     // Формируем красивую карточку ошибки для пользователя
                     BotResponse errorUi = BotResponse.builder()
                             .notify(false)
-                            .text("⚠️ *Ошибка обращения к Роспатенту!*\n\n" +
-                                    "Платформа поиска отклонила запрос по причине:\n" +
-                                    "`" + reason + "`\n\n")
+                            .text(errorText)
                             .attachments(List.of(BotResponse.Attachment.builder()
                                     .type("inline_keyboard")
                                     .payload(BotResponse.InlineKeyboardPayload.builder()
