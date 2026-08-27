@@ -183,6 +183,7 @@ class SearchHandlerTest {
         assertTrue(errorResponse.getText().contains("Неизвестная ошибка платформы"),
                 "При null message должен подставиться дефолтный текст ошибки. Было: " + errorResponse.getText());
     }
+
     @Test
     void shouldIncludePrevPageButtonWhenOffsetIsGreaterThanZero() {
         // Given: offset = 5, limit = 5, total = 5 (5 > 0 -> сработает только кнопка Назад)
@@ -192,19 +193,24 @@ class SearchHandlerTest {
         BotEvent event = new BotEvent();
 
         PatentSearchResponse searchResponse = new PatentSearchResponse();
-        searchResponse.setHits(List.of(new PatentHit()));
+        searchResponse.setHits(List.of(new PatentHit())); // 1 хит
         searchResponse.setTotal(5);
 
         when(patentService.searchPatents(any(PatentSearchRequest.class))).thenReturn(Mono.just(searchResponse));
-        when(maxApiClient.sendMessage(eq(123), any(BotResponse.class))).thenReturn(Mono.empty());
+
+        // ИСПРАВЛЕНИЕ: Возвращаем Mono.just(), чтобы реактивная цепочка .then() в хендлере гарантированно дошла до конца
+        when(maxApiClient.sendMessage(eq(123), any(BotResponse.class)))
+                .thenReturn(Mono.just(BotResponse.builder().build()).then());
 
         // When
         handler.handle(ctx, event);
 
         // Then
         ArgumentCaptor<BotResponse> responseCaptor = ArgumentCaptor.forClass(BotResponse.class);
-        verify(maxApiClient, timeout(1000).atLeastOnce()).sendMessage(eq(123), responseCaptor.capture());
+        // Ждем, пока улетят минимум 3 сообщения (Хедер + 1 Карточка патента + Меню навигации)
+        verify(maxApiClient, timeout(1000).atLeast(3)).sendMessage(eq(123), responseCaptor.capture());
 
+        // Находим меню навигации среди ВСЕХ перехваченных сообщений
         BotResponse menuResponse = responseCaptor.getAllValues().stream()
                 .filter(r -> r.getAttachments() != null && !r.getAttachments().isEmpty())
                 .filter(r -> r.getAttachments().get(0).getPayload() != null)
@@ -233,18 +239,22 @@ class SearchHandlerTest {
         BotEvent event = new BotEvent();
 
         PatentSearchResponse searchResponse = new PatentSearchResponse();
-        searchResponse.setHits(List.of(new PatentHit()));
+        searchResponse.setHits(List.of(new PatentHit())); // 1 хит
         searchResponse.setTotal(10);
 
         when(patentService.searchPatents(any(PatentSearchRequest.class))).thenReturn(Mono.just(searchResponse));
-        when(maxApiClient.sendMessage(eq(123), any(BotResponse.class))).thenReturn(Mono.empty());
+
+        // ИСПРАВЛЕНИЕ: Возвращаем сигнальный поток для продвижения цепочки .then()
+        when(maxApiClient.sendMessage(eq(123), any(BotResponse.class)))
+                .thenReturn(Mono.just(BotResponse.builder().build()).then());
 
         // When
         handler.handle(ctx, event);
 
         // Then
         ArgumentCaptor<BotResponse> responseCaptor = ArgumentCaptor.forClass(BotResponse.class);
-        verify(maxApiClient, timeout(1000).atLeastOnce()).sendMessage(eq(123), responseCaptor.capture());
+        // Ждем выполнения всех асинхронных шагов отправки
+        verify(maxApiClient, timeout(1000).atLeast(3)).sendMessage(eq(123), responseCaptor.capture());
 
         BotResponse menuResponse = responseCaptor.getAllValues().stream()
                 .filter(r -> r.getAttachments() != null && !r.getAttachments().isEmpty())
@@ -264,7 +274,6 @@ class SearchHandlerTest {
 
         assertTrue(hasNextButton, "В навигационном меню должна присутствовать кнопка SEARCH_NEXT_PAGE");
     }
-
 
 
     private UserContext createBaseContext() {
