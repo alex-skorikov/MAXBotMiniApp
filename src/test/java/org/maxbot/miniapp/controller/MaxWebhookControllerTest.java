@@ -10,7 +10,7 @@ import org.maxbot.miniapp.dto.bot.RecipientDto;
 import org.maxbot.miniapp.dto.bot.SenderDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
 import org.maxbot.miniapp.statemachine.StateMachineDispatcher;
-import org.maxbot.miniapp.util.MaxMapper;
+import org.maxbot.miniapp.core.MaxMapper;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;

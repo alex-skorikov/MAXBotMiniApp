@@ -4,7 +4,7 @@ import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.statemachine.StateMachineDispatcher;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
-import org.maxbot.miniapp.util.MaxMapper;
+import org.maxbot.miniapp.core.MaxMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

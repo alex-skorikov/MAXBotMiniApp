@@ -3,6 +3,7 @@ package org.maxbot.miniapp.util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.MaxMapper;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BodyDto;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
@@ -145,8 +146,8 @@ class MaxMapperTest {
 
         // Then
         assertNotNull(event);
-        assertEquals(BotEvents.USER_VIEW_DOC_DETAILS, event.getType());
-        assertEquals("Просмотр документа 9999", event.getPayloadDescription());
+        assertNull(event.getType());
+        assertEquals("Изолированный просмотр документа 9999", event.getPayloadDescription());
 
         // Верифицируем вызов сервиса с chatId = 123
         Mockito.verify(patentService, Mockito.times(1))

@@ -46,11 +46,11 @@ public class StepAction implements Action<BotStates, BotEvents> {
 
     @Override
     public void execute(StateContext<BotStates, BotEvents> context) {
-        // 1. НАДЕЖНОЕ ОПРЕДЕЛЕНИЕ ЦЕЛЕВОГО СТЕЙТА (куда переходит машина)
+        // 1. ОПРЕДЕЛЕНИЕ ЦЕЛЕВОГО СТЕЙТА (куда переходит машина)
         BotStates targetState = null;
 
         if (context.getTransition() != null && context.getTransition().getTarget() != null) {
-            // Если вызвано как Transition Action (наш случай)
+            // Если вызвано как Transition Action
             targetState = context.getTransition().getTarget().getId();
         } else if (context.getTarget() != null) {
             // Фаллбэк для State Action
