@@ -86,9 +86,13 @@ class UserContextTest {
                 .userId(777)
                 .chatId("888")
                 .build();
+        String string = ctx.toString();
 
         assertNotNull(ctx);
         assertEquals(777, ctx.getUserId());
         assertEquals("888", ctx.getChatId());
+
+        assertTrue(string.contains("777"));
+        assertTrue(string.contains("888"));
     }
 }

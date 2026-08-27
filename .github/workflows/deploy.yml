@@ -64,8 +64,8 @@ jobs:
         with:
           commit_message: "chore: auto-update project status badges [skip ci]"
           file_pattern: "jacoco-coverage-badge.svg checkstyle-badge.svg"
-          branch: ${{ github.ref_name }} # <-- ДОБАВЛЕНО: явное указание текущей ветки
-          push_options: '--force'       # <-- ИСПРАВЛЕНО: форсируем пуш бейджей без конфликтов
+          branch: ${{ github.ref_name }}
+          push_options: '--force'
 
       # ========================================================================
       # ДЕПЛОЙ НА СЕРВЕР (Выполняется только если этапы выше прошли успешно)

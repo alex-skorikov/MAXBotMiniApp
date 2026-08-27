@@ -22,7 +22,7 @@ public class BaseSelectHandler implements StepHandler {
                 "Поисковые массивы", "SEARCH_ARRAYS",
                 "Классификаторы", "CLASSIFIERS"));
 
-        log.info(">>> BaseSelectHandler обрабатываем... Event: {}, UserContext: {}", event, ctx);
+//        log.info(">>> BaseSelectHandler обрабатываем... Event: {}, UserContext: {}", event, ctx);
 
         // --- Формируем ответ
         String selectBase = ctx.getSelectedBase();
