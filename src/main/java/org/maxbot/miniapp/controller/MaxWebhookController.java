@@ -37,7 +37,7 @@ public class MaxWebhookController {
             return Mono.empty();
         }
 
-        log.info(">>> Incoming webhook: {}", upd);
+        log.info("\uD83D\uDCE1 >>> INCOMING WEBHOOK: {}", upd);
 
         // 1. Вычисляем гарантированно правильный chatId
         int resolvedChatId = upd.getChatId();

@@ -133,7 +133,8 @@ public class WebAppController {
 
         if (resp != null && resp.getHits() != null && !resp.getHits().isEmpty()) {
             ctx.setHits(resp.getHits());
-            log.info("💾 [SYNC] В контекст пользователя {} кэшировано документов: {}", ctx.getUserId(), resp.getHits().size());
+            log.info("💾 [SYNC] В контекст пользователя {} кэшировано документов: {}", ctx.getUserId(), resp.getHits()
+                    .size());
         } else {
             ctx.setHits(List.of()); // Очищаем старый кэш hits, если Роспатент вернул 0 результатов
             log.info("🗑️ [SYNC] По запросу '{}' документов не найдено. Кэш hits пользователя {} очищен.", actualQuery, ctx.getUserId());
@@ -205,7 +206,8 @@ public class WebAppController {
 
                                 } catch (Exception e) {
                                     log.error("❌ Ошибка при генерации файла экспорта для документа {}", docId, e);
-                                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<Resource>build());
+                                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                            .<Resource>build());
                                 }
                             })
                             .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
