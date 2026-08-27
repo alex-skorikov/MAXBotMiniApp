@@ -132,14 +132,13 @@ class StateMachineDispatcherTest {
 
         Map<Object, Object> variables = new HashMap<>();
         variables.put("userContext", new UserContext());
-
+        when(stateMachine.startReactively()).thenReturn(Mono.empty());
         when(factory.getStateMachine("12345")).thenReturn(stateMachine);
         when(stateMachine.getExtendedState()).thenReturn(extendedState);
         when(extendedState.getVariables()).thenReturn(variables);
 
         Mockito.lenient().when(persister.restore(any(), any())).thenReturn(Mono.empty());
 
-        when(stateMachine.startReactively()).thenReturn(Mono.empty());
         when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
         // Симулируем отклонение ивента стейт-машиной (DENIED)
