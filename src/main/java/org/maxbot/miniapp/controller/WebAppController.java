@@ -69,7 +69,7 @@ public class WebAppController {
                     UserContext userContext = contextRepository.load(request.getUserId());
                     if (userContext == null) {
                         userContext = new UserContext();
-                        userContext.setUserId(Integer.parseInt(request.getUserId()));
+                        userContext.setUserId(safeParseUserId(request.getUserId()));
                     }
                     userContext.setChatId(request.getChatId());
                     contextRepository.save(userContext);
@@ -90,7 +90,7 @@ public class WebAppController {
                                 UserContext ctx = contextRepository.load(userId);
                                 if (ctx == null) {
                                     ctx = new UserContext();
-                                    ctx.setUserId(Integer.parseInt(userId));
+                                    ctx.setUserId(safeParseUserId(userId));
                                 }
 
                                 // Вызываем вынесенный метод синхронизации
@@ -214,4 +214,18 @@ public class WebAppController {
                 })
                 .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
+    private int safeParseUserId(String userIdStr) {
+        if (userIdStr == null || "undefined".equalsIgnoreCase(userIdStr.trim()) || userIdStr.isBlank()) {
+            log.warn("⚠️ [WEB APP] Получен некорректный userId: '{}'. Используется дефолтный ID 0.", userIdStr);
+            return 0;
+        }
+        try {
+            return Integer.parseInt(userIdStr.trim());
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId из строки '{}': {}", userIdStr, e.getMessage());
+            return 0;
+        }
+    }
+
 }

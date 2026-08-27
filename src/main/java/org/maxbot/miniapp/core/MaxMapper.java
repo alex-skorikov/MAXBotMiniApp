@@ -69,7 +69,7 @@ public class MaxMapper {
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
         }
 
-        log.info("🔄 >>> MaxMapper обработал событие: \n⚡ >>> Event: {}, \uD83D\uDC64 >>> UserContext: {}", event, userContext);
+        log.info("🔄 >>> MaxMapper обработал событие: \n⚡ >>> Event: {},\n\uD83D\uDC64 >>> UserContext: {}", event, userContext);
         return event;
     }
 
