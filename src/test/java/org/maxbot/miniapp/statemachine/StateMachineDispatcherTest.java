@@ -7,6 +7,7 @@ import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.statemachine.ExtendedState;
 import org.springframework.statemachine.StateMachine;
@@ -121,7 +122,6 @@ class StateMachineDispatcherTest {
         verify(persister, times(1)).persist(stateMachine, "12345", "999", BotEvents.USER_OPEN_CHAT);
     }
 
-
     @Test
     void shouldReturnEmptyMonoWhenTransitionIsDenied() {
         // Given
@@ -137,6 +137,8 @@ class StateMachineDispatcherTest {
         when(stateMachine.getExtendedState()).thenReturn(extendedState);
         when(extendedState.getVariables()).thenReturn(variables);
 
+        Mockito.lenient().when(persister.restore(any(), any())).thenReturn(Mono.empty());
+
         when(stateMachine.startReactively()).thenReturn(Mono.empty());
         when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
@@ -151,7 +153,8 @@ class StateMachineDispatcherTest {
         StepVerifier.create(result)
                 .verifyComplete(); // Результат не ACCEPTED -> возвращается Mono.empty()
 
-        // Персист все равно должен вызваться по doOnSuccess (так как сам стрим завершился без ошибок)
+        // Персист все равно должен вызваться по doOnSuccess
         verify(persister, times(1)).persist(eq(stateMachine), any(), any(), any());
     }
+
 }

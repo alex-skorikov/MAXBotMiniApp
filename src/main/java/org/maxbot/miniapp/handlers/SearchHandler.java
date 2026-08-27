@@ -80,7 +80,7 @@ public class SearchHandler implements StepHandler {
                             .then(Mono.defer(() -> sendNavigationMenu(chatId, offset, limit, totalFound)));
                 })
                 .onErrorResume(e -> {
-                    log.error("❌ [SEARCH HANDLER] Ошибка при поиске патентов", e);
+                    log.error("❌ [SEARCH HANDLER] Ошибка при поиске патентов: {} ", e.getMessage());
 
                     // Извлекаем чистое сообщение об ошибке
                     String reason = e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка платформы";

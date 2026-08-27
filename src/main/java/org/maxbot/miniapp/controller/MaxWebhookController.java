@@ -101,7 +101,7 @@ public class MaxWebhookController {
                                 });
                     }
                 })
-                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука", error))
+                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука: {}", error.getMessage()))
                 .onErrorComplete();
     }
 

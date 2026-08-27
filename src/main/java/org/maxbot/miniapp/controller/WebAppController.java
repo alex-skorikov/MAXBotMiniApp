@@ -205,7 +205,7 @@ public class WebAppController {
                                             .body((Resource) resource));
 
                                 } catch (Exception e) {
-                                    log.error("❌ Ошибка при генерации файла экспорта для документа {}", docId, e);
+                                    log.error("❌ Ошибка при генерации файла экспорта для документа {}: {}", docId, e.getMessage());
                                     return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                             .<Resource>build());
                                 }
