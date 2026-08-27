@@ -69,7 +69,7 @@ public class MaxMapper {
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
         }
 
-        log.info(">>> MaxMapper обработал событие: \n>>> Event: {}, \n>>> UserContext: {}", event, userContext);
+        log.info("🔄 >>> MaxMapper обработал событие: \n⚡ >>> Event: {}, \uD83D\uDC64 >>> UserContext: {}", event, userContext);
         return event;
     }
 
@@ -91,9 +91,6 @@ public class MaxMapper {
         // Динамические обработчики (пагинация и просмотр)
         if (payload != null && payload.startsWith("DOC_VIEW_")) {
             String docId = payload.substring("DOC_VIEW_".length());
-//            event.setType(BotEvents.USER_VIEW_DOC_DETAILS);
-//            event.setPayloadDescription("Просмотр документа " + docId);
-
             patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId, userContext).subscribe();
             event.setType(null);
             event.setPayloadDescription("Изолированный просмотр документа " + docId);
@@ -146,8 +143,6 @@ public class MaxMapper {
         if (freshContext == null) {
             freshContext = userContext;
         }
-        log.info("🔄 MaxMapper загружен freshContext для обновления {}", freshContext);
-
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
             freshContext.setSelectedBase(info.description);
             freshContext.setOffset(0);

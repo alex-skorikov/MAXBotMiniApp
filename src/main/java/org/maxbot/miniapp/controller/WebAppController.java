@@ -212,7 +212,6 @@ public class WebAppController {
                             })
                             .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
                 })
-                // ИСПРАВЛЕНО: Явное указание типа <Resource>
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 }
