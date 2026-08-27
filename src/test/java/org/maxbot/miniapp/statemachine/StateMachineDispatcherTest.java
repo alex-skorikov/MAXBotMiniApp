@@ -137,7 +137,6 @@ class StateMachineDispatcherTest {
         when(stateMachine.getExtendedState()).thenReturn(extendedState);
         when(extendedState.getVariables()).thenReturn(variables);
 
-        when(persister.restore(any(), any())).thenReturn(Mono.empty());
         when(stateMachine.startReactively()).thenReturn(Mono.empty());
         when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
