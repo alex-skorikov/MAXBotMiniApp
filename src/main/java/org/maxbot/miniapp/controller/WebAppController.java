@@ -65,12 +65,20 @@ public class WebAppController {
         log.info("🌐 [WEB APP] Инициализация сессии. Привязка userId: {} к чату/сессии: {}",
                 request.getUserId(), request.getChatId());
 
+        String requestUserId = request.getUserId();
+        int userId;
+        try {
+            userId = Integer.parseInt(requestUserId.trim());
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
+            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
+        }
+
         return Mono.fromRunnable(() -> {
                     UserContext userContext = contextRepository.load(request.getUserId());
                     if (userContext == null) {
                         userContext = new UserContext();
-                        userContext.setUserId(safeParseUserId(request.getUserId()));
-                    }
+                        userContext.setUserId(userId);                    }
                     userContext.setChatId(request.getChatId());
                     contextRepository.save(userContext);
                 })
@@ -81,17 +89,24 @@ public class WebAppController {
     @PostMapping("/search")
     public Mono<PatentSearchPagedResponse> search(
             @RequestBody PatentSearchRequest req,
-            @RequestParam("userId") String userId) {
+            @RequestParam("userId") String requestUserId) {
+
+        int userId;
+        try {
+            userId = Integer.parseInt(requestUserId);
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
+            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
+        }
 
         return patentService.searchPatents(req)
                 .doOnNext(resp -> {
                     // Асинхронно загружаем, синхронизируем и сохраняем контекст в Redis
                     Mono.fromRunnable(() -> {
-                                UserContext ctx = contextRepository.load(userId);
+                                UserContext ctx = contextRepository.load(String.valueOf(userId));
                                 if (ctx == null) {
                                     ctx = new UserContext();
-                                    ctx.setUserId(safeParseUserId(userId));
-                                }
+                                    ctx.setUserId(userId);                                }
 
                                 // Вызываем вынесенный метод синхронизации
                                 syncUserContext(ctx, req, resp);
@@ -213,19 +228,6 @@ public class WebAppController {
                             .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
                 })
                 .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-    }
-
-    private int safeParseUserId(String userIdStr) {
-        if (userIdStr == null || "undefined".equalsIgnoreCase(userIdStr.trim()) || userIdStr.isBlank()) {
-            log.warn("⚠️ [WEB APP] Получен некорректный userId: '{}'. Используется дефолтный ID 0.", userIdStr);
-            return 0;
-        }
-        try {
-            return Integer.parseInt(userIdStr.trim());
-        } catch (NumberFormatException e) {
-            log.error("❌ [WEB APP] Ошибка парсинга userId из строки '{}': {}", userIdStr, e.getMessage());
-            return 0;
-        }
     }
 
 }

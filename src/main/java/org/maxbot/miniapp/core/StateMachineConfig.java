@@ -4,6 +4,7 @@ import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.maxbot.miniapp.util.ValidDateGuard;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
@@ -20,8 +21,8 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
     private final StepAction stepAction;
     private final ValidDateGuard validDateGuard;
 
-    public StateMachineConfig(StepAction stepAction,
-                              ValidDateGuard validDateGuard) {
+    public StateMachineConfig(@Lazy StepAction stepAction,
+                              @Lazy ValidDateGuard validDateGuard) {
         this.stepAction = stepAction;
         this.validDateGuard = validDateGuard;
     }
@@ -31,7 +32,6 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         states
                 .withStates()
                 .initial(BotStates.INIT)
-//                .state(BotStates.INIT)
                 .state(BotStates.SELECT_BASE)
                 .state(BotStates.BASE_SELECTED)
                 .state(BotStates.FILTER_DATE)
