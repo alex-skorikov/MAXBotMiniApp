@@ -99,7 +99,6 @@ class StateMachineDispatcherTest {
         when(factory.getStateMachine("12345")).thenReturn(stateMachine);
         when(persister.restore(eq(stateMachine), eq("12345"))).thenReturn(Mono.empty());
         when(stateMachine.startReactively()).thenReturn(Mono.empty());
-        when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
         // Мокаем результат отправки ивента (ACCEPTED)
         when(eventResult.getResultType()).thenReturn(StateMachineEventResult.ResultType.ACCEPTED);
@@ -137,8 +136,6 @@ class StateMachineDispatcherTest {
         when(extendedState.getVariables()).thenReturn(variables);
 
         Mockito.lenient().when(persister.restore(any(), any())).thenReturn(Mono.empty());
-
-//        when(stateMachine.stopReactively()).thenReturn(Mono.empty());
 
         // Симулируем отклонение ивента стейт-машиной (DENIED)
         when(eventResult.getResultType()).thenReturn(StateMachineEventResult.ResultType.DENIED);
