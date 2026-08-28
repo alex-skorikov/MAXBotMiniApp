@@ -99,7 +99,17 @@ public class WebAppController {
             return Mono.error(new IllegalArgumentException("Invalid format for userId"));
         }
 
-        return patentService.searchPatents(req)
+        PatentSearchRequest searchRequest = PatentService.createRequest(
+                req.getQueryMode(),
+                req.getQuery(),
+                req.getLimit(),
+                req.getOffset(),
+                req.getFilter().getDatePublished().getRange().getGt(),
+                req.getDatasets(),
+                req.getFilter().getClassification().getValues().toString()
+        );
+
+        return patentService.searchPatents(searchRequest)
                 .doOnNext(resp -> {
                     // Асинхронно загружаем, синхронизируем и сохраняем контекст в Redis
                     Mono.fromRunnable(() -> {
