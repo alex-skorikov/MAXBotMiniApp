@@ -116,7 +116,7 @@ class WebAppControllerTest {
         PatentSearchRequest.Filter filter = new PatentSearchRequest.Filter();
         PatentSearchRequest.DatePublished datePublished = new PatentSearchRequest.DatePublished();
         PatentSearchRequest.Range range = new PatentSearchRequest.Range();
-        range.setGt("2025-01-01");
+        range.setGt("01.01.2025");
         datePublished.setRange(range);
         filter.setDatePublished(datePublished);
 
