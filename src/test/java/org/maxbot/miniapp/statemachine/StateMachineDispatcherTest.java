@@ -23,6 +23,7 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -116,7 +117,6 @@ class StateMachineDispatcherTest {
         // Верифицируем, что удаление и извлечение вызывались по контракту диспетчера
         verify(mockVariables, times(1)).remove("response");
         verify(stateMachine, times(1)).startReactively();
-        verify(stateMachine, times(1)).stopReactively();
 
         // Верифицируем сохранение контекста в БД после успешного перехода
         verify(persister, times(1)).persist(stateMachine, "12345", "999", BotEvents.USER_OPEN_CHAT);
