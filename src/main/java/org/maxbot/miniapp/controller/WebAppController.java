@@ -102,16 +102,16 @@ public class WebAppController {
             return Mono.error(new IllegalArgumentException("Invalid format for userId"));
         }
         // --- Формат пользователя в рабочий ---
+
+        PatentSearchRequest.Filter filter = req.getFilter();
         String date = req.getFilter().getDatePublished().getRange().getGt();
         String requestDate = checkDate(date);
 
-        req.setFilter(PatentSearchRequest.Filter.builder()
-                .datePublished(PatentSearchRequest.DatePublished.builder()
+        filter.setDatePublished(PatentSearchRequest.DatePublished.builder()
                         .range(PatentSearchRequest.Range.builder()
                                 .gt(requestDate)
                                 .build())
-                        .build())
-                .build());
+                        .build());
 
         return patentService.searchPatents(req)
                 .doOnNext(resp -> {
