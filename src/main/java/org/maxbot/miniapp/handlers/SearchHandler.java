@@ -232,7 +232,7 @@ public class SearchHandler implements StepHandler {
 
         BotResponse navigationMenu = BotResponse.builder()
                 .notify(false)
-                .text("🎛️ Управление поиском:\n──────────────────────────────")
+                .text("🎛️ ──────────────────Управление поиском:──────────────────")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()
