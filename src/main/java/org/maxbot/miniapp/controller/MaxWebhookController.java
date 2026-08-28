@@ -4,7 +4,7 @@ import org.maxbot.miniapp.client.MaxApiClient;
 import org.maxbot.miniapp.statemachine.StateMachineDispatcher;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
-import org.maxbot.miniapp.util.MaxMapper;
+import org.maxbot.miniapp.core.MaxMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,7 +37,7 @@ public class MaxWebhookController {
             return Mono.empty();
         }
 
-        log.info(">>> Incoming webhook: {}", upd);
+        log.info("\uD83D\uDCE1 >>> INCOMING WEBHOOK: {}", upd);
 
         // 1. Вычисляем гарантированно правильный chatId
         int resolvedChatId = upd.getChatId();
@@ -101,7 +101,7 @@ public class MaxWebhookController {
                                 });
                     }
                 })
-                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука", error))
+                .doOnError(error -> log.error("❌ Критическая ошибка при обработке вебхука: {}", error.getMessage()))
                 .onErrorComplete();
     }
 

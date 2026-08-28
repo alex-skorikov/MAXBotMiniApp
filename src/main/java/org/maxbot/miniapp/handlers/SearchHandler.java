@@ -80,17 +80,18 @@ public class SearchHandler implements StepHandler {
                             .then(Mono.defer(() -> sendNavigationMenu(chatId, offset, limit, totalFound)));
                 })
                 .onErrorResume(e -> {
-                    log.error("❌ [SEARCH HANDLER] Ошибка при поиске патентов", e);
+                    log.error("❌ [SEARCH HANDLER] Ошибка при поиске патентов: {} ", e.getMessage());
 
                     // Извлекаем чистое сообщение об ошибке
                     String reason = e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка платформы";
+                    String errorText = "⚠️ *Ошибка обращения к Роспатенту!*\n\n" +
+                            "Платформа поиска отклонила запрос по причине:\n" +
+                            reason;
 
                     // Формируем красивую карточку ошибки для пользователя
                     BotResponse errorUi = BotResponse.builder()
                             .notify(false)
-                            .text("⚠️ *Ошибка обращения к Роспатенту!*\n\n" +
-                                    "Платформа поиска отклонила запрос по причине:\n" +
-                                    "`" + reason + "`\n\n")
+                            .text(errorText)
                             .attachments(List.of(BotResponse.Attachment.builder()
                                     .type("inline_keyboard")
                                     .payload(BotResponse.InlineKeyboardPayload.builder()
@@ -224,14 +225,23 @@ public class SearchHandler implements StepHandler {
         String dip = "https://max.ru/" + botName + "?startapp";
         navButtons.add(List.of(
                 BotResponse.Button.builder()
-                        .type("link").text("⚙️ Расширенный поиск").url(dip).build(),
+                        .type("link")
+                        .text("⚙️ Расширенный поиск")
+                        .url(dip)
+                        .build()
+        ));
+
+        navButtons.add(List.of(
                 BotResponse.Button.builder()
-                        .type("callback").text("🔄 Сбросить").payload("BACK_TO_START").build()
+                        .type("callback")
+                        .text("🔄 Сбросить")
+                        .payload("BACK_TO_START")
+                        .build()
         ));
 
         BotResponse navigationMenu = BotResponse.builder()
                 .notify(false)
-                .text("🎛️ Управление поиском:                             ")
+                .text("🎛️ Управление поиском:")
                 .attachments(List.of(BotResponse.Attachment.builder()
                         .type("inline_keyboard")
                         .payload(BotResponse.InlineKeyboardPayload.builder()

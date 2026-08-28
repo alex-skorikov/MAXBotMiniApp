@@ -2,9 +2,9 @@ package org.maxbot.miniapp.core;
 
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
-import org.maxbot.miniapp.util.StepAction;
 import org.maxbot.miniapp.util.ValidDateGuard;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.Message;
 import org.springframework.statemachine.config.EnableStateMachineFactory;
 import org.springframework.statemachine.config.StateMachineConfigurerAdapter;
@@ -21,8 +21,8 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
     private final StepAction stepAction;
     private final ValidDateGuard validDateGuard;
 
-    public StateMachineConfig(StepAction stepAction,
-                              ValidDateGuard validDateGuard) {
+    public StateMachineConfig(@Lazy StepAction stepAction,
+                              @Lazy ValidDateGuard validDateGuard) {
         this.stepAction = stepAction;
         this.validDateGuard = validDateGuard;
     }
@@ -32,17 +32,16 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
         states
                 .withStates()
                 .initial(BotStates.INIT)
-                .state(BotStates.INIT, stepAction)
-                .state(BotStates.SELECT_BASE, stepAction)
-                .state(BotStates.BASE_SELECTED, stepAction)
-                .state(BotStates.FILTER_DATE, stepAction)
-                .state(BotStates.SELECT_DATE, stepAction) // Хранит логику ожидания ввода поисковой строки
-                .state(BotStates.SEARCH, stepAction)      // Экран выполнения самого поиска и результатов
-                .state(BotStates.FILTER_SEARCH_ARRAY, stepAction)
-                .state(BotStates.SELECT_SEARCH_ARRAY, stepAction)
-                .state(BotStates.FILTER_CLASSIFIERS, stepAction)
-                .state(BotStates.SELECT_CLASSIFIERS, stepAction)
-                .state(BotStates.DONE, stepAction);
+                .state(BotStates.SELECT_BASE)
+                .state(BotStates.BASE_SELECTED)
+                .state(BotStates.FILTER_DATE)
+                .state(BotStates.SELECT_DATE)
+                .state(BotStates.SEARCH)
+                .state(BotStates.FILTER_SEARCH_ARRAY)
+                .state(BotStates.SELECT_SEARCH_ARRAY)
+                .state(BotStates.FILTER_CLASSIFIERS)
+                .state(BotStates.SELECT_CLASSIFIERS)
+                .state(BotStates.DONE);
     }
 
     @Override
@@ -53,6 +52,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.INIT)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.USER_OPEN_CHAT)
+                .action(stepAction)
                 .and()
 
                 // ВЫБОР БАЗЫ -> ГЛАВНОЕ МЕНЮ ФИЛЬТРОВ
@@ -60,6 +60,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECT_BASE)
+                .action(stepAction)
                 .and()
 
                 // ПОДМЕНЮ: ДАТА
@@ -67,6 +68,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.FILTER_DATE)
                 .event(BotEvents.USER_INPUT_DATE)
+                .action(stepAction)
                 .and()
 
                 // Если введенная дата валидна
@@ -75,6 +77,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECTED_DATE)
                 .guard(validDateGuard)
+                .action(stepAction)
                 .and()
 
                 // Если введенная дата не валидна
@@ -91,12 +94,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.FILTER_SEARCH_ARRAY)
                 .event(BotEvents.USER_SEARCH_ARRAY)
+                .action(stepAction)
                 .and()
 
                 .withExternal()
                 .source(BotStates.FILTER_SEARCH_ARRAY)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECT_ARRAY)
+                .action(stepAction)
                 .and()
 
                 // ПОДМЕНЮ: КЛАССИФИКАТОРЫ
@@ -104,12 +109,14 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.FILTER_CLASSIFIERS)
                 .event(BotEvents.USER_SEARCH_CLASSIFIERS)
+                .action(stepAction)
                 .and()
 
                 .withExternal()
                 .source(BotStates.FILTER_CLASSIFIERS)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.USER_SELECT_CLASSIFIERS)
+                .action(stepAction)
                 .and()
 
                 // КНОПКА "СТАРТ ПОИСКА" -> Стей ожидания ввода текста (SELECT_DATE)
@@ -117,6 +124,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_PROCEED_TO_SEARCH) // Ивент от инлайн-кнопки "START_SEARCH"
+                .action(stepAction)
                 .and()
 
                 // ПОЛЬЗОВАТЕЛЬ ПРИСЛАЛ ТЕКСТ ЗАПРОСА -> Переходим непосредственно к поиску патентов
@@ -124,6 +132,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_DATE)
                 .target(BotStates.SEARCH)
                 .event(BotEvents.USER_SEARCH_PATENT) // Вызывается внутри handleMessageCreated
+                .action(stepAction)
                 .and()
 
                 // Циклический переход для пагинации (Кнопки Вперёд / Назад)
@@ -131,6 +140,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SEARCH)
                 .target(BotStates.SEARCH)
                 .event(BotEvents.USER_SEARCH_PATENT)
+                .action(stepAction)
                 .and()
 
                 // Переход по кнопке «Сбросить» из экрана поиска в самое начало
@@ -146,6 +156,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_PROCEED_TO_SEARCH)
+                .action(stepAction)
                 .and()
 
                 //Из меню ВЫБОР БАЗЫ -> СБРОС
@@ -153,6 +164,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.SELECT_BASE)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
                 .and()
 
                 //Из меню ВЫБОР ФИЛЬТРОВ -> ПОИСК
@@ -160,6 +172,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_DATE)
                 .event(BotEvents.USER_PROCEED_TO_SEARCH)
+                .action(stepAction)
                 .and()
 
                 //Из меню ВЫБОР ФИЛЬТРОВ -> СБРОС
@@ -167,6 +180,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK_TO_START)
+                .action(stepAction)
                 .and()
 
                 // Из результатов поиска -> Сбросить
@@ -180,6 +194,7 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .withInternal()
                 .source(BotStates.SEARCH)
                 .event(BotEvents.USER_VIEW_DOC_DETAILS)
+                .action(stepAction)
                 .and()
 
                 // ==========================================
@@ -189,31 +204,36 @@ public class StateMachineConfig extends StateMachineConfigurerAdapter<BotStates,
                 .source(BotStates.BASE_SELECTED)
                 .target(BotStates.SELECT_BASE)
                 .event(BotEvents.BACK)
+                .action(stepAction)
                 .and()
 
                 .withExternal()
                 .source(BotStates.FILTER_DATE)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.BACK)
+                .action(stepAction)
                 .and()
 
                 .withExternal()
                 .source(BotStates.FILTER_SEARCH_ARRAY)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.BACK)
+                .action(stepAction)
                 .and()
 
                 .withExternal()
                 .source(BotStates.FILTER_CLASSIFIERS)
                 .target(BotStates.BASE_SELECTED)
                 .event(BotEvents.BACK)
+                .action(stepAction)
                 .and()
 
                 // Из экрана ввода строки поиска возвращаемся обратно в меню фильтров
                 .withExternal()
                 .source(BotStates.SELECT_DATE)
                 .target(BotStates.BASE_SELECTED)
-                .event(BotEvents.BACK);
+                .event(BotEvents.BACK)
+                .action(stepAction);
     }
 
 

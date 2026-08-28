@@ -3,6 +3,7 @@ package org.maxbot.miniapp.util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.BotEvent;
+import org.maxbot.miniapp.core.MaxMapper;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BodyDto;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
@@ -15,6 +16,8 @@ import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -143,8 +146,8 @@ class MaxMapperTest {
 
         // Then
         assertNotNull(event);
-        assertEquals(BotEvents.USER_VIEW_DOC_DETAILS, event.getType());
-        assertEquals("Просмотр документа 9999", event.getPayloadDescription());
+        assertNull(event.getType());
+        assertEquals("Изолированный просмотр документа 9999", event.getPayloadDescription());
 
         // Верифицируем вызов сервиса с chatId = 123
         Mockito.verify(patentService, Mockito.times(1))
@@ -230,7 +233,7 @@ class MaxMapperTest {
         UserContext initialCtx = repository.load(String.valueOf(chatId));
         initialCtx.setUserId(chatId);
 
-        initialCtx.setChatId(String.valueOf(chatId)); // Если тип int
+        initialCtx.setChatId(String.valueOf(chatId));
 
         initialCtx.setOffset(50);
         repository.save(initialCtx);
@@ -244,5 +247,129 @@ class MaxMapperTest {
         assertEquals(0, savedCtx.getOffset());
     }
 
+    @Test
+    void handleMessageCreatedFilterClassifiersState() {
+        // Given
+        UpdateDto update = new UpdateDto();
+        update.setUpdateType("message_created");
+
+        MessageDto message = new MessageDto();
+        BodyDto body = new BodyDto();
+        body.setText("A61K31/00");
+        message.setBody(body);
+        update.setMessage(message);
+
+        UserContext userContext = repository.load("123");
+        userContext.setState(BotStates.FILTER_CLASSIFIERS);
+        repository.save(userContext);
+
+        // When
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
+
+        // Then
+        assertNotNull(event);
+        assertEquals(BotEvents.USER_SELECT_CLASSIFIERS, event.getType());
+        assertEquals("Ввод классификатора", event.getPayloadDescription());
+
+        UserContext updatedCtx = repository.load("123");
+        assertEquals("A61K31/00", updatedCtx.getClassifiers());
+    }
+
+    @Test
+    void handleMessageCreatedSearchState() {
+        // Given
+        UpdateDto update = new UpdateDto();
+        update.setUpdateType("message_created");
+
+        MessageDto message = new MessageDto();
+        BodyDto body = new BodyDto();
+        body.setText("Устройство для фильтрации"); // Поисковый запрос в стейте SEARCH
+        message.setBody(body);
+        update.setMessage(message);
+
+        UserContext userContext = repository.load("123");
+        userContext.setState(BotStates.SEARCH);
+        repository.save(userContext);
+
+        // When
+        BotEvent event = maxMapper.toEvent(update, 123, 123);
+
+        // Then
+        assertNotNull(event);
+        assertEquals(BotEvents.USER_SEARCH_PATENT, event.getType());
+        assertEquals("Ввод поискового запроса", event.getPayloadDescription());
+
+        UserContext updatedCtx = repository.load("123");
+        assertEquals("Устройство для фильтрации", updatedCtx.getSearchQuery());
+    }
+
+    @Test
+    void handleMessageCallbackSelectArrayStoresDataCorrectly() {
+        // Given
+        int chatId = 12345;
+        int userId = 123456;
+
+        UpdateDto update = new UpdateDto();
+        update.setUpdateType("message_callback");
+
+        CallbackDto callback = new CallbackDto();
+        callback.setPayload("COUNTRY_INPUT");
+
+        SenderDto sender = new SenderDto();
+        sender.setUserId(userId);
+        callback.setUser(sender);
+        update.setCallback(callback);
+
+        UserContext initialCtx = repository.load(String.valueOf(userId));
+        initialCtx.setUserId(userId);
+        initialCtx.setChatId(String.valueOf(chatId));
+        repository.save(initialCtx);
+
+        List<String> mockArrays = List.of("SU_PATENTS", "RU_PATENTS");
+
+        Mockito.when(patentService.getDataSetArrayByDescription("Россия и страны СНГ"))
+                .thenReturn(mockArrays);
+
+        // When
+        BotEvent event = maxMapper.toEvent(update, chatId, userId);
+
+        // Then
+        assertNotNull(event);
+        assertEquals(BotEvents.USER_SELECT_ARRAY, event.getType());
+        assertEquals("Россия и страны СНГ", event.getPayloadDescription());
+
+        UserContext savedCtx = repository.load(String.valueOf(userId));
+        assertEquals("Россия и страны СНГ", savedCtx.getDatasetName());
+        assertEquals(mockArrays, savedCtx.getDatasetArrays());
+
+        Mockito.verify(patentService, Mockito.times(1))
+                .getDataSetArrayByDescription("Россия и страны СНГ");
+    }
+
+
+    @Test
+    void handleMessageCreatedWhenCurrentStateIsNull() {
+        // Given
+        UpdateDto update = new UpdateDto();
+        update.setUpdateType("message_created");
+
+        MessageDto message = new MessageDto();
+        BodyDto body = new BodyDto();
+        body.setText("Привет");
+        message.setBody(body);
+        update.setMessage(message);
+
+        // Контекст без установленного стейта (currentState == null)
+        UserContext userContext = repository.load("999");
+        userContext.setState(null);
+        repository.save(userContext);
+
+        // When
+        BotEvent event = maxMapper.toEvent(update, 999, 999);
+
+        // Then
+        assertNotNull(event);
+        assertEquals(BotEvents.BACK_TO_START, event.getType());
+    }
 
 }

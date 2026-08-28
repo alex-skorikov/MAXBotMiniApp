@@ -1,9 +1,7 @@
-package org.maxbot.miniapp.util;
+package org.maxbot.miniapp.core;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.maxbot.miniapp.core.BotEvent;
-import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.CallbackDto;
 import org.maxbot.miniapp.dto.bot.MessageDto;
 import org.maxbot.miniapp.dto.bot.UpdateDto;
@@ -71,7 +69,7 @@ public class MaxMapper {
             default -> log.debug("Получен необрабатываемый тип апдейта: {}", upd.getUpdateType());
         }
 
-        log.info(">>> MaxMapper обработал событие: \n>>> Event: {}, \n>>> UserContext: {}", event, userContext);
+        log.info("🔄 >>> MaxMapper обработал событие: \n⚡ >>> Event: {},\n\uD83D\uDC64 >>> UserContext: {}", event, userContext);
         return event;
     }
 
@@ -93,10 +91,9 @@ public class MaxMapper {
         // Динамические обработчики (пагинация и просмотр)
         if (payload != null && payload.startsWith("DOC_VIEW_")) {
             String docId = payload.substring("DOC_VIEW_".length());
-            event.setType(BotEvents.USER_VIEW_DOC_DETAILS);
-            event.setPayloadDescription("Просмотр документа " + docId);
-
             patentService.sendSinglePatentCardAsync(Integer.parseInt(event.getChatId()), docId, userContext).subscribe();
+            event.setType(null);
+            event.setPayloadDescription("Изолированный просмотр документа " + docId);
             return;
         }
 
@@ -146,14 +143,12 @@ public class MaxMapper {
         if (freshContext == null) {
             freshContext = userContext;
         }
-        log.info("🔄 MaxMapper загружен freshContext для обновления {}", freshContext);
-
         if (info.eventType() == BotEvents.USER_SELECT_BASE) {
             freshContext.setSelectedBase(info.description);
             freshContext.setOffset(0);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО базу
         } else if (info.eventType() == BotEvents.USER_SELECT_ARRAY) {
-            List<String> arrays = patentService.getSearchArrayByDescription(info.description());
+            List<String> arrays = patentService.getDataSetArrayByDescription(info.description());
             freshContext.setDatasetName(info.description);
             freshContext.setDatasetArrays(arrays);
             contextRepository.save(freshContext); // Пишем ТОЛЬКО массив

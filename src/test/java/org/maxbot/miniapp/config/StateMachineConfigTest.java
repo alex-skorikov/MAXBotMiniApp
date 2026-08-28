@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.StateMachineConfig;
 import org.maxbot.miniapp.statemachine.BotEvents;
 import org.maxbot.miniapp.statemachine.BotStates;
-import org.maxbot.miniapp.util.StepAction;
+import org.maxbot.miniapp.core.StepAction;
 import org.maxbot.miniapp.util.ValidDateGuard;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

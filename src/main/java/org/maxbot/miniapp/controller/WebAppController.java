@@ -29,6 +29,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -65,11 +67,20 @@ public class WebAppController {
         log.info("🌐 [WEB APP] Инициализация сессии. Привязка userId: {} к чату/сессии: {}",
                 request.getUserId(), request.getChatId());
 
+        String requestUserId = request.getUserId();
+        int userId;
+        try {
+            userId = Integer.parseInt(requestUserId.trim());
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
+            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
+        }
+
         return Mono.fromRunnable(() -> {
                     UserContext userContext = contextRepository.load(request.getUserId());
                     if (userContext == null) {
                         userContext = new UserContext();
-                        userContext.setUserId(Integer.parseInt(request.getUserId()));
+                        userContext.setUserId(userId);
                     }
                     userContext.setChatId(request.getChatId());
                     contextRepository.save(userContext);
@@ -81,16 +92,35 @@ public class WebAppController {
     @PostMapping("/search")
     public Mono<PatentSearchPagedResponse> search(
             @RequestBody PatentSearchRequest req,
-            @RequestParam("userId") String userId) {
+            @RequestParam("userId") String requestUserId) {
+
+        int userId;
+        try {
+            userId = Integer.parseInt(requestUserId);
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
+            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
+        }
+        // --- Формат пользователя в рабочий ---
+
+        PatentSearchRequest.Filter filter = req.getFilter();
+        String date = req.getFilter().getDatePublished().getRange().getGt();
+        String requestDate = checkDate(date);
+
+        filter.setDatePublished(PatentSearchRequest.DatePublished.builder()
+                        .range(PatentSearchRequest.Range.builder()
+                                .gt(requestDate)
+                                .build())
+                        .build());
 
         return patentService.searchPatents(req)
                 .doOnNext(resp -> {
                     // Асинхронно загружаем, синхронизируем и сохраняем контекст в Redis
                     Mono.fromRunnable(() -> {
-                                UserContext ctx = contextRepository.load(userId);
+                                UserContext ctx = contextRepository.load(String.valueOf(userId));
                                 if (ctx == null) {
                                     ctx = new UserContext();
-                                    ctx.setUserId(Integer.parseInt(userId));
+                                    ctx.setUserId(userId);
                                 }
 
                                 // Вызываем вынесенный метод синхронизации
@@ -103,6 +133,16 @@ public class WebAppController {
                             .subscribe();
                 })
                 .map(resp -> PatentService.getPatentSearchPagedResponse(req, resp));
+    }
+
+    private String checkDate(String date) {
+        String apiDate = "";
+        if (date != null && !date.isBlank()) {
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
+        }
+        return apiDate;
     }
 
     // --- Синхронизируем контекст пользователя ---
@@ -133,7 +173,8 @@ public class WebAppController {
 
         if (resp != null && resp.getHits() != null && !resp.getHits().isEmpty()) {
             ctx.setHits(resp.getHits());
-            log.info("💾 [SYNC] В контекст пользователя {} кэшировано документов: {}", ctx.getUserId(), resp.getHits().size());
+            log.info("💾 [SYNC] В контекст пользователя {} кэшировано документов: {}", ctx.getUserId(), resp.getHits()
+                    .size());
         } else {
             ctx.setHits(List.of()); // Очищаем старый кэш hits, если Роспатент вернул 0 результатов
             log.info("🗑️ [SYNC] По запросу '{}' документов не найдено. Кэш hits пользователя {} очищен.", actualQuery, ctx.getUserId());
@@ -204,13 +245,14 @@ public class WebAppController {
                                             .body((Resource) resource));
 
                                 } catch (Exception e) {
-                                    log.error("❌ Ошибка при генерации файла экспорта для документа {}", docId, e);
-                                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).<Resource>build());
+                                    log.error("❌ Ошибка при генерации файла экспорта для документа {}: {}", docId, e.getMessage());
+                                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                            .<Resource>build());
                                 }
                             })
                             .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
                 })
-                // ИСПРАВЛЕНО: Явное указание типа <Resource>
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
+                .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
 }

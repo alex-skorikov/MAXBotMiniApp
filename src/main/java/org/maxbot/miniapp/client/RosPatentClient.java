@@ -61,10 +61,14 @@ public class RosPatentClient {
                 .bodyValue(body)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, clientResponse ->
-                        clientResponse.bodyToMono(String.class)
-                                .flatMap(errorBody -> {
-                                    log.error("❌ [Роспатент] Ошибка синтаксиса запроса (4xx). Ответ сервера: {}", errorBody);
-                                    return Mono.error(new IllegalArgumentException(errorBody));
+                        clientResponse.bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                                .flatMap(errorMap -> {
+                                    String cleanReason = "Неизвестная ошибка параметров запроса";
+                                    if (errorMap != null && errorMap.containsKey("result")) {
+                                        cleanReason = errorMap.get("result").toString();
+                                    }
+                                    log.error("❌ [Роспатент] Ошибка синтаксиса запроса (4xx). Причина: {}", cleanReason);
+                                    return Mono.error(new IllegalArgumentException(cleanReason));
                                 })
                 )
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {

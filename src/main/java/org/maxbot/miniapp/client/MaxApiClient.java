@@ -32,7 +32,7 @@ public class MaxApiClient {
                         .queryParam("chat_id", chatId).build())
                 .bodyValue(resp).retrieve()
                 .bodyToMono(Void.class)
-                .doOnError(e -> log.error("MAX API sendMessage error", e));
+                .doOnError(e -> log.error("❌ MAX API sendMessage error: {} ", e.getMessage()));
     }
 
     public Mono<Void> sendAnswer(String callbackId, BotResponse resp) {
@@ -42,6 +42,6 @@ public class MaxApiClient {
                 .bodyValue(Map.of("message", resp))
                 .retrieve()
                 .bodyToMono(Void.class)
-                .doOnError(e -> log.error("MAX API sendAnswer error", e));
+                .doOnError(e -> log.error("❌ MAX API sendAnswer error: {} ", e.getMessage()));
     }
 }

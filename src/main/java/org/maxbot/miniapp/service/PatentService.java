@@ -11,6 +11,8 @@ import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +22,7 @@ public class PatentService {
 
     private final MaxApiClient maxApiClient;
     private final RosPatentClient client;
-    private static final Map<String, List<String>> SEARCH_ARRAYS = Map.ofEntries(
+    private static final Map<String, List<String>> DATASET_ARRAYS = Map.ofEntries(
             Map.entry("Россия и страны СНГ", List.of("ru_till_1994", "ru_since_1994", "cis", "dsgn_ru")),
             Map.entry("Минимум РСТ", List.of("ap", "cn", "ch", "au", "gb", "ki", "ca", "at", "jp", "ep", "de", "fr", "ap", "us")),
             Map.entry("Промышленные образцы", List.of("dsgn_kr", "dsgn_cn", "dsgn_jp")),
@@ -28,9 +30,9 @@ public class PatentService {
     );
 
     public PatentService(MaxApiClient maxApiClient,
-                         RosPatentClient client) {
+                         RosPatentClient rosPatentClient) {
         this.maxApiClient = maxApiClient;
-        this.client = client;
+        this.client = rosPatentClient;
     }
 
     public static PatentSearchRequest createRequest(
@@ -39,7 +41,7 @@ public class PatentService {
             int limit,
             int offset,
             String date,
-            List<String> searchArrays,
+            List<String> dataSetArrays,
             String classifiers) {
 
         // 1. Инициализируем базовый билдер запроса
@@ -50,8 +52,8 @@ public class PatentService {
                 .offset(offset);
 
         // 2. Добавляем классификаторы (datasets), только если они заданы
-        if (searchArrays != null && !searchArrays.isEmpty()) {
-            requestBuilder.datasets(searchArrays);
+        if (dataSetArrays != null && !dataSetArrays.isEmpty()) {
+            requestBuilder.datasets(dataSetArrays);
         }
 
         // 3. Динамически собираем фильтры
@@ -68,9 +70,13 @@ public class PatentService {
 
         // Проверяем дату публикации
         if (date != null && !date.isBlank()) {
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
+
             filterBuilder.datePublished(PatentSearchRequest.DatePublished.builder()
                     .range(PatentSearchRequest.Range.builder()
-                            .gt(date)
+                            .gt(apiDate)
                             .build())
                     .build());
             hasFilters = true;
@@ -129,8 +135,8 @@ public class PatentService {
         }
     }
 
-    public List<String> getSearchArrayByDescription(String searchArrayName) {
-        return SEARCH_ARRAYS.get(searchArrayName);
+    public List<String> getDataSetArrayByDescription(String arrayName) {
+        return DATASET_ARRAYS.get(arrayName);
     }
 
     public static PatentSearchPagedResponse getPatentSearchPagedResponse(PatentSearchRequest request,

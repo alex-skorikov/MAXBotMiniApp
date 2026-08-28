@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.maxbot.miniapp.core.BotEvent;
 import org.maxbot.miniapp.core.HandlerRegistry;
+import org.maxbot.miniapp.core.StepAction;
 import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.bot.BotResponse;
 import org.maxbot.miniapp.handlers.StepHandler;
@@ -66,7 +67,7 @@ class StepActionTest {
         stepAction.execute(context);
 
         assertEquals(mockResponse, variables.get("response"));
-        Mockito.verify(extendedState, Mockito.times(1)).getVariables();
+        Mockito.verify(extendedState, Mockito.times(3)).getVariables();
     }
 
     @Test

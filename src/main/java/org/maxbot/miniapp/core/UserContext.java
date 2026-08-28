@@ -1,8 +1,8 @@
 package org.maxbot.miniapp.core;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.maxbot.miniapp.dto.patent.PatentHit;
@@ -29,7 +29,9 @@ public class UserContext {
     private String searchQuery;
     @ToString.Exclude
     private List<PatentHit> hits;
+    @Builder.Default
     private int offset = 0;
+    @Builder.Default
     private int limit = 5;
 }
 
