@@ -11,6 +11,8 @@ import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -68,9 +70,14 @@ public class PatentService {
 
         // Проверяем дату публикации
         if (date != null && !date.isBlank()) {
+            // Пример конвертации при сохранении или отправке:
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
+
             filterBuilder.datePublished(PatentSearchRequest.DatePublished.builder()
                     .range(PatentSearchRequest.Range.builder()
-                            .gt(date)
+                            .gt(apiDate)
                             .build())
                     .build());
             hasFilters = true;

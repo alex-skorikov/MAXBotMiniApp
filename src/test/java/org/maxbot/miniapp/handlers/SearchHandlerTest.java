@@ -282,7 +282,7 @@ class SearchHandlerTest {
         ctx.setSearchQuery("Нейросети");
         ctx.setLimit(5);
         ctx.setOffset(0);
-        ctx.setDate("20260101");
+        ctx.setDate("01.01.2020");
         ctx.setDatasetArrays(List.of("cis"));
         ctx.setClassifiers("F02K9/00");
         return ctx;
