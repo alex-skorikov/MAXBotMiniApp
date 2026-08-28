@@ -17,7 +17,7 @@ public class ValidDateGuard implements Guard<BotStates, BotEvents> {
             return false;
         }
         String text = event.getText();
-        return text.matches("\\d{4}-\\d{2}-\\d{2}");
+        return text.matches("\\d{2}.\\d{2}.\\d{4}");
     }
 
     // Изменяем метод инверсии: создаем полноценный Guard
@@ -30,5 +30,4 @@ public class ValidDateGuard implements Guard<BotStates, BotEvents> {
         };
     }
 }
-
 

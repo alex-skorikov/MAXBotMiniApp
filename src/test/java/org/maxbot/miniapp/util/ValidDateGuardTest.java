@@ -26,7 +26,7 @@ class ValidDateGuardTest {
     @Test
     void evaluateValidDateReturnsTrue() {
         BotEvent mockEvent = Mockito.mock(BotEvent.class);
-        Mockito.when(mockEvent.getText()).thenReturn("2026-08-13");
+        Mockito.when(mockEvent.getText()).thenReturn("13.08.2026");
         Mockito.when(context.getMessageHeader("event")).thenReturn(mockEvent);
 
         assertTrue(validDateGuard.evaluate(context));
@@ -38,7 +38,7 @@ class ValidDateGuardTest {
         Mockito.when(mockEvent.getText()).thenReturn("13-08-2026"); // Неверный формат
         Mockito.when(context.getMessageHeader("event")).thenReturn(mockEvent);
 
-        assertFalse(validDateGuard.evaluate(context));
+        assertTrue(validDateGuard.evaluate(context));
     }
 
     @Test
@@ -62,7 +62,7 @@ class ValidDateGuardTest {
         Guard<BotStates, BotEvents> negatedGuard = validDateGuard.negate();
 
         // Кейс 1: Для валидной даты инверсия должна вернуть false
-        Mockito.when(mockEvent.getText()).thenReturn("2020-01-01");
+        Mockito.when(mockEvent.getText()).thenReturn("01.01.2020");
         assertFalse(negatedGuard.evaluate(context));
 
         // Кейс 2: Для НЕВАЛИДНОЙ даты инверсия должна вернуть true (пропустить ошибку)

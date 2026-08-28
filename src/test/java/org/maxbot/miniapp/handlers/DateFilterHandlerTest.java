@@ -36,7 +36,7 @@ class DateFilterHandlerTest {
         assertFalse(response.isNotify());
 
         String actualText = response.getText();
-        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+        assertTrue(actualText.contains(" Введите дату в формате ДД.ММ.ГГГГ"));
         assertFalse(actualText.contains("Неверный формат даты"), "Префикса ошибки быть не должно");
         validateBackButton(response);
     }
@@ -55,8 +55,8 @@ class DateFilterHandlerTest {
         assertNotNull(response);
         String actualText = response.getText();
 
-        assertTrue(actualText.contains("Неверный формат даты! Пожалуйста, используйте YYYY-MM-DD."));
-        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+        assertTrue(actualText.contains("Неверный формат даты! Пожалуйста, используйте ДД.ММ.ГГГГ."));
+        assertTrue(actualText.contains("Введите дату в формате ДД.ММ.ГГГГ"));
 
         validateBackButton(response);
     }
@@ -66,7 +66,7 @@ class DateFilterHandlerTest {
         // Given
         UserContext ctx = new UserContext();
         BotEvent event = new BotEvent();
-        event.setText("2026-08-17");
+        event.setText("17.08.2026");
 
         // When
         BotResponse response = handler.handle(ctx, event);
@@ -76,7 +76,7 @@ class DateFilterHandlerTest {
         String actualText = response.getText();
 
         assertFalse(actualText.contains("Неверный формат даты!"), "Для верного формата префикс ошибки не нужен");
-        assertTrue(actualText.contains("Введите дату в формате 2020-01-01:"));
+        assertTrue(actualText.contains(" Введите дату в формате ДД.ММ.ГГГГ"));
         validateBackButton(response);
     }
 
