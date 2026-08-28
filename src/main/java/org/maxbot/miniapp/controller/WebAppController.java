@@ -29,6 +29,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -78,7 +80,8 @@ public class WebAppController {
                     UserContext userContext = contextRepository.load(request.getUserId());
                     if (userContext == null) {
                         userContext = new UserContext();
-                        userContext.setUserId(userId);                    }
+                        userContext.setUserId(userId);
+                    }
                     userContext.setChatId(request.getChatId());
                     contextRepository.save(userContext);
                 })
@@ -98,25 +101,27 @@ public class WebAppController {
             log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
             return Mono.error(new IllegalArgumentException("Invalid format for userId"));
         }
+        // --- Формат пользователя в рабочий ---
+        String date = req.getFilter().getDatePublished().getRange().getGt();
+        String requestDate = checkDate(date);
 
-        PatentSearchRequest searchRequest = PatentService.createRequest(
-                req.getQueryMode(),
-                req.getQuery(),
-                req.getLimit(),
-                req.getOffset(),
-                req.getFilter().getDatePublished().getRange().getGt(),
-                req.getDatasets(),
-                req.getFilter().getClassification().getValues().toString()
-        );
+        req.setFilter(PatentSearchRequest.Filter.builder()
+                .datePublished(PatentSearchRequest.DatePublished.builder()
+                        .range(PatentSearchRequest.Range.builder()
+                                .gt(requestDate)
+                                .build())
+                        .build())
+                .build());
 
-        return patentService.searchPatents(searchRequest)
+        return patentService.searchPatents(req)
                 .doOnNext(resp -> {
                     // Асинхронно загружаем, синхронизируем и сохраняем контекст в Redis
                     Mono.fromRunnable(() -> {
                                 UserContext ctx = contextRepository.load(String.valueOf(userId));
                                 if (ctx == null) {
                                     ctx = new UserContext();
-                                    ctx.setUserId(userId);                                }
+                                    ctx.setUserId(userId);
+                                }
 
                                 // Вызываем вынесенный метод синхронизации
                                 syncUserContext(ctx, req, resp);
@@ -128,6 +133,16 @@ public class WebAppController {
                             .subscribe();
                 })
                 .map(resp -> PatentService.getPatentSearchPagedResponse(req, resp));
+    }
+
+    private String checkDate(String date) {
+        String apiDate = "";
+        if (date != null && !date.isBlank()) {
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
+        }
+        return apiDate;
     }
 
     // --- Синхронизируем контекст пользователя ---

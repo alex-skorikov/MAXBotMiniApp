@@ -70,7 +70,6 @@ public class PatentService {
 
         // Проверяем дату публикации
         if (date != null && !date.isBlank()) {
-            // Пример конвертации при сохранении или отправке:
             DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
