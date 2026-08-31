@@ -1,15 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-
-    <!-- 🟢 Задаем переменную для пути. Если она не передана, будет использоваться ./logs -->
     <property name="LOG_DIR" value="${LOG_PATH:-./logs}" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <!-- 🟢 Используем переменную -->
         <file>${LOG_DIR}/app.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- 🟢 Используем переменную -->
             <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>1</maxHistory>
         </rollingPolicy>

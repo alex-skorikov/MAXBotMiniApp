@@ -52,7 +52,15 @@ public class WebAppController {
     public Mono<UserContext> getUserContext(@PathVariable("id") String id) {
         log.info("🌐 [WEB APP] Запрос контекста сессии для ID: {}", id);
 
-        return Mono.fromCallable(() -> contextRepository.load(id))
+        int userId;
+        try {
+            userId = Integer.parseInt(id);
+        } catch (NumberFormatException e) {
+            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", id, e.getMessage());
+            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
+        }
+
+        return Mono.fromCallable(() -> contextRepository.load(String.valueOf(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 // Если контекст в базе не найден, возвращаем пустой объект, чтобы фронт не падал
                 .defaultIfEmpty(UserContext.builder()
@@ -101,17 +109,16 @@ public class WebAppController {
             log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
             return Mono.error(new IllegalArgumentException("Invalid format for userId"));
         }
-        // --- Формат пользователя в рабочий ---
-
-        PatentSearchRequest.Filter filter = req.getFilter();
-        String date = req.getFilter().getDatePublished().getRange().getGt();
-        String requestDate = checkDate(date);
-
-        filter.setDatePublished(PatentSearchRequest.DatePublished.builder()
-                        .range(PatentSearchRequest.Range.builder()
-                                .gt(requestDate)
-                                .build())
-                        .build());
+//        PatentSearchRequest.Filter filter = req.getFilter();
+//        String date = req.getFilter().getDatePublished().getRange().getGt();
+//        // --- Формат даты пользователя в рабочий ---
+//        String requestDate = checkDate(date);
+//
+//        filter.setDatePublished(PatentSearchRequest.DatePublished.builder()
+//                        .range(PatentSearchRequest.Range.builder()
+//                                .gt(requestDate)
+//                                .build())
+//                        .build());
 
         return patentService.searchPatents(req)
                 .doOnNext(resp -> {
