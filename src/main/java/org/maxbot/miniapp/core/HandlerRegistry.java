@@ -36,7 +36,7 @@ public class HandlerRegistry {
         map.put(BotStates.SELECT_BASE, init);
         // Выбор базы, показываем главное меню фильтров
         map.put(BotStates.BASE_SELECTED, selectBase);
-        // Выбор фильтра ДАТА, запрос даты в формате yyyy-mm-dd
+        // Выбор фильтра ДАТА, запрос даты в формате dd.mm.yyyy
         map.put(BotStates.FILTER_DATE, filterDate);
         // Поисковая строк получена
         map.put(BotStates.SELECT_DATE, searchQueryWaitingHandler);
