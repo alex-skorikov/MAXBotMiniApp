@@ -89,7 +89,7 @@ class WebAppControllerTest {
         request.setUserId("444");
         request.setChatId("555");
 
-        when(contextRepository.load("444")).thenReturn(null); // Эмулируем первую привязку
+        when(contextRepository.load("444")).thenReturn(null);
 
         // When & Then
         webTestClient.post()
@@ -112,7 +112,6 @@ class WebAppControllerTest {
         req.setLimit(5);
         req.setOffset(0);
 
-        // Формируем фильтры для покрытия веток метода syncUserContext
         PatentSearchRequest.Filter filter = new PatentSearchRequest.Filter();
         PatentSearchRequest.DatePublished datePublished = new PatentSearchRequest.DatePublished();
         PatentSearchRequest.Range range = new PatentSearchRequest.Range();
@@ -142,7 +141,6 @@ class WebAppControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        // Даем асинхронному Mono.fromRunnable() в .doOnNext() успеть выполниться
         verify(contextRepository, timeout(1000)).save(any(UserContext.class));
     }
 
@@ -154,11 +152,11 @@ class WebAppControllerTest {
         hit.setId("DOC77");
         ctx.setHits(List.of(hit));
 
-        when(contextRepository.load("user1")).thenReturn(ctx);
+        when(contextRepository.load("111")).thenReturn(ctx);
 
         // When & Then
         webTestClient.get()
-                .uri("/api/docs/DOC77?userId=user1")
+                .uri("/api/docs/DOC77?userId=111")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(PatentHit.class)
@@ -171,11 +169,11 @@ class WebAppControllerTest {
     @Test
     void getDocumentFromContextShouldReturnNotFoundWhenMissing() {
         // Given
-        when(contextRepository.load("user2")).thenReturn(null);
+        when(contextRepository.load("222")).thenReturn(null);
 
         // When & Then
         webTestClient.get()
-                .uri("/api/docs/DOC_MISSING?userId=user2")
+                .uri("/api/docs/DOC_MISSING?userId=222")
                 .exchange()
                 .expectStatus().is4xxClientError();
     }
@@ -188,11 +186,11 @@ class WebAppControllerTest {
         hit.setId("UA12345");
         ctx.setHits(List.of(hit));
 
-        when(contextRepository.load("user3")).thenReturn(ctx);
+        when(contextRepository.load("333")).thenReturn(ctx);
 
         // When & Then
         webTestClient.get()
-                .uri("/api/docs/export?docId=UA12345&userId=user3")
+                .uri("/api/docs/export?docId=UA12345&userId=333")
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -210,12 +208,56 @@ class WebAppControllerTest {
         // Given
         UserContext emptyCtx = new UserContext();
         emptyCtx.setHits(Collections.emptyList());
-        when(contextRepository.load("user4")).thenReturn(emptyCtx);
+        when(contextRepository.load("444")).thenReturn(emptyCtx);
 
         // When & Then
         webTestClient.get()
-                .uri("/api/docs/export?docId=UA12345&userId=user4")
+                .uri("/api/docs/export?docId=UA12345&userId=444")
                 .exchange()
                 .expectStatus().is4xxClientError();
+    }
+
+    @Test
+    void getUserContextShouldReturnBadRequestWhenIdIsInvalidString() {
+        webTestClient.get()
+                .uri("/api/session/abc")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("ERROR")
+                .jsonPath("$.message").isEqualTo("Invalid request parameter or format");
+    }
+
+    @Test
+    void sessionInitShouldReturnBadRequestWhenUserIdIsInvalid() {
+        SessionInitRequest request = new SessionInitRequest();
+        request.setUserId("invalid_id");
+        request.setChatId("555");
+
+        webTestClient.post()
+                .uri("/api/session/init")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("ERROR")
+                .jsonPath("$.message").isEqualTo("Invalid request parameter or format");
+    }
+
+    @Test
+    void searchShouldReturnBadRequestWhenUserIdIsString() {
+        // Тест передачи некорректного RequestParam в эндпоинт /search
+        PatentSearchRequest req = new PatentSearchRequest();
+        req.setQuery("Тест");
+
+        webTestClient.post()
+                .uri("/api/search?userId=not-a-number")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(req)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("ERROR");
     }
 }
