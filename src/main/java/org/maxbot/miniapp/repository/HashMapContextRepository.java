@@ -1,8 +1,11 @@
 package org.maxbot.miniapp.repository;
 
 import org.maxbot.miniapp.core.UserContext;
+import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
+import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +33,10 @@ public class HashMapContextRepository implements ContextRepository {
     @Override
     public void delete(String userId) {
         storage.remove(userId);
+    }
+
+    @Override
+    public void syncUserContext(UserContext ctx, PatentSearchRequest req, PatentSearchResponse resp) {
     }
 
     public UserContext storageGetDirectly(String userId) {
