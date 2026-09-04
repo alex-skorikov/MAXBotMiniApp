@@ -5,7 +5,6 @@ import org.maxbot.miniapp.core.UserContext;
 import org.maxbot.miniapp.dto.patent.PatentHit;
 import org.maxbot.miniapp.dto.patent.PatentSearchPagedResponse;
 import org.maxbot.miniapp.dto.patent.PatentSearchRequest;
-import org.maxbot.miniapp.dto.patent.PatentSearchResponse;
 import org.maxbot.miniapp.dto.webapp.SessionInitRequest;
 import org.maxbot.miniapp.repository.ContextRepository;
 import org.maxbot.miniapp.service.PatentService;
@@ -17,21 +16,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebInputException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -49,22 +48,14 @@ public class WebAppController {
     }
 
     @GetMapping("/session/{id}")
-    public Mono<UserContext> getUserContext(@PathVariable("id") String id) {
-        log.info("🌐 [WEB APP] Запрос контекста сессии для ID: {}", id);
-
-        int userId;
-        try {
-            userId = Integer.parseInt(id);
-        } catch (NumberFormatException e) {
-            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", id, e.getMessage());
-            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
-        }
+    public Mono<UserContext> getUserContext(@PathVariable("id") int userId) {
+        log.info("🌐 [WEB APP] Запрос контекста сессии для ID: {}", userId);
 
         return Mono.fromCallable(() -> contextRepository.load(String.valueOf(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 // Если контекст в базе не найден, возвращаем пустой объект, чтобы фронт не падал
                 .defaultIfEmpty(UserContext.builder()
-                        .chatId(id)
+                        .chatId(String.valueOf(userId))
                         .limit(5)
                         .offset(0)
                         .build());
@@ -100,38 +91,20 @@ public class WebAppController {
     @PostMapping("/search")
     public Mono<PatentSearchPagedResponse> search(
             @RequestBody PatentSearchRequest req,
-            @RequestParam("userId") String requestUserId) {
-
-        int userId;
-        try {
-            userId = Integer.parseInt(requestUserId);
-        } catch (NumberFormatException e) {
-            log.error("❌ [WEB APP] Ошибка парсинга userId '{}': {}", requestUserId, e.getMessage());
-            return Mono.error(new IllegalArgumentException("Invalid format for userId"));
-        }
-//        PatentSearchRequest.Filter filter = req.getFilter();
-//        String date = req.getFilter().getDatePublished().getRange().getGt();
-//        // --- Формат даты пользователя в рабочий ---
-//        String requestDate = checkDate(date);
-//
-//        filter.setDatePublished(PatentSearchRequest.DatePublished.builder()
-//                        .range(PatentSearchRequest.Range.builder()
-//                                .gt(requestDate)
-//                                .build())
-//                        .build());
+            @RequestParam("userId") int requestUserId) {
 
         return patentService.searchPatents(req)
                 .doOnNext(resp -> {
                     // Асинхронно загружаем, синхронизируем и сохраняем контекст в Redis
                     Mono.fromRunnable(() -> {
-                                UserContext ctx = contextRepository.load(String.valueOf(userId));
+                                UserContext ctx = contextRepository.load(String.valueOf(requestUserId));
                                 if (ctx == null) {
                                     ctx = new UserContext();
-                                    ctx.setUserId(userId);
+                                    ctx.setUserId(requestUserId);
                                 }
 
-                                // Вызываем вынесенный метод синхронизации
-                                syncUserContext(ctx, req, resp);
+                                // --- Синхронизируем контекст пользователя ---
+                                contextRepository.syncUserContext(ctx, req, resp);
 
                                 // Сохраняем обновленный контекст обратно в Redis
                                 contextRepository.save(ctx);
@@ -142,60 +115,14 @@ public class WebAppController {
                 .map(resp -> PatentService.getPatentSearchPagedResponse(req, resp));
     }
 
-    private String checkDate(String date) {
-        String apiDate = "";
-        if (date != null && !date.isBlank()) {
-            DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            apiDate = LocalDate.parse(date, inputFormatter).format(outputFormatter);
-        }
-        return apiDate;
-    }
-
-    // --- Синхронизируем контекст пользователя ---
-    private void syncUserContext(UserContext ctx, PatentSearchRequest req, PatentSearchResponse resp) {
-        String actualQuery = req.getQuery();
-        if (actualQuery != null && !actualQuery.isBlank()) {
-            ctx.setSearchQuery(actualQuery);
-        }
-        ctx.setLimit(req.getLimit() > 0 ? req.getLimit() : 5);
-        ctx.setOffset(req.getOffset());
-
-        if (req.getDatasets() != null && !req.getDatasets().isEmpty()) {
-            ctx.setDatasetArrays(req.getDatasets());
-        }
-
-        if (req.getFilter() != null) {
-            if (req.getFilter().getDatePublished() != null &&
-                    req.getFilter().getDatePublished().getRange() != null) {
-                ctx.setDate(req.getFilter().getDatePublished().getRange().getGt());
-            }
-
-            if (req.getFilter().getClassification() != null &&
-                    req.getFilter().getClassification().getValues() != null &&
-                    !req.getFilter().getClassification().getValues().isEmpty()) {
-                ctx.setClassifiers(req.getFilter().getClassification().getValues().get(0));
-            }
-        }
-
-        if (resp != null && resp.getHits() != null && !resp.getHits().isEmpty()) {
-            ctx.setHits(resp.getHits());
-            log.info("💾 [SYNC] В контекст пользователя {} кэшировано документов: {}", ctx.getUserId(), resp.getHits()
-                    .size());
-        } else {
-            ctx.setHits(List.of()); // Очищаем старый кэш hits, если Роспатент вернул 0 результатов
-            log.info("🗑️ [SYNC] По запросу '{}' документов не найдено. Кэш hits пользователя {} очищен.", actualQuery, ctx.getUserId());
-        }
-    }
-
     @GetMapping("/docs/{id}")
     public Mono<ResponseEntity<PatentHit>> getDocumentFromContext(
             @PathVariable("id") String docId,
-            @RequestParam("userId") String userId) {
+            @RequestParam("userId") int userId) {
 
         log.info("🌐 [WEB APP] Запрос карточки документа ID: {} из контекста пользователя: {}", docId, userId);
 
-        return Mono.fromCallable(() -> contextRepository.load(userId))
+        return Mono.fromCallable(() -> contextRepository.load(String.valueOf(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(ctx -> {
                     if (ctx == null || ctx.getHits() == null || ctx.getHits().isEmpty()) {
@@ -215,12 +142,12 @@ public class WebAppController {
     @GetMapping("/docs/export")
     public Mono<ResponseEntity<Resource>> exportDocument(
             @RequestParam("docId") String docId,
-            @RequestParam("userId") String userId) {
+            @RequestParam("userId") int userId) {
 
         log.info("🌐 [WEB APP] Запрос на экспорт документа ID: {} для пользователя: {}", docId, userId);
         ObjectMapper objectMapper = new ObjectMapper();
 
-        return Mono.fromCallable(() -> contextRepository.load(userId))
+        return Mono.fromCallable(() -> contextRepository.load(String.valueOf(userId)))
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(ctx -> {
                     if (ctx == null || ctx.getHits() == null || ctx.getHits().isEmpty()) {
@@ -260,6 +187,13 @@ public class WebAppController {
                             .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).<Resource>build());
                 })
                 .defaultIfEmpty(ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, ServerWebInputException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<Map<String, String>> handleInvalidInput(Exception ex) {
+        log.warn("⚠️ [API ВАЛИДАЦИЯ] Перехвачен некорректный ввод: {}", ex.getMessage());
+        return Mono.just(Map.of("status", "ERROR", "message", "Invalid request parameter or format"));
     }
 
 }
